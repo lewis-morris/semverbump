@@ -76,6 +76,10 @@ Update version information in ``pyproject.toml`` and other files.
 ``--commit``
     Create a git commit for the version change.
 
+    .. note::
+        The version will bump on every invocation unless the change is
+        committed or reverted.
+
 ``--tag``
     Create a git tag for the new version.
 
