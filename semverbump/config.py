@@ -16,6 +16,10 @@ _DEFAULTS = {
     "rules": {"return_type_change": "minor"},  # or "major"
     "analyzers": {"cli": False},
     "migrations": {"paths": ["migrations"]},
+    "version": {
+        "paths": ["pyproject.toml", "setup.py", "setup.cfg", "**/*.py"],
+        "ignore": [],
+    },
 }
 
 
@@ -63,6 +67,21 @@ class Migrations:
 
 
 @dataclass
+class VersionFiles:
+    """Locations containing project version strings.
+
+    Attributes:
+        paths: Glob patterns to search for version declarations.
+        ignore: Glob patterns to skip during version replacement.
+    """
+
+    paths: List[str] = field(
+        default_factory=lambda: ["pyproject.toml", "setup.py", "setup.cfg", "**/*.py"]
+    )
+    ignore: List[str] = field(default_factory=list)
+
+
+@dataclass
 class Config:
     """Top-level configuration for semverbump.
 
@@ -71,6 +90,7 @@ class Config:
         rules: Rules controlling version bumps.
         ignore: Paths to exclude when scanning.
         analyzers: Optional analyzer plugin settings.
+        version: Locations containing version strings.
     """
 
     project: Project = field(default_factory=Project)
@@ -78,6 +98,7 @@ class Config:
     ignore: Ignore = field(default_factory=Ignore)
     analyzers: Analyzers = field(default_factory=Analyzers)
     migrations: Migrations = field(default_factory=Migrations)
+    version: VersionFiles = field(default_factory=VersionFiles)
 
 
 def _merge_defaults(data: dict) -> dict:
@@ -108,10 +129,12 @@ def load_config(path: str | Path = "semverbump.toml") -> Config:
     enabled = {name for name, enabled in d["analyzers"].items() if enabled}
     analyzers = Analyzers(enabled=enabled)
     migrations = Migrations(**d.get("migrations", {}))
+    version = VersionFiles(**d.get("version", {}))
     return Config(
         project=proj,
         rules=rules,
         ignore=ign,
         analyzers=analyzers,
         migrations=migrations,
+        version=version,
     )

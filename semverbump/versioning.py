@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
+from fnmatch import fnmatch
+from glob import glob
 from pathlib import Path
+from typing import Iterable, List
 
 try:  # pragma: no cover - needed for linting when dependency missing
     from packaging.version import Version
@@ -101,13 +105,18 @@ def apply_bump(
     level: str,
     pyproject_path: str | Path = "pyproject.toml",
     dry_run: bool = False,
+    paths: Iterable[str] | None = None,
+    ignore: Iterable[str] | None = None,
 ) -> VersionChange:
-    """Apply a semantic version bump to ``pyproject.toml``.
+    """Apply a semantic version bump and update version strings.
 
     Args:
         level: Bump level to apply (``"major"``, ``"minor"``, or ``"patch"``).
-        pyproject_path: Path to the ``pyproject.toml`` file.
+        pyproject_path: Path to the canonical ``pyproject.toml`` file.
         dry_run: If ``True``, compute the new version without writing to disk.
+        paths: Glob patterns pointing to files that may contain the version.
+            The canonical ``pyproject.toml`` is always updated.
+        ignore: Glob patterns to exclude from ``paths``.
 
     Returns:
         :class:`VersionChange` detailing the old and new versions.
@@ -115,6 +124,64 @@ def apply_bump(
 
     old = read_project_version(pyproject_path)
     new = bump_string(old, level)
-    if not dry_run:
-        write_project_version(new, pyproject_path)
+    if dry_run:
+        return VersionChange(old=old, new=new, level=level)
+
+    write_project_version(new, pyproject_path)
+    _update_additional_files(new, old, paths or [], ignore or [], pyproject_path)
     return VersionChange(old=old, new=new, level=level)
+
+
+def _update_additional_files(
+    new: str,
+    old: str,
+    patterns: Iterable[str],
+    ignore: Iterable[str],
+    pyproject_path: str | Path,
+) -> None:
+    """Update version strings in files matching ``patterns``.
+
+    Args:
+        new: New version string.
+        old: Previous version string.
+        patterns: Glob patterns to search for files.
+        ignore: Glob patterns to skip.
+        pyproject_path: Canonical ``pyproject.toml`` path to skip (already updated).
+    """
+
+    files = _resolve_files(patterns, ignore)
+    canon = Path(pyproject_path).resolve()
+    for f in files:
+        if f.resolve() == canon:
+            continue
+        _replace_version(f, old, new)
+
+
+def _resolve_files(patterns: Iterable[str], ignore: Iterable[str]) -> List[Path]:
+    """Expand glob patterns while applying ignore rules."""
+
+    out: List[Path] = []
+    ignore_list = list(ignore)
+    for pat in patterns:
+        for match in glob(pat, recursive=True):
+            p = Path(match)
+            if not p.is_file():
+                continue
+            if any(fnmatch(str(p), ig) for ig in ignore_list):
+                continue
+            out.append(p)
+    return out
+
+
+def _replace_version(path: Path, old: str, new: str) -> None:
+    """Replace occurrences of ``old`` version with ``new`` in ``path``."""
+
+    text = path.read_text(encoding="utf-8")
+    patterns = [
+        rf"(__version__\s*=\s*['\"])({re.escape(old)})(['\"])",
+        rf"(VERSION\s*=\s*['\"])({re.escape(old)})(['\"])",
+        rf"(version\s*=\s*['\"])({re.escape(old)})(['\"])",
+    ]
+    for pat in patterns:
+        text, _ = re.subn(pat, rf"\g<1>{new}\g<3>", text)
+    path.write_text(text, encoding="utf-8")
