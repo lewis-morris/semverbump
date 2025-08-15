@@ -50,6 +50,25 @@ Running ``bumpwright decide`` without ``--base`` compares the current commit
 against its parent (``HEAD^``). Because this subcommand only inspects commits,
 there is no ``--dry-run`` flag.
 
+.. code-block:: console
+
+   bumpwright decide --format json
+
+.. code-block:: json
+
+   {
+     "level": "minor",
+     "impacts": [
+       {"severity": "minor", "symbol": "cli.new_command", "reason": "added CLI entry 'greet'"}
+     ]
+   }
+
+Omitting ``--head`` uses the current ``HEAD``:
+
+.. code-block:: console
+
+   bumpwright decide --base origin/main --format json
+
 ``bump`` – apply a bump
 -----------------------
 
@@ -115,6 +134,24 @@ This prints the old and new versions and, when ``--commit`` and ``--tag`` are
 set, commits and tags the release. Omitting ``--base`` uses the branch's
 upstream, and omitting ``--head`` assumes ``HEAD``.
 
+To preview changes without touching the filesystem, combine ``--dry-run`` with
+JSON output:
+
+.. code-block:: console
+
+   bumpwright bump --dry-run --format json
+
+.. code-block:: json
+
+   {
+     "old_version": "1.2.3",
+     "new_version": "1.2.4",
+     "level": "patch"
+   }
+
+Omitting ``--base`` compares against the branch's upstream; leaving out
+``--head`` uses the current ``HEAD``.
+
 ``auto`` – decide and bump
 ----------------------------
 
@@ -159,6 +196,25 @@ Omitting ``--base`` compares against the upstream branch, and omitting
 ``--head`` assumes ``HEAD``. With ``--dry-run`` no files are modified and no
 commit or tag is created.
 
+
+.. code-block:: console
+
+   bumpwright auto --dry-run --format json
+
+.. code-block:: json
+
+   {
+     "level": "minor",
+     "old_version": "1.2.3",
+     "new_version": "1.3.0",
+     "impacts": []
+   }
+
+Using ``--dry-run`` previews the new version without editing files or creating
+commits. Omitting ``--head`` uses the current ``HEAD``; leaving out ``--base``
+falls back to the branch's upstream.
+
+
 Full workflow
 -------------
 
@@ -171,6 +227,7 @@ A typical release sequence might look like this:
    git commit -am "feat: add amazing change"
    bumpwright auto --commit --tag
    git push --follow-tags origin HEAD
+
 
 All commands read configuration from ``bumpwright.toml`` by default. Use
 ``--config`` to specify an alternate file.
@@ -189,3 +246,4 @@ No upstream configured for base
 Changes not applied after running
     The ``--dry-run`` flag previews the bump without touching files. Remove it
     and, if desired, add ``--commit`` and ``--tag`` to persist the change.
+
