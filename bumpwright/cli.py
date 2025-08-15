@@ -15,7 +15,12 @@ from typing import Iterable, List
 from .analyzers import available, load_enabled
 from .compare import Impact, decide_bump, diff_public_api
 from .config import Config, load_config
-from .gitutils import changed_paths, list_py_files_at_ref, read_file_at_ref
+from .gitutils import (
+    changed_paths,
+    last_release_commit,
+    list_py_files_at_ref,
+    read_file_at_ref,
+)
 from .public_api import PublicAPI, extract_public_api_from_source, module_name_from_path
 from .versioning import apply_bump, find_pyproject
 
@@ -207,9 +212,12 @@ def decide_command(args: argparse.Namespace) -> int:
     """
 
     cfg = load_config(args.config)
-    # Default to comparing the current commit against its immediate parent when no base
-    # reference is provided.
-    base: str = args.base or "HEAD^"
+    # Default to comparing the current commit against the latest release when no
+    # explicit base is provided.
+    if args.base:
+        base: str = args.base
+    else:
+        base = last_release_commit() or "HEAD^"
     head: str = args.head
     old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
     new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
@@ -267,7 +275,12 @@ def bump_command(args: argparse.Namespace) -> int:
     cfg = load_config(args.config)
     # If level not provided, compute from base/head
     level = args.level
-    base = args.base or (_infer_base_ref() if not level else "HEAD^")
+    if args.base:
+        base = args.base
+    elif level:
+        base = "HEAD^"
+    else:
+        base = last_release_commit() or _infer_base_ref()
     head = args.head
 
     try:
@@ -355,7 +368,7 @@ def auto_command(args: argparse.Namespace) -> int:
     project version.
     """
 
-    base = args.base or _infer_base_ref()
+    base = args.base or last_release_commit() or _infer_base_ref()
     head = args.head
     cfg = load_config(args.config)
 

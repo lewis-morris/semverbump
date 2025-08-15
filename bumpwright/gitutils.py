@@ -108,3 +108,23 @@ def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> Optional[st
         return _run(["git", "show", f"{ref}:{path}"], cwd)
     except subprocess.CalledProcessError:
         return None
+
+
+def last_release_commit(cwd: str | None = None) -> Optional[str]:
+    """Return the most recent release commit created by bumpwright.
+
+    Args:
+        cwd: Repository path to inspect.
+
+    Returns:
+        Hash of the latest ``chore(release):`` commit or ``None`` if not found.
+    """
+
+    try:
+        out = _run(
+            ["git", "log", "-n", "1", "--grep", "^chore(release):", "--format=%H"],
+            cwd,
+        )
+    except subprocess.CalledProcessError:
+        return None
+    return out.strip() or None
