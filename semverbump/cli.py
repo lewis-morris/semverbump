@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from typing import List
+from typing import Iterable, List
 
 from .analyzers import available, load_enabled
 from .compare import Impact, decide_bump, diff_public_api
@@ -15,12 +15,13 @@ from .public_api import PublicAPI, extract_public_api_from_source, module_name_f
 from .versioning import apply_bump
 
 
-def _build_api_at_ref(ref: str, roots: list[str]) -> PublicAPI:
+def _build_api_at_ref(ref: str, roots: list[str], ignores: Iterable[str]) -> PublicAPI:
     """Collect the public API for ``roots`` at a git reference.
 
     Args:
         ref: Git reference to inspect.
         roots: Project root directories to scan.
+        ignores: Glob patterns for paths to skip.
 
     Returns:
         Mapping of public symbols to signatures.
@@ -28,7 +29,7 @@ def _build_api_at_ref(ref: str, roots: list[str]) -> PublicAPI:
 
     api: PublicAPI = {}
     for root in roots:
-        for path in sorted(list_py_files_at_ref(ref, [root])):
+        for path in sorted(list_py_files_at_ref(ref, [root], ignore_globs=ignores)):
             code = read_file_at_ref(ref, path)
             if code is None:
                 continue
@@ -84,8 +85,8 @@ def decide_command(args: argparse.Namespace) -> int:
     """
 
     cfg = load_config(args.config)
-    old_api = _build_api_at_ref(args.base, cfg.project.public_roots)
-    new_api = _build_api_at_ref(args.head, cfg.project.public_roots)
+    old_api = _build_api_at_ref(args.base, cfg.project.public_roots, cfg.ignore.paths)
+    new_api = _build_api_at_ref(args.head, cfg.project.public_roots, cfg.ignore.paths)
 
     impacts = diff_public_api(
         old_api, new_api, return_type_change=cfg.rules.return_type_change
@@ -122,8 +123,12 @@ def bump_command(args: argparse.Namespace) -> int:
     level = args.level
     if not level:
         cfg = load_config(args.config)
-        old_api = _build_api_at_ref(args.base, cfg.project.public_roots)
-        new_api = _build_api_at_ref(args.head, cfg.project.public_roots)
+        old_api = _build_api_at_ref(
+            args.base, cfg.project.public_roots, cfg.ignore.paths
+        )
+        new_api = _build_api_at_ref(
+            args.head, cfg.project.public_roots, cfg.ignore.paths
+        )
         impacts = diff_public_api(
             old_api, new_api, return_type_change=cfg.rules.return_type_change
         )
