@@ -15,6 +15,14 @@ Exclude paths from API scanning:
    [ignore]
    paths = ["tests/**", "examples/**"]
 
+Specify additional version file locations:
+
+.. code-block:: toml
+
+   [version]
+   paths = ["pyproject.toml", "setup.py", "src/pkg/__init__.py"]
+   ignore = ["examples/**"]
+
 Apply a bump and commit/tag automatically:
 
 .. code-block:: console

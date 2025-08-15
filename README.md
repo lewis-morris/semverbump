@@ -8,7 +8,7 @@ recommending the next semantic version. It can even apply the bump for you.
 - Static diff of the public API to highlight breaking changes.
 - Pluggable analysers for command-line tools, web routes and database
   migrations.
-- Optional helpers to update ``pyproject.toml`` and tag the release.
+- Optional helpers to update version numbers across common files and tag the release.
 
 ## Installation
 

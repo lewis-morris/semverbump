@@ -32,6 +32,11 @@ Once the level is known, apply it directly to ``pyproject.toml``:
 This prints the old and new versions and, with the flags above, commits and tags
 the change.
 
+By default, the command updates common version locations such as
+``setup.py``, ``setup.cfg`` and any ``__version__`` variables in Python modules.
+Use ``--version-path`` to target specific files and ``--version-ignore`` to
+exclude paths from updating.
+
 If ``--level`` is omitted, provide ``--base`` and ``--head`` and the command
 will automatically decide in the same fashion as ``decide``.
 

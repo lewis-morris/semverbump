@@ -169,12 +169,12 @@ def bump_command(args: argparse.Namespace) -> int:
         Process exit code.
     """
 
+    cfg = load_config(args.config)
     # If level not provided, compute from base/head
     level = args.level
     base = args.base or _infer_base_ref()
     head = args.head
     if not level:
-        cfg = load_config(args.config)
         old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
         new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
         impacts = diff_public_api(
@@ -183,7 +183,15 @@ def bump_command(args: argparse.Namespace) -> int:
         impacts.extend(_run_analyzers(base, head, cfg))
         level = decide_bump(impacts)
 
-    vc = apply_bump(level, pyproject_path=args.pyproject, dry_run=args.dry_run)
+    paths = args.version_path or cfg.version.paths
+    ignore = args.version_ignore or cfg.version.ignore
+    vc = apply_bump(
+        level,
+        pyproject_path=args.pyproject,
+        dry_run=args.dry_run,
+        paths=paths,
+        ignore=ignore,
+    )
     print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
     if not args.dry_run:
         _commit_tag(args.pyproject, vc.new, args.commit, args.tag)
@@ -210,7 +218,15 @@ def auto_command(args: argparse.Namespace) -> int:
     )
     impacts.extend(_run_analyzers(base, head, cfg))
     level = decide_bump(impacts)
-    vc = apply_bump(level, pyproject_path=args.pyproject, dry_run=args.dry_run)
+    paths = args.version_path or cfg.version.paths
+    ignore = args.version_ignore or cfg.version.ignore
+    vc = apply_bump(
+        level,
+        pyproject_path=args.pyproject,
+        dry_run=args.dry_run,
+        paths=paths,
+        ignore=ignore,
+    )
 
     if args.format == "json":
         print(
@@ -285,6 +301,18 @@ def main(argv: list[str] | None = None) -> int:
     p_bump.add_argument("--head", default="HEAD", help="Head ref (default: HEAD)")
     p_bump.add_argument("--pyproject", default="pyproject.toml")
     p_bump.add_argument(
+        "--version-path",
+        action="append",
+        dest="version_path",
+        help="Glob of files containing the project version (repeatable)",
+    )
+    p_bump.add_argument(
+        "--version-ignore",
+        action="append",
+        dest="version_ignore",
+        help="Glob of paths to ignore when updating version",
+    )
+    p_bump.add_argument(
         "--commit",
         action="store_true",
         help="git commit the version change",
@@ -307,6 +335,18 @@ def main(argv: list[str] | None = None) -> int:
     p_auto.add_argument("--head", default="HEAD", help="Head ref (default: HEAD)")
     p_auto.add_argument("--format", choices=["text", "md", "json"], default="text")
     p_auto.add_argument("--pyproject", default="pyproject.toml")
+    p_auto.add_argument(
+        "--version-path",
+        action="append",
+        dest="version_path",
+        help="Glob of files containing the project version (repeatable)",
+    )
+    p_auto.add_argument(
+        "--version-ignore",
+        action="append",
+        dest="version_ignore",
+        help="Glob of paths to ignore when updating version",
+    )
     p_auto.add_argument(
         "--commit",
         action="store_true",
