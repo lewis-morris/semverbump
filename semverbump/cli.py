@@ -1,4 +1,8 @@
-"""Command-line interface for semverbump."""
+"""Command-line interface for the :mod:`semverbump` project.
+
+This module exposes subcommands for suggesting and applying semantic version
+bumps based on public API differences and additional analyzers.
+"""
 
 from __future__ import annotations
 

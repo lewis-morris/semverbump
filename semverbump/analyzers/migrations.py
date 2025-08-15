@@ -1,3 +1,10 @@
+"""Analyzer for Alembic database migrations.
+
+The utilities here parse migration scripts and flag schema changes such as
+added or removed columns. The analyzer reports these findings as public API
+impacts so they can influence semantic version recommendations.
+"""
+
 from __future__ import annotations
 
 import ast
