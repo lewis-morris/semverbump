@@ -128,3 +128,27 @@ def last_release_commit(cwd: str | None = None) -> Optional[str]:
     except subprocess.CalledProcessError:
         return None
     return out.strip() or None
+
+
+def collect_commits(
+    base: str, head: str, cwd: str | None = None
+) -> list[tuple[str, str]]:
+    """Collect commit metadata between two references.
+
+    Args:
+        base: Older git reference (exclusive).
+        head: Newer git reference (inclusive).
+        cwd: Optional repository path.
+
+    Returns:
+        List of ``(short_sha, subject)`` tuples ordered newest first.
+    """
+
+    out = _run(["git", "log", "--format=%h%x09%s", f"{base}..{head}"], cwd)
+    commits: list[tuple[str, str]] = []
+    for line in out.splitlines():
+        if not line.strip():
+            continue
+        sha, subject = line.split("\t", 1)
+        commits.append((sha, subject))
+    return commits

@@ -49,3 +49,19 @@ def test_list_py_files_at_ref_matches_legacy(tmp_path):
     result = gitutils.list_py_files_at_ref("HEAD", ["."], ignore, str(repo))
 
     assert result == expected
+
+
+def test_collect_commits(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    gitutils._run(["git", "init"], str(repo))
+    gitutils._run(["git", "config", "user.email", "test@example.com"], str(repo))
+    gitutils._run(["git", "config", "user.name", "Test"], str(repo))
+    (repo / "file.txt").write_text("one\n", encoding="utf-8")
+    gitutils._run(["git", "add", "file.txt"], str(repo))
+    gitutils._run(["git", "commit", "-m", "first"], str(repo))
+    (repo / "file.txt").write_text("two\n", encoding="utf-8")
+    gitutils._run(["git", "commit", "-am", "second"], str(repo))
+    sha = gitutils._run(["git", "rev-parse", "--short", "HEAD"], str(repo)).strip()
+    commits = gitutils.collect_commits("HEAD^", "HEAD", str(repo))
+    assert commits == [(sha, "second")]
