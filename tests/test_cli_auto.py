@@ -102,3 +102,36 @@ def test_auto_command_dry_run(tmp_path: Path) -> None:
 
     assert "Bumped version: 0.1.0 -> 0.2.0 (minor)" in res.stdout
     assert read_project_version(repo / "pyproject.toml") == "0.1.0"
+
+
+def test_main_shows_help_when_no_args(tmp_path: Path) -> None:
+    res = subprocess.run(
+        [sys.executable, "-m", "semverbump.cli"],
+        cwd=tmp_path,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+        env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
+    )
+    assert "usage: semverbump" in res.stdout
+
+
+def test_bump_command_searches_pyproject(tmp_path: Path) -> None:
+    repo, pkg, _ = _setup_repo(tmp_path)
+    res = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "semverbump.cli",
+            "bump",
+            "--level",
+            "patch",
+        ],
+        cwd=pkg,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+        env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
+    )
+    assert "Bumped version: 0.1.0 -> 0.1.1 (patch)" in res.stdout
+    assert read_project_version(repo / "pyproject.toml") == "0.1.1"
