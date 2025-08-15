@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from fnmatch import fnmatch
 from glob import glob
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 try:  # pragma: no cover - needed for linting when dependency missing
     from packaging.version import Version
@@ -60,6 +60,25 @@ def bump_string(v: str, level: str) -> str:
     return f"{parts[0]}.{parts[1]}.{parts[2]}"
 
 
+def find_pyproject(start: str | Path | None = None) -> Optional[Path]:
+    """Search upward from ``start`` for ``pyproject.toml``.
+
+    Args:
+        start: Directory to begin searching from. Defaults to the current working
+            directory.
+
+    Returns:
+        Path to the discovered ``pyproject.toml`` file, or ``None`` if not found.
+    """
+
+    path = Path(start or Path.cwd()).resolve()
+    for parent in [path, *path.parents]:
+        candidate = parent / "pyproject.toml"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
 def read_project_version(pyproject_path: str | Path = "pyproject.toml") -> str:
     """Read the project version from a ``pyproject.toml`` file.
 
@@ -73,7 +92,12 @@ def read_project_version(pyproject_path: str | Path = "pyproject.toml") -> str:
         KeyError: If the version field is missing.
     """
 
-    data = toml_parse(Path(pyproject_path).read_text(encoding="utf-8"))
+    p = Path(pyproject_path)
+    if not p.is_file():
+        p = find_pyproject(p.parent)
+        if p is None:
+            raise FileNotFoundError(f"pyproject.toml not found at {pyproject_path}")
+    data = toml_parse(p.read_text(encoding="utf-8"))
     try:
         return str(data["project"]["version"])
     except Exception as e:  # pragma: no cover - explicit re-raise for clarity
@@ -94,6 +118,10 @@ def write_project_version(
     """
 
     p = Path(pyproject_path)
+    if not p.is_file():
+        p = find_pyproject(p.parent)
+        if p is None:
+            raise FileNotFoundError(f"pyproject.toml not found at {pyproject_path}")
     data = toml_parse(p.read_text(encoding="utf-8"))
     if "project" not in data:
         raise KeyError("No [project] table in pyproject.toml")

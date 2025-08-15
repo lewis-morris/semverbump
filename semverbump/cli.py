@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from pathlib import Path
 from typing import Iterable, List
 
 from .analyzers import available, load_enabled
@@ -16,7 +17,7 @@ from .compare import Impact, decide_bump, diff_public_api
 from .config import Config, load_config
 from .gitutils import list_py_files_at_ref, read_file_at_ref
 from .public_api import PublicAPI, extract_public_api_from_source, module_name_from_path
-from .versioning import apply_bump
+from .versioning import apply_bump, find_pyproject
 
 
 def _build_api_at_ref(ref: str, roots: list[str], ignores: Iterable[str]) -> PublicAPI:
@@ -124,6 +125,29 @@ def _commit_tag(pyproject: str, version: str, commit: bool, tag: bool) -> None:
         subprocess.run(["git", "tag", f"v{version}"], check=True)
 
 
+def _resolve_pyproject(path: str) -> Path:
+    """Locate ``pyproject.toml`` relative to ``path``.
+
+    Args:
+        path: User-supplied path to ``pyproject.toml``.
+
+    Returns:
+        Resolved path to ``pyproject.toml``.
+
+    Raises:
+        FileNotFoundError: If no ``pyproject.toml`` can be found.
+    """
+
+    candidate = Path(path)
+    if candidate.is_file():
+        return candidate
+    if candidate.name == "pyproject.toml":
+        found = find_pyproject()
+        if found:
+            return found
+    raise FileNotFoundError(f"pyproject.toml not found at {path}")
+
+
 def decide_command(args: argparse.Namespace) -> int:
     """CLI command to suggest a version bump between two refs.
 
@@ -183,18 +207,24 @@ def bump_command(args: argparse.Namespace) -> int:
         impacts.extend(_run_analyzers(base, head, cfg))
         level = decide_bump(impacts)
 
+    try:
+        pyproject = _resolve_pyproject(args.pyproject)
+    except FileNotFoundError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
     paths = args.version_path or cfg.version.paths
     ignore = args.version_ignore or cfg.version.ignore
     vc = apply_bump(
         level,
-        pyproject_path=args.pyproject,
+        pyproject_path=pyproject,
         dry_run=args.dry_run,
         paths=paths,
         ignore=ignore,
     )
     print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
     if not args.dry_run:
-        _commit_tag(args.pyproject, vc.new, args.commit, args.tag)
+        _commit_tag(str(pyproject), vc.new, args.commit, args.tag)
     return 0
 
 
@@ -218,11 +248,17 @@ def auto_command(args: argparse.Namespace) -> int:
     )
     impacts.extend(_run_analyzers(base, head, cfg))
     level = decide_bump(impacts)
+    try:
+        pyproject = _resolve_pyproject(args.pyproject)
+    except FileNotFoundError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+
     paths = args.version_path or cfg.version.paths
     ignore = args.version_ignore or cfg.version.ignore
     vc = apply_bump(
         level,
-        pyproject_path=args.pyproject,
+        pyproject_path=pyproject,
         dry_run=args.dry_run,
         paths=paths,
         ignore=ignore,
@@ -251,7 +287,7 @@ def auto_command(args: argparse.Namespace) -> int:
         print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
 
     if not args.dry_run:
-        _commit_tag(args.pyproject, vc.new, args.commit, args.tag)
+        _commit_tag(str(pyproject), vc.new, args.commit, args.tag)
     return 0
 
 
@@ -277,7 +313,7 @@ def main(argv: list[str] | None = None) -> int:
         help="Path to configuration file.",
     )
 
-    sub = parser.add_subparsers(dest="cmd", required=True)
+    sub = parser.add_subparsers(dest="cmd")
 
     p_decide = sub.add_parser(
         "decide",
@@ -408,6 +444,9 @@ def main(argv: list[str] | None = None) -> int:
     p_auto.set_defaults(func=auto_command)
 
     args = parser.parse_args(argv)
+    if not hasattr(args, "func"):
+        parser.print_help()
+        return 0
     return args.func(args)
 
 
