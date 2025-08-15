@@ -1,4 +1,4 @@
-# semverbump
+# bumpwright
 
 Keep your project's version numbers honest by inspecting public interfaces and
 recommending the next semantic version. It can even apply the bump for you.
@@ -13,12 +13,12 @@ recommending the next semantic version. It can even apply the bump for you.
 ## Installation
 
 ```bash
-pip install semverbump
+pip install bumpwright
 ```
 
 ## Quick start
 
-1. **Create a configuration file** (``semverbump.toml``) to customise behaviour:
+1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
 
    ```toml
    [analyzers]
@@ -29,8 +29,8 @@ pip install semverbump
 2. **Suggest the next version** between two git references:
 
    ```console
-   $ semverbump decide --base origin/main --head HEAD --format md
-   **semverbump** suggests: `minor`
+   $ bumpwright decide --base origin/main --head HEAD --format md
+   **bumpwright** suggests: `minor`
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
    ```
@@ -44,18 +44,18 @@ pip install semverbump
 3. **Apply the bump** and optionally commit and tag the release:
 
    ```console
-   $ semverbump bump --level minor --pyproject pyproject.toml --commit --tag
+   $ bumpwright bump --level minor --pyproject pyproject.toml --commit --tag
    Bumped version: 1.2.3 -> 1.3.0 (minor)
    ```
 
    Omitting ``--level`` triggers an automatic decision using ``--base`` and
    ``--head`` in the same manner as the ``decide`` command.
 
-4. **Run everything in one step** and let semverbump infer the base reference:
+4. **Run everything in one step** and let bumpwright infer the base reference:
 
    ```console
-   $ semverbump auto --commit --tag
-   **semverbump** suggests: `minor`
+   $ bumpwright auto --commit --tag
+   **bumpwright** suggests: `minor`
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
    Bumped version: 1.2.3 -> 1.3.0 (minor)
@@ -67,7 +67,7 @@ pip install semverbump
 ## Configuration
 
 Only analysers explicitly set to ``true`` run. See ``docs/configuration.rst`` for
-full details. The default file name is ``semverbump.toml`` but you may specify an
+full details. The default file name is ``bumpwright.toml`` but you may specify an
 alternative with ``--config``.
 
 ### Analyser reference

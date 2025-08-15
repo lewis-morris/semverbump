@@ -1,4 +1,4 @@
-"""Command-line interface for the :mod:`semverbump` project.
+"""Command-line interface for the :mod:`bumpwright` project.
 
 This module exposes subcommands for suggesting and applying semantic version
 bumps based on public API differences and additional analyzers.
@@ -181,7 +181,7 @@ def decide_command(args: argparse.Namespace) -> int:
             )
         )
     elif args.format == "md":
-        print(f"**semverbump** suggests: `{level}`\n")
+        print(f"**bumpwright** suggests: `{level}`\n")
         print(_format_impacts_text(impacts))
     else:
         print(f"Suggested bump: {level}")
@@ -283,7 +283,7 @@ def auto_command(args: argparse.Namespace) -> int:
             )
         )
     elif args.format == "md":
-        print(f"**semverbump** suggests: `{level}`\n")
+        print(f"**bumpwright** suggests: `{level}`\n")
         print(_format_impacts_text(impacts))
         print()
         print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
@@ -298,7 +298,7 @@ def auto_command(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point for the ``semverbump`` CLI.
+    """Entry point for the ``bumpwright`` CLI.
 
     Args:
         argv: Optional argument vector.
@@ -309,13 +309,13 @@ def main(argv: list[str] | None = None) -> int:
 
     avail = ", ".join(available()) or "none"
     parser = argparse.ArgumentParser(
-        prog="semverbump",
+        prog="bumpwright",
         description=f"Suggest and apply semantic version bumps. Available analyzers: {avail}.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--config",
-        default="semverbump.toml",
+        default="bumpwright.toml",
         help="Path to configuration file.",
     )
 

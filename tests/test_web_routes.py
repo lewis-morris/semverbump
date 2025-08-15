@@ -1,4 +1,4 @@
-from semverbump.analyzers.web_routes import diff_routes, extract_routes_from_source
+from bumpwright.analyzers.web_routes import diff_routes, extract_routes_from_source
 
 
 def _build(src: str):

@@ -27,4 +27,4 @@ Apply a bump and commit/tag automatically:
 
 .. code-block:: console
 
-   semverbump auto --base v1.0.0 --head HEAD --commit --tag
+   bumpwright auto --base v1.0.0 --head HEAD --commit --tag

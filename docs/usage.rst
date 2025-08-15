@@ -1,7 +1,7 @@
 Usage
 =====
 
-The ``semverbump`` command-line interface provides three subcommands to help
+The ``bumpwright`` command-line interface provides three subcommands to help
 manage project versions based on public API changes. This section explains each
 command, its arguments, and expected outputs.
 
@@ -9,7 +9,7 @@ Global options
 --------------
 
 ``--config``
-    Path to the configuration file. Defaults to ``semverbump.toml`` in the
+    Path to the configuration file. Defaults to ``bumpwright.toml`` in the
     current working directory.
 
 ``decide`` – suggest a bump
@@ -34,14 +34,14 @@ Compare two git references and report the semantic version level they require.
 
 .. code-block:: console
 
-   semverbump decide --base origin/main --head HEAD --format md
+   bumpwright decide --base origin/main --head HEAD --format md
 
 .. code-block:: text
 
-   **semverbump** suggests: `minor`
+   **bumpwright** suggests: `minor`
    - [MINOR] cli.new_command: added CLI entry 'greet'
 
-Running ``semverbump decide`` without ``--base`` compares the current commit
+Running ``bumpwright decide`` without ``--base`` compares the current commit
 against its parent (``HEAD^``).
 
 ``bump`` – apply a bump
@@ -86,7 +86,7 @@ Update version information in ``pyproject.toml`` and other files.
 
 .. code-block:: console
 
-   semverbump bump --level minor --pyproject pyproject.toml --commit --tag
+   bumpwright bump --level minor --pyproject pyproject.toml --commit --tag
 
 This prints the old and new versions and, when ``--commit`` and ``--tag`` are
 set, commits and tags the release.
@@ -115,7 +115,7 @@ Supported arguments mirror those of ``decide`` and ``bump``:
 
 .. code-block:: console
 
-   semverbump auto --commit --tag
+   bumpwright auto --commit --tag
 
 Full workflow
 -------------
@@ -127,8 +127,8 @@ A typical release sequence might look like this:
    git checkout -b feature/amazing-change
    # edit code
    git commit -am "feat: add amazing change"
-   semverbump auto --commit --tag
+   bumpwright auto --commit --tag
    git push --follow-tags origin HEAD
 
-All commands read configuration from ``semverbump.toml`` by default. Use
+All commands read configuration from ``bumpwright.toml`` by default. Use
 ``--config`` to specify an alternate file.

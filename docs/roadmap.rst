@@ -2,7 +2,7 @@ Roadmap
 =======
 
 The following items outline potential directions for improving
-``semverbump``. Contributions and discussion are welcome.
+``bumpwright``. Contributions and discussion are welcome.
 
 Upcoming analyzers
 ------------------

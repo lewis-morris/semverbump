@@ -4,7 +4,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 from typing import Iterable, List, Set
 
-from semverbump import gitutils
+from bumpwright import gitutils
 
 
 def _legacy_list_py_files_at_ref(

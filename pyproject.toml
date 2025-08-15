@@ -1,5 +1,5 @@
 [project]
-name = "semverbump"
+name = "bumpwright"
 version = "0.1.5"
 description = "Static public-API diff + heuristics to suggest semantic version bumps."
 readme = "README.md"
@@ -13,7 +13,7 @@ authors = [{ name = "Lewis Morris", email = "lewis@arched.dev"}]
   ]
 
 [project.scripts]
-semverbump = "semverbump:main"
+bumpwright = "bumpwright:main"
 
 [project.optional-dependencies]
 test = [
