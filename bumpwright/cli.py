@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import date
 from pathlib import Path
 from typing import Iterable, List
 
@@ -17,6 +18,7 @@ from .compare import Impact, decide_bump, diff_public_api
 from .config import Config, load_config
 from .gitutils import (
     changed_paths,
+    collect_commits,
     last_release_commit,
     list_py_files_at_ref,
     read_file_at_ref,
@@ -334,6 +336,13 @@ def bump_command(args: argparse.Namespace) -> int:
         paths=paths,
         ignore=ignore,
     )
+    changelog: str | None = None
+    if args.changelog is not None:
+        base = last_release_commit() or f"{args.head}^"
+        commits = collect_commits(base, args.head)
+        lines = [f"## [v{vc.new}] - {date.today().isoformat()}"]
+        lines.extend(f"- {sha} {subject}" for sha, subject in commits)
+        changelog = "\n".join(lines) + "\n"
     if args.format == "json":
         print(
             json.dumps(
@@ -351,6 +360,12 @@ def bump_command(args: argparse.Namespace) -> int:
         print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
     if not args.dry_run:
         _commit_tag(str(pyproject), vc.new, args.commit, args.tag)
+    if changelog is not None:
+        if args.changelog == "-":
+            print(changelog, end="")
+        else:
+            with open(args.changelog, "a", encoding="utf-8") as fh:
+                fh.write(changelog)
     return 0
 
 
@@ -460,6 +475,12 @@ def main(argv: list[str] | None = None) -> int:
         "--dry-run",
         action="store_true",
         help="Display the new version without modifying any files.",
+    )
+    p_bump.add_argument(
+        "--changelog",
+        nargs="?",
+        const="-",
+        help="Append release notes to FILE or stdout when no path is given.",
     )
     p_bump.set_defaults(func=bump_command)
 
