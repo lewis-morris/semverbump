@@ -27,7 +27,7 @@ Example configuration showing all available sections and their default values:
    paths = ["migrations"]
 
    [changelog]
-   path = "CHANGELOG.md"
+   path = ""
 
    [version]
    paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/*.py"]
@@ -163,7 +163,7 @@ Changelog
      - str
      - ``""``
      - Default file appended when running ``bumpwright bump`` with
-       ``--changelog`` omitted.
+       ``--changelog`` omitted. Empty string means no default file.
 
 All sections and keys are optional; unspecified values fall back to the
 defaults shown above.

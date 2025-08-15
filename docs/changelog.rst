@@ -8,13 +8,12 @@ notes go and how they are emitted.
 Using ``--changelog``
 ---------------------
 
-``--changelog FILE``
+``--changelog [FILE]``
     Append release notes for the new version to ``FILE``.
+    When ``FILE`` is omitted or set to ``-``, the changelog entry is printed to
+    standard output.
 
-``--changelog``
-    Print the changelog entry to standard output instead of updating a file.
-
-If omitted, no changelog entry is produced.
+If the option is omitted, no changelog entry is produced.
 
 Format
 ------
@@ -43,4 +42,4 @@ Projects can set a default changelog path in ``bumpwright.toml`` so the
 
 With this configuration, running ``bumpwright bump`` automatically appends the
 release notes to ``CHANGELOG.md``. To print to stdout instead, invoke
-``bumpwright bump --changelog``.
+``bumpwright bump --changelog`` (or pass ``--changelog -`` for clarity).
