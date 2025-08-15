@@ -1,3 +1,5 @@
+"""Utility helpers for interacting with git repositories."""
+
 from __future__ import annotations
 
 import shlex

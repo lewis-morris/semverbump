@@ -1,3 +1,4 @@
+"""Sphinx configuration for project documentation."""
 
 from datetime import datetime
 

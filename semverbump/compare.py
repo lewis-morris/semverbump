@@ -1,3 +1,5 @@
+"""Compare public API definitions and suggest version bumps."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

@@ -1,9 +1,14 @@
+"""Helpers for reading and bumping package versions."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
 
-from packaging.version import Version
+try:  # pragma: no cover - needed for linting when dependency missing
+    from packaging.version import Version
+except ModuleNotFoundError as exc:  # pragma: no cover
+    raise RuntimeError("packaging is required for version operations") from exc
 from tomlkit import dumps as toml_dumps
 from tomlkit import parse as toml_parse
 
@@ -64,7 +69,7 @@ def read_project_version(pyproject_path: str | Path = "pyproject.toml") -> str:
         KeyError: If the version field is missing.
     """
 
-    data = toml_parse(Path(pyproject_path).read_text())
+    data = toml_parse(Path(pyproject_path).read_text(encoding="utf-8"))
     try:
         return str(data["project"]["version"])
     except Exception as e:  # pragma: no cover - explicit re-raise for clarity
@@ -85,11 +90,11 @@ def write_project_version(
     """
 
     p = Path(pyproject_path)
-    data = toml_parse(p.read_text())
+    data = toml_parse(p.read_text(encoding="utf-8"))
     if "project" not in data:
         raise KeyError("No [project] table in pyproject.toml")
     data["project"]["version"] = new_version
-    p.write_text(toml_dumps(data))
+    p.write_text(toml_dumps(data), encoding="utf-8")
 
 
 def apply_bump(

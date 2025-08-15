@@ -1,9 +1,14 @@
+"""Integration tests for combining analyzer plugins."""
+
 import os
 import subprocess
 from pathlib import Path
 from typing import List, Set
 
-import pytest
+try:  # pragma: no cover - handled when pytest not installed
+    import pytest
+except ModuleNotFoundError:  # pragma: no cover
+    pytest = None  # type: ignore
 
 from semverbump.analyzers import load_enabled
 from semverbump.compare import Impact
