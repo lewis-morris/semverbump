@@ -21,6 +21,7 @@ class Command:
 
 
 def _is_str(node: ast.AST) -> bool:
+    """Return ``True`` if ``node`` is a constant string."""
     return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
 
@@ -190,6 +191,7 @@ class CLIAnalyzer:
     """Analyzer plugin for command-line interfaces."""
 
     def __init__(self, cfg: Config) -> None:
+        """Initialize the analyzer with configuration."""
         self.cfg = cfg
 
     def collect(self, ref: str) -> Dict[str, Command]:

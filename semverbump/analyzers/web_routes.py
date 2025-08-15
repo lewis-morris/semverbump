@@ -24,6 +24,7 @@ class Route:
 
 
 def _is_const_str(node: ast.AST) -> bool:
+    """Return ``True`` if ``node`` is a constant string."""
     return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
 
@@ -155,6 +156,7 @@ class WebRoutesAnalyzer:
     """Analyzer plugin for web application routes."""
 
     def __init__(self, cfg: Config) -> None:
+        """Initialize the analyzer with configuration."""
         self.cfg = cfg
 
     def collect(self, ref: str) -> Dict[Tuple[str, str], Route]:

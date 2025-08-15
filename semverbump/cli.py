@@ -1,3 +1,5 @@
+"""Command-line interface for semverbump."""
+
 from __future__ import annotations
 
 import argparse
@@ -14,8 +16,17 @@ from .versioning import apply_bump
 
 
 def _build_api_at_ref(ref: str, roots: list[str]) -> PublicAPI:
+    """Collect the public API for ``roots`` at a git reference.
+
+    Args:
+        ref: Git reference to inspect.
+        roots: Project root directories to scan.
+
+    Returns:
+        Mapping of public symbols to signatures.
+    """
+
     api: PublicAPI = {}
-    # Parse all .py files under roots at this ref
     for root in roots:
         for path in sorted(list_py_files_at_ref(ref, [root])):
             code = read_file_at_ref(ref, path)
@@ -26,7 +37,16 @@ def _build_api_at_ref(ref: str, roots: list[str]) -> PublicAPI:
     return api
 
 
-def _format_impacts_text(impacts) -> str:
+def _format_impacts_text(impacts: List[Impact]) -> str:
+    """Render a list of impacts as human-readable text.
+
+    Args:
+        impacts: Detected impacts.
+
+    Returns:
+        Formatted Markdown-style bullet list.
+    """
+
     lines = []
     for i in impacts:
         lines.append(f"- [{i.severity.upper()}] {i.symbol}: {i.reason}")
@@ -34,7 +54,16 @@ def _format_impacts_text(impacts) -> str:
 
 
 def _run_analyzers(base: str, head: str, cfg: Config) -> List[Impact]:
-    """Run enabled analyzer plugins."""
+    """Run enabled analyzer plugins and collect impacts.
+
+    Args:
+        base: Base git reference.
+        head: Head git reference.
+        cfg: Project configuration.
+
+    Returns:
+        List of impacts reported by all analyzers.
+    """
 
     impacts: List[Impact] = []
     for analyzer in load_enabled(cfg):
@@ -44,7 +73,16 @@ def _run_analyzers(base: str, head: str, cfg: Config) -> List[Impact]:
     return impacts
 
 
-def decide_cmd(args) -> int:
+def decide_command(args: argparse.Namespace) -> int:
+    """CLI command to suggest a version bump between two refs.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Process exit code.
+    """
+
     cfg = load_config(args.config)
     old_api = _build_api_at_ref(args.base, cfg.project.public_roots)
     new_api = _build_api_at_ref(args.head, cfg.project.public_roots)
@@ -70,7 +108,16 @@ def decide_cmd(args) -> int:
     return 0
 
 
-def bump_cmd(args) -> int:
+def bump_command(args: argparse.Namespace) -> int:
+    """CLI command to apply a version bump.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Process exit code.
+    """
+
     # If level not provided, compute from base/head
     level = args.level
     if not level:
@@ -101,12 +148,21 @@ def bump_cmd(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Entry point for the ``semverbump`` CLI.
+
+    Args:
+        argv: Optional argument vector.
+
+    Returns:
+        Process exit code.
+    """
+
     avail = ", ".join(available()) or "none"
     parser = argparse.ArgumentParser(
         prog="semverbump",
         description=(
             "Suggest and apply semantic version bumps. Available analyzers: "
-            f"{avail}."
+            f"{avail}.",
         ),
     )
     parser.add_argument(
@@ -123,7 +179,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_decide.add_argument("--head", default="HEAD", help="Head ref (default: HEAD)")
     p_decide.add_argument("--format", choices=["text", "md", "json"], default="text")
-    p_decide.set_defaults(func=decide_cmd)
+    p_decide.set_defaults(func=decide_command)
 
     p_bump = sub.add_parser("bump", help="Apply a bump to pyproject.toml")
     p_bump.add_argument(
@@ -135,10 +191,12 @@ def main(argv: list[str] | None = None) -> int:
     p_bump.add_argument("--head", default="HEAD", help="Head ref (for auto decide)")
     p_bump.add_argument("--pyproject", default="pyproject.toml")
     p_bump.add_argument(
-        "--commit", action="store_true", help="git commit the version change"
+        "--commit",
+        action="store_true",
+        help="git commit the version change",
     )
     p_bump.add_argument("--tag", action="store_true", help="git tag the new version")
-    p_bump.set_defaults(func=bump_cmd)
+    p_bump.set_defaults(func=bump_command)
 
     args = parser.parse_args(argv)
     return args.func(args)
