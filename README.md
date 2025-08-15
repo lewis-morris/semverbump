@@ -102,8 +102,50 @@ and [configuration reference](docs/configuration.rst).
 
 ## Configuration
 
-Only analysers explicitly set to ``true`` run. See ``docs/configuration.rst`` for
-full details. The default file name is ``bumpwright.toml`` but you may specify an
+``bumpwright`` reads settings from ``bumpwright.toml``. If the file or any
+section is missing, built-in defaults apply. A complete configuration file with
+all sections and their default values looks like:
+
+```toml
+[project]
+package = ""
+public_roots = ["."]
+index_file = "pyproject.toml"
+
+[ignore]
+paths = ["tests/**", "examples/**", "scripts/**"]
+
+[rules]
+return_type_change = "minor"  # or "major"
+
+[analyzers]
+cli = false
+web_routes = false
+
+[migrations]
+paths = ["migrations"]
+
+[changelog]
+path = "CHANGELOG.md"
+
+[version]
+paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/*.py"]
+ignore = []
+```
+
+Set an analyser to ``true`` to enable it. Each section configures a different
+aspect of bumpwright:
+
+- **project** – identifies the package, public API roots, and metadata file.
+- **ignore** – glob patterns excluded from analysis.
+- **rules** – maps findings to semantic version levels.
+- **analyzers** – toggles built-in or plugin analysers.
+- **migrations** – directories containing Alembic migration scripts.
+- **changelog** – default changelog file used with ``--changelog``.
+- **version** – files where version strings are read and updated.
+
+See ``docs/configuration.rst`` for in-depth descriptions and additional
+examples. The default file name is ``bumpwright.toml`` but you may specify an
 alternative with ``--config``.
 
 ### Analyser reference
