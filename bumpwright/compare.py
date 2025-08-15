@@ -133,11 +133,14 @@ def decide_bump(impacts: List[Impact], optional:None | str=None) -> Optional[str
 
     Args:
         impacts: Detected impacts from API comparison.
+        optional: optional val
 
     Returns:
         Suggested semantic version bump (``"major"``, ``"minor"``, or ``"patch"``) or
         ``None`` if ``impacts`` is empty.
     """
+    if optional:
+        return optional
 
     if not impacts:
         return None
