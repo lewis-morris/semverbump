@@ -9,7 +9,7 @@ _DEFAULTS = {
     "project": {"package": "", "public_roots": ["."], "index_file": "pyproject.toml"},
     "ignore": {"paths": ["tests/**", "examples/**", "scripts/**"]},
     "rules": {"return_type_change": "minor"},  # or "major"
-    "analyzers": {},
+    "analyzers": {"cli": False},
 }
 
 
