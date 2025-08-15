@@ -5,7 +5,7 @@ import json
 import sys
 from typing import List
 
-from .analyzers import REGISTRY as ANALYZERS
+from .analyzers import available, load_enabled
 from .compare import Impact, decide_bump, diff_public_api
 from .config import Config, load_config
 from .gitutils import list_py_files_at_ref, read_file_at_ref
@@ -37,10 +37,10 @@ def _run_analyzers(base: str, head: str, cfg: Config) -> List[Impact]:
     """Run enabled analyzer plugins."""
 
     impacts: List[Impact] = []
-    for name in cfg.analyzers.enabled:
-        func = ANALYZERS.get(name)
-        if func:
-            impacts.extend(func(base, head, cfg))
+    for analyzer in load_enabled(cfg):
+        old = analyzer.collect(base)
+        new = analyzer.collect(head)
+        impacts.extend(analyzer.compare(old, new))
     return impacts
 
 
@@ -101,8 +101,13 @@ def bump_cmd(args) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    avail = ", ".join(available()) or "none"
     parser = argparse.ArgumentParser(
-        prog="semverbump", description="Suggest and apply semantic version bumps."
+        prog="semverbump",
+        description=(
+            "Suggest and apply semantic version bumps. Available analyzers: "
+            f"{avail}."
+        ),
     )
     parser.add_argument(
         "--config",
