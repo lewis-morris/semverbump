@@ -15,7 +15,7 @@ from typing import Iterable, List
 from .analyzers import available, load_enabled
 from .compare import Impact, decide_bump, diff_public_api
 from .config import Config, load_config
-from .gitutils import list_py_files_at_ref, read_file_at_ref
+from .gitutils import changed_paths, list_py_files_at_ref, read_file_at_ref
 from .public_api import PublicAPI, extract_public_api_from_source, module_name_from_path
 from .versioning import apply_bump, find_pyproject
 
@@ -258,21 +258,17 @@ def bump_command(args: argparse.Namespace) -> int:
 
         $ bumpwright bump --level minor --commit
         Bumped version: 1.2.3 -> 1.3.0 (minor)
+
+    If no relevant files have changed or no API impacts are detected, the
+    command prints ``No version bump needed`` and exits without modifying the
+    project version.
     """
 
     cfg = load_config(args.config)
     # If level not provided, compute from base/head
     level = args.level
-    base = args.base or _infer_base_ref()
+    base = args.base or (_infer_base_ref() if not level else "HEAD^")
     head = args.head
-    if not level:
-        old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
-        new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
-        impacts = diff_public_api(
-            old_api, new_api, return_type_change=cfg.rules.return_type_change
-        )
-        impacts.extend(_run_analyzers(base, head, cfg))
-        level = decide_bump(impacts)
 
     try:
         pyproject = _resolve_pyproject(args.pyproject)
@@ -281,6 +277,33 @@ def bump_command(args: argparse.Namespace) -> int:
         return 1
 
     paths = args.version_path or cfg.version.paths
+    version_files = {p for p in paths if not any(ch in p for ch in "*?[")}
+
+    try:
+        changed = changed_paths(base, head)
+    except Exception:  # git diff may fail on initial commit
+        changed = None
+
+    if changed is not None:
+        filtered = {
+            p for p in changed if p != Path(pyproject).name and p not in version_files
+        }
+        if not filtered:
+            print("No version bump needed")
+            return 0
+
+    if not level:
+        old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
+        new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
+        impacts = diff_public_api(
+            old_api, new_api, return_type_change=cfg.rules.return_type_change
+        )
+        impacts.extend(_run_analyzers(base, head, cfg))
+        level = decide_bump(impacts)
+        if level is None:
+            print("No version bump needed")
+            return 0
+
     ignore = args.version_ignore or cfg.version.ignore
     vc = apply_bump(
         level,
@@ -326,18 +349,16 @@ def auto_command(args: argparse.Namespace) -> int:
           "old_version": "1.2.3",
           "new_version": "1.2.4"
         }
+
+    If no relevant files have changed or no API impacts are detected, the
+    command prints ``No version bump needed`` and exits without modifying the
+    project version.
     """
 
     base = args.base or _infer_base_ref()
     head = args.head
     cfg = load_config(args.config)
-    old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
-    new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
-    impacts = diff_public_api(
-        old_api, new_api, return_type_change=cfg.rules.return_type_change
-    )
-    impacts.extend(_run_analyzers(base, head, cfg))
-    level = decide_bump(impacts)
+
     try:
         pyproject = _resolve_pyproject(args.pyproject)
     except FileNotFoundError as exc:
@@ -345,6 +366,32 @@ def auto_command(args: argparse.Namespace) -> int:
         return 1
 
     paths = args.version_path or cfg.version.paths
+    version_files = {p for p in paths if not any(ch in p for ch in "*?[")}
+
+    try:
+        changed = changed_paths(base, head)
+    except Exception:  # git diff may fail on initial commit
+        changed = None
+
+    if changed is not None:
+        filtered = {
+            p for p in changed if p != Path(pyproject).name and p not in version_files
+        }
+        if not filtered:
+            print("No version bump needed")
+            return 0
+
+    old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
+    new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
+    impacts = diff_public_api(
+        old_api, new_api, return_type_change=cfg.rules.return_type_change
+    )
+    impacts.extend(_run_analyzers(base, head, cfg))
+    level = decide_bump(impacts)
+    if level is None:
+        print("No version bump needed")
+        return 0
+
     ignore = args.version_ignore or cfg.version.ignore
     vc = apply_bump(
         level,
