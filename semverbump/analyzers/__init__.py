@@ -18,4 +18,4 @@ def register(name: str, func: Analyzer) -> None:
 
 
 # Import built-in analyzers for registration side-effects
-from . import web_routes  # noqa: F401,E402
+from . import cli, web_routes  # noqa: F401,E402

@@ -1,0 +1,194 @@
+"""CLI analyzer for argparse and click based applications."""
+
+from __future__ import annotations
+
+import ast
+from dataclasses import dataclass
+from typing import Dict, Iterable, List
+
+from ..compare import Impact
+from ..config import Config
+from ..gitutils import list_py_files_at_ref, read_file_at_ref
+from . import register
+
+
+@dataclass(frozen=True)
+class Command:
+    """Represent a CLI command and its options."""
+
+    name: str
+    options: Dict[str, bool]  # True if required
+
+
+def _is_str(node: ast.AST) -> bool:
+    return isinstance(node, ast.Constant) and isinstance(node.value, str)
+
+
+def _extract_click(node: ast.FunctionDef) -> Command | None:
+    """Extract click command metadata from a function definition."""
+
+    cmd_name: str | None = None
+    options: Dict[str, bool] = {}
+    is_click = False
+
+    for deco in node.decorator_list:
+        if isinstance(deco, ast.Call) and isinstance(deco.func, ast.Attribute):
+            attr = deco.func
+            if (
+                isinstance(attr.value, ast.Name)
+                and attr.value.id == "click"
+                and attr.attr in {"command", "group"}
+            ):
+                is_click = True
+                for kw in deco.keywords:
+                    if kw.arg == "name" and _is_str(kw.value):
+                        cmd_name = kw.value.value  # type: ignore[assignment]
+            elif (
+                isinstance(attr.value, ast.Name)
+                and attr.value.id == "click"
+                and attr.attr == "option"
+            ):
+                name: str | None = None
+                required = False
+                for arg in deco.args:
+                    if _is_str(arg) and arg.value.startswith("--"):
+                        name = arg.value
+                        break
+                for kw in deco.keywords:
+                    if kw.arg == "required" and isinstance(kw.value, ast.Constant):
+                        required = bool(kw.value.value)
+                if name:
+                    options[name] = required
+            elif (
+                isinstance(attr.value, ast.Name)
+                and attr.value.id == "click"
+                and attr.attr == "argument"
+            ):
+                if deco.args and _is_str(deco.args[0]):
+                    name = deco.args[0].value  # type: ignore[assignment]
+                    required = True
+                    for kw in deco.keywords:
+                        if kw.arg == "required" and isinstance(kw.value, ast.Constant):
+                            required = bool(kw.value.value)
+                    options[name] = required
+    if is_click:
+        if not cmd_name:
+            cmd_name = node.name
+        return Command(cmd_name, options)
+    return None
+
+
+def _extract_argparse(tree: ast.AST) -> Dict[str, Command]:
+    """Extract argparse commands from AST."""
+
+    commands: Dict[str, Command] = {}
+    parsers: Dict[str, str] = {}
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign):
+            if isinstance(node.value, ast.Call) and isinstance(
+                node.value.func, ast.Attribute
+            ):
+                attr = node.value.func
+                if (
+                    attr.attr == "add_parser"
+                    and node.value.args
+                    and _is_str(node.value.args[0])
+                ):
+                    cmd_name = node.value.args[0].value  # type: ignore[assignment]
+                    for target in node.targets:
+                        if isinstance(target, ast.Name):
+                            parsers[target.id] = cmd_name
+                            commands[cmd_name] = Command(cmd_name, {})
+        elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+            if (
+                node.func.attr == "add_argument"
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id in parsers
+            ):
+                parser_name = parsers[node.func.value.id]
+                cmd = commands[parser_name]
+                name: str | None = None
+                required = False
+                for arg in node.args:
+                    if _is_str(arg):
+                        if arg.value.startswith("--"):
+                            if name is None or not name.startswith("--"):
+                                name = arg.value
+                        elif name is None:
+                            name = arg.value
+                            required = True
+                for kw in node.keywords:
+                    if kw.arg == "required" and isinstance(kw.value, ast.Constant):
+                        required = bool(kw.value.value)
+                    if kw.arg == "nargs" and isinstance(kw.value, ast.Constant):
+                        if kw.value.value in ("?", "*"):
+                            required = False
+                if name:
+                    cmd.options[name] = required
+    return commands
+
+
+def extract_cli_from_source(code: str) -> Dict[str, Command]:
+    """Extract command definitions from source code."""
+
+    tree = ast.parse(code)
+    commands: Dict[str, Command] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef):
+            cmd = _extract_click(node)
+            if cmd:
+                commands[cmd.name] = cmd
+    commands.update(_extract_argparse(tree))
+    return commands
+
+
+def diff_cli(old: Dict[str, Command], new: Dict[str, Command]) -> List[Impact]:
+    """Compare CLI definitions and compute impacts."""
+
+    impacts: List[Impact] = []
+    for name in old.keys() - new.keys():
+        impacts.append(Impact("major", name, "Removed command"))
+    for name in new.keys() - old.keys():
+        impacts.append(Impact("minor", name, "Added command"))
+    for name in old.keys() & new.keys():
+        op = old[name].options
+        np = new[name].options
+        for opt in op.keys() - np.keys():
+            severity = "major" if op[opt] else "minor"
+            reason = "Removed required option" if op[opt] else "Removed optional option"
+            impacts.append(Impact(severity, name, f"{reason} '{opt}'"))
+        for opt in np.keys() - op.keys():
+            severity = "major" if np[opt] else "minor"
+            reason = "Added required option" if np[opt] else "Added optional option"
+            impacts.append(Impact(severity, name, f"{reason} '{opt}'"))
+        for opt in op.keys() & np.keys():
+            if op[opt] and not np[opt]:
+                impacts.append(Impact("minor", name, f"Option '{opt}' became optional"))
+            if not op[opt] and np[opt]:
+                impacts.append(Impact("major", name, f"Option '{opt}' became required"))
+    return impacts
+
+
+def _build_cli_at_ref(ref: str, roots: Iterable[str]) -> Dict[str, Command]:
+    """Collect commands for all modules at a git ref."""
+
+    out: Dict[str, Command] = {}
+    for root in roots:
+        for path in list_py_files_at_ref(ref, [root]):
+            code = read_file_at_ref(ref, path)
+            if code is None:
+                continue
+            out.update(extract_cli_from_source(code))
+    return out
+
+
+def analyze(base: str, head: str, cfg: Config) -> List[Impact]:
+    """Analyzer entry point used by the plugin registry."""
+
+    old = _build_cli_at_ref(base, cfg.project.public_roots)
+    new = _build_cli_at_ref(head, cfg.project.public_roots)
+    return diff_cli(old, new)
+
+
+register("cli", analyze)
