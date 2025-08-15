@@ -125,6 +125,8 @@ def _extract_argparse(tree: ast.AST) -> Dict[str, Command]:
                     if kw.arg == "nargs" and isinstance(kw.value, ast.Constant):
                         if kw.value.value in ("?", "*"):
                             required = False
+                        if kw.value.value == "+":
+                            required = True
                 if name:
                     cmd.options[name] = required
     return commands

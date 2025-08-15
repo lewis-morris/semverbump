@@ -80,6 +80,29 @@ def cli(name):
     assert any(i.severity == "major" for i in impacts)
 
 
+def test_argparse_nargs_plus_major():
+    old = _build(
+        """
+import argparse
+parser = argparse.ArgumentParser()
+sub = parser.add_subparsers()
+p_run = sub.add_parser('run')
+p_run.add_argument('--files')
+"""
+    )
+    new = _build(
+        """
+import argparse
+parser = argparse.ArgumentParser()
+sub = parser.add_subparsers()
+p_run = sub.add_parser('run')
+p_run.add_argument('--files', nargs='+')
+"""
+    )
+    impacts = diff_cli(old, new)
+    assert any(i.severity == "major" for i in impacts)
+
+
 def _run(cmd: list[str], cwd: Path) -> str:
     res = subprocess.run(cmd, cwd=cwd, check=True, stdout=subprocess.PIPE, text=True)
     return res.stdout.strip()
