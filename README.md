@@ -35,6 +35,9 @@ pip install semverbump
    - [MINOR] cli.new_command: added CLI entry 'greet'
    ```
 
+    If ``--base`` is omitted, the command compares the current commit to its
+    immediate parent (``HEAD^``).
+
    Use ``--format text`` for plain output or ``--format json`` for
    machine-readable results.
 

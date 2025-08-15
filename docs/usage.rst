@@ -21,7 +21,7 @@ Compare two git references and report the semantic version level they require.
 
 ``--base BASE``
     Base git reference to compare against, for example ``origin/main``.
-    Required.
+    Defaults to the previous commit (``HEAD^``).
 
 ``--head HEAD``
     Head git reference. Defaults to ``HEAD``.
@@ -40,6 +40,9 @@ Compare two git references and report the semantic version level they require.
 
    **semverbump** suggests: `minor`
    - [MINOR] cli.new_command: added CLI entry 'greet'
+
+Running ``semverbump decide`` without ``--base`` compares the current commit
+against its parent (``HEAD^``).
 
 ``bump`` – apply a bump
 -----------------------

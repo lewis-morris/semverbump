@@ -1,0 +1,34 @@
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+from tests.test_cli_auto import _run, _setup_repo
+
+
+def test_decide_defaults_to_previous_commit(tmp_path: Path) -> None:
+    repo, pkg, _ = _setup_repo(tmp_path)
+
+    (pkg / "extra.py").write_text("def bar() -> int:\n    return 2\n", encoding="utf-8")
+    _run(["git", "add", "pkg/extra.py"], repo)
+    _run(["git", "commit", "-m", "feat: add bar"], repo)
+
+    res = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "semverbump.cli",
+            "decide",
+            "--format",
+            "json",
+        ],
+        cwd=repo,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+        env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
+    )
+
+    data = json.loads(res.stdout)
+    assert data["level"] == "minor"
