@@ -23,4 +23,4 @@ sections with defaults shown:
    [migrations]
    paths = ["migrations"]
 
-Enable an analyzer by setting its value to ``true`` under ``[analyzers]``.
+Enable an analyser by setting its value to ``true`` under ``[analyzers]``.

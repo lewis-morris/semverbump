@@ -3,11 +3,11 @@
 Keep your project's version numbers honest by inspecting public interfaces and
 recommending the next semantic version. It can even apply the bump for you.
 
-## Why semverbump
+## Why Bumpwright
 
 Semantic versioning only works when releases accurately reflect the impact of
 code changes. Manually tracking public interfaces across a project is tedious
-and error-prone. **semverbump** automates this process by scanning source code
+and error-prone. **Bumpwright** automates this process by scanning source code
 for API changes and recommending the appropriate version bump.
 
 Design goals include:
@@ -23,6 +23,8 @@ Design goals include:
 - Static diff of the public API to highlight breaking changes.
 - Pluggable analysers for command-line tools, web routes and database
   migrations.
+- Dry-run mode to preview version bumps without touching any files.
+- Output in plain text, Markdown or JSON for easy integration.
 - Optional helpers to update version numbers across common files and tag the release.
 
 ## Installation
@@ -49,22 +51,22 @@ pip install bumpwright
 2. **Suggest the next version** between two git references:
 
    ```console
-   $ semverbump decide --base origin/main --head HEAD --format text
-   semverbump suggests: minor
+   $ bumpwright decide --base origin/main --head HEAD --format text
+   bumpwright suggests: minor
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
    ```
 
    ```console
-   $ semverbump decide --base origin/main --head HEAD --format md
-   **semverbump** suggests: `minor`
+   $ bumpwright decide --base origin/main --head HEAD --format md
+   **bumpwright** suggests: `minor`
 
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
    ```
 
    ```console
-   $ semverbump decide --base origin/main --head HEAD --format json
+   $ bumpwright decide --base origin/main --head HEAD --format json
    {"level": "minor", "changes": [{"severity": "minor", "symbol": "cli.new_command", "description": "added CLI entry 'greet'"}]}
    ```
 
@@ -84,8 +86,8 @@ pip install bumpwright
 4. **Run everything in one step** with automatic bumping and tagging:
 
    ```console
-   $ semverbump auto --base origin/main --commit --tag --pyproject pyproject.toml
-   **semverbump** suggests: `minor`
+   $ bumpwright auto --base origin/main --commit --tag --pyproject pyproject.toml
+   **bumpwright** suggests: `minor`
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
    Bumped version: 1.2.3 -> 1.3.0 (minor)
