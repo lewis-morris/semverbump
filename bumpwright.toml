@@ -1,0 +1,13 @@
+[project]
+package = "bumpwright"
+public_roots = ["./bumpwright/"]
+index_file = "pyproject.toml"
+
+[ignore]
+paths = ["tests/**", "docs/**", "build/**", ".venv/**"]
+
+[rules]
+return_type_change = "minor"  # or "major"
+
+[analyzers]
+cli = true
