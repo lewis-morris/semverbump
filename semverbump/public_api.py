@@ -1,10 +1,15 @@
+"""Extract and represent a package's public API using LibCST."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-import libcst as cst
+try:  # pragma: no cover - needed for linting when dependency missing
+    import libcst as cst
+except ModuleNotFoundError as exc:  # pragma: no cover
+    raise RuntimeError("libcst is required to analyze public APIs") from exc
 
 # --------- Data model ---------
 
@@ -150,7 +155,9 @@ class _APIVisitor(cst.CSTVisitor):
         self.exports = exports
         self.sigs: List[FuncSig] = []
 
-    def visit_FunctionDef(self, node: cst.FunctionDef) -> None:  # noqa: D401
+    def visit_FunctionDef(
+        self, node: cst.FunctionDef
+    ) -> None:  # noqa: D401  # pylint: disable=invalid-name
         """Collect function definitions."""
 
         fn = node.name.value
@@ -162,7 +169,9 @@ class _APIVisitor(cst.CSTVisitor):
         ret = _render_type(node.returns)
         self.sigs.append(FuncSig(f"{self.module_name}:{fn}", params, ret))
 
-    def visit_ClassDef(self, node: cst.ClassDef) -> None:  # noqa: D401
+    def visit_ClassDef(
+        self, node: cst.ClassDef
+    ) -> None:  # noqa: D401  # pylint: disable=invalid-name
         """Collect method signatures from public classes."""
 
         cname = node.name.value

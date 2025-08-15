@@ -1,3 +1,5 @@
+"""Load and represent ``semverbump`` configuration files."""
+
 from __future__ import annotations
 
 try:  # pragma: no cover - exercised in Python <3.11 tests
@@ -99,7 +101,7 @@ def load_config(path: str | Path = "semverbump.toml") -> Config:
     if not p.exists():
         d = _merge_defaults({})
     else:
-        d = _merge_defaults(tomllib.loads(p.read_text()))
+        d = _merge_defaults(tomllib.loads(p.read_text(encoding="utf-8")))
     proj = Project(**d["project"])
     rules = Rules(**d["rules"])
     ign = Ignore(**d["ignore"])

@@ -1,7 +1,12 @@
+"""Tests for the migrations analyzer."""
+
 import subprocess
 from pathlib import Path
 
-import pytest
+try:  # pragma: no cover - handled when pytest not installed
+    import pytest
+except ModuleNotFoundError:  # pragma: no cover
+    pytest = None  # type: ignore
 
 from semverbump.analyzers.migrations import analyze_migrations
 from semverbump.config import Migrations
@@ -37,6 +42,8 @@ def _baseline(repo: Path) -> str:
 
 
 def test_add_nullable_column_minor(repo: Path) -> None:
+    """Adding a nullable column should be minor."""
+
     base = _baseline(repo)
     head = _commit_migration(
         repo,
@@ -54,6 +61,8 @@ def upgrade():
 
 
 def test_drop_column_major(repo: Path) -> None:
+    """Dropping a column should be major."""
+
     base = _baseline(repo)
     head = _commit_migration(
         repo,
@@ -70,6 +79,8 @@ def upgrade():
 
 
 def test_add_non_nullable_no_default_major(repo: Path) -> None:
+    """Adding a non-nullable column without default is major."""
+
     base = _baseline(repo)
     head = _commit_migration(
         repo,
@@ -87,6 +98,8 @@ def upgrade():
 
 
 def test_create_index_minor(repo: Path) -> None:
+    """Creating an index is considered a minor change."""
+
     base = _baseline(repo)
     head = _commit_migration(
         repo,

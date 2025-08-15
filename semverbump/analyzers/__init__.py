@@ -1,4 +1,4 @@
-"""Analyzer plugin registry."""
+"""Analyzer plugin registry and utilities."""
 
 from __future__ import annotations
 
@@ -54,7 +54,11 @@ def available() -> List[str]:
 
 
 # Import built-in analyzers for registration side-effects
-from . import cli, web_routes  # noqa: F401,E402
+# isort: off
+# fmt: off
+from . import cli, web_routes  # noqa: F401,E402  # pylint: disable=wrong-import-position
+# fmt: on
+# isort: on
 
 __all__ = [
     "Analyzer",
