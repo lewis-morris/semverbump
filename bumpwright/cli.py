@@ -186,6 +186,45 @@ def _resolve_pyproject(path: str) -> Path:
     raise FileNotFoundError(f"pyproject.toml not found at {path}")
 
 
+def init_command(args: argparse.Namespace) -> int:
+    """CLI command to create an empty baseline release commit.
+
+    This command records an empty ``chore(release): initialize baseline`` commit
+    so that subsequent invocations of :func:`last_release_commit` have a
+    reference point. It is typically run once when integrating bumpwright into a
+    project that lacks prior release commits.
+
+    Args:
+        args: Parsed command-line arguments (unused).
+
+    Returns:
+        Process exit code.
+
+    Examples:
+        >>> init_command(argparse.Namespace())  # doctest: +SKIP
+        0
+    """
+
+    if last_release_commit() is not None:
+        print("Baseline already initialized.")
+        return 0
+
+    import subprocess
+
+    subprocess.run(
+        [
+            "git",
+            "commit",
+            "--allow-empty",
+            "-m",
+            "chore(release): initialize baseline",
+        ],
+        check=True,
+    )
+    print("Created baseline release commit.")
+    return 0
+
+
 def decide_command(args: argparse.Namespace) -> int:
     """CLI command to suggest a version bump between two refs.
 
@@ -392,6 +431,16 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     sub = parser.add_subparsers(dest="cmd")
+
+    p_init = sub.add_parser(
+        "init",
+        help="Create baseline release commit",
+        description=(
+            "Create an empty 'chore(release): initialize baseline' commit to "
+            "establish a comparison point for future bumps."
+        ),
+    )
+    p_init.set_defaults(func=init_command)
 
     p_decide = sub.add_parser(
         "decide",

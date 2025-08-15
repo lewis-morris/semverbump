@@ -1,11 +1,11 @@
 Usage
 =====
 
-The ``bumpwright`` command-line interface provides two subcommands to help
-manage project versions based on public API changes. By default, both
-subcommands compare the current commit against the last release commit, or the
-previous commit (``HEAD^``) when no release exists. This section explains each
-command, its arguments, and expected outputs.
+The ``bumpwright`` command-line interface provides three subcommands to help
+manage project versions based on public API changes. By default, the
+``decide`` and ``bump`` subcommands compare the current commit against the last
+release commit, or the previous commit (``HEAD^``) when no release exists. This
+section explains each command, its arguments, and expected outputs.
 
 Global options
 --------------
@@ -13,6 +13,20 @@ Global options
 ``--config``
     Path to the configuration file. Defaults to ``bumpwright.toml`` in the
     current working directory.
+
+``init`` – create a baseline
+---------------------------
+
+Record an empty ``chore(release): initialize baseline`` commit so future runs
+of bumpwright have a starting point for comparisons. Run this once when first
+adopting bumpwright or after importing an existing project without prior
+release commits.
+
+**Examples**
+
+.. code-block:: console
+
+   bumpwright init
 
 ``decide`` – suggest a bump
 ---------------------------
