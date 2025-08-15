@@ -128,7 +128,7 @@ def diff_public_api(
     return impacts
 
 
-def decide_bump(impacts: List[Impact]) -> Optional[str]:
+def decide_bump(impacts: List[Impact], optional:None | str=None) -> Optional[str]:
     """Determine the bump level from a list of impacts.
 
     Args:
