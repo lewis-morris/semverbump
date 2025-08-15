@@ -13,6 +13,23 @@ Enable optional analyzers in ``bumpwright.toml``:
    [migrations]
    paths = ["migrations"]
 
+Plugin utilities
+----------------
+
+The :mod:`bumpwright.analyzers` module provides helpers for managing
+analyzer plugins. Plugins register themselves via
+``bumpwright.analyzers.register`` and can be introspected using
+``available`` and ``get``.
+
+.. code-block:: python
+
+   from bumpwright.analyzers import available, get, register
+
+Attempting to register a plugin with a duplicate name raises
+``AnalyzerRegistrationError``. ``get`` returns the analyzer class for a
+given name and raises ``AnalyzerNotFoundError`` if the analyzer is not
+registered.
+
 CLI Analyzer
 ------------
 
