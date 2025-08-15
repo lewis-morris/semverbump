@@ -87,6 +87,10 @@ Update version information in ``pyproject.toml`` and other files.
 ``--head HEAD``
     Head git reference. Defaults to ``HEAD``.
 
+``--format {text,md,json}``
+    Output style. ``text`` prints plain console output, ``md`` emits Markdown,
+    and ``json`` produces machine-readable data. Defaults to ``text``.
+
 ``--pyproject PATH``
     Path to the project's ``pyproject.toml`` file. Defaults to
     ``pyproject.toml``.
