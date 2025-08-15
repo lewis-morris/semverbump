@@ -35,6 +35,17 @@ the change.
 If ``--level`` is omitted, provide ``--base`` and ``--head`` and the command
 will automatically decide in the same fashion as ``decide``.
 
+Automatic bump
+--------------
+
+To decide and apply the bump in a single step, use the ``auto`` command. When
+``--base`` is omitted, the current branch's upstream is used as the comparison
+reference.
+
+.. code-block:: console
+
+   semverbump auto --commit --tag
+
 Full workflow
 -------------
 
@@ -45,8 +56,7 @@ A typical release sequence might look like this:
    git checkout -b feature/amazing-change
    # edit code
    git commit -am "feat: add amazing change"
-   semverbump decide --base origin/main --head HEAD --format md
-   semverbump bump --level minor --commit --tag
+   semverbump auto --commit --tag
    git push --follow-tags origin HEAD
 
 Both commands read configuration from ``semverbump.toml`` by default. Use

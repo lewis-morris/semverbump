@@ -78,6 +78,52 @@ def _run_analyzers(base: str, head: str, cfg: Config) -> List[Impact]:
     return impacts
 
 
+def _infer_base_ref() -> str:
+    """Determine the upstream git reference for the current branch.
+
+    Returns:
+        Git reference of the upstream branch. Falls back to ``origin/HEAD`` if
+        no upstream is configured.
+    """
+
+    import subprocess
+
+    try:
+        res = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
+            check=True,
+            stdout=subprocess.PIPE,
+            text=True,
+        )
+        return res.stdout.strip()
+    except subprocess.CalledProcessError:
+        return "origin/HEAD"
+
+
+def _commit_tag(pyproject: str, version: str, commit: bool, tag: bool) -> None:
+    """Optionally commit and tag the updated version.
+
+    Args:
+        pyproject: Path to the ``pyproject.toml`` file.
+        version: New version string applied.
+        commit: Whether to create a git commit.
+        tag: Whether to create a git tag.
+    """
+
+    if not (commit or tag):
+        return
+
+    import subprocess
+
+    if commit:
+        subprocess.run(["git", "add", pyproject], check=True)
+        subprocess.run(
+            ["git", "commit", "-m", f"chore(release): {version}"], check=True
+        )
+    if tag:
+        subprocess.run(["git", "tag", f"v{version}"], check=True)
+
+
 def decide_command(args: argparse.Namespace) -> int:
     """CLI command to suggest a version bump between two refs.
 
@@ -125,34 +171,69 @@ def bump_command(args: argparse.Namespace) -> int:
 
     # If level not provided, compute from base/head
     level = args.level
+    base = args.base or _infer_base_ref()
+    head = args.head
     if not level:
         cfg = load_config(args.config)
-        old_api = _build_api_at_ref(
-            args.base, cfg.project.public_roots, cfg.ignore.paths
-        )
-        new_api = _build_api_at_ref(
-            args.head, cfg.project.public_roots, cfg.ignore.paths
-        )
+        old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
+        new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
         impacts = diff_public_api(
             old_api, new_api, return_type_change=cfg.rules.return_type_change
         )
-        impacts.extend(_run_analyzers(args.base, args.head, cfg))
+        impacts.extend(_run_analyzers(base, head, cfg))
         level = decide_bump(impacts)
 
     vc = apply_bump(level, pyproject_path=args.pyproject)
     print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
-    if args.commit or args.tag:
-        import subprocess
+    _commit_tag(args.pyproject, vc.new, args.commit, args.tag)
+    return 0
 
-        # Commit
-        if args.commit:
-            subprocess.run(["git", "add", args.pyproject], check=True)
-            subprocess.run(
-                ["git", "commit", "-m", f"chore(release): {vc.new}"], check=True
+
+def auto_command(args: argparse.Namespace) -> int:
+    """CLI command to decide and apply a version bump in one step.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Process exit code.
+    """
+
+    base = args.base or _infer_base_ref()
+    head = args.head
+    cfg = load_config(args.config)
+    old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
+    new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
+    impacts = diff_public_api(
+        old_api, new_api, return_type_change=cfg.rules.return_type_change
+    )
+    impacts.extend(_run_analyzers(base, head, cfg))
+    level = decide_bump(impacts)
+    vc = apply_bump(level, pyproject_path=args.pyproject)
+
+    if args.format == "json":
+        print(
+            json.dumps(
+                {
+                    "level": level,
+                    "impacts": [i.__dict__ for i in impacts],
+                    "old_version": vc.old,
+                    "new_version": vc.new,
+                },
+                indent=2,
             )
-        # Tag
-        if args.tag:
-            subprocess.run(["git", "tag", f"v{vc.new}"], check=True)
+        )
+    elif args.format == "md":
+        print(f"**semverbump** suggests: `{level}`\n")
+        print(_format_impacts_text(impacts))
+        print()
+        print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
+    else:
+        print(f"Suggested bump: {level}")
+        print(_format_impacts_text(impacts))
+        print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
+
+    _commit_tag(args.pyproject, vc.new, args.commit, args.tag)
     return 0
 
 
@@ -195,8 +276,11 @@ def main(argv: list[str] | None = None) -> int:
         choices=["major", "minor", "patch"],
         help="Bump level; if omitted, auto-decide from refs",
     )
-    p_bump.add_argument("--base", help="Base ref (for auto decide)")
-    p_bump.add_argument("--head", default="HEAD", help="Head ref (for auto decide)")
+    p_bump.add_argument(
+        "--base",
+        help="Base ref (defaults to upstream of HEAD when --level omitted)",
+    )
+    p_bump.add_argument("--head", default="HEAD", help="Head ref (default: HEAD)")
     p_bump.add_argument("--pyproject", default="pyproject.toml")
     p_bump.add_argument(
         "--commit",
@@ -205,6 +289,24 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_bump.add_argument("--tag", action="store_true", help="git tag the new version")
     p_bump.set_defaults(func=bump_command)
+
+    p_auto = sub.add_parser(
+        "auto", help="Decide and apply bump, committing and tagging optionally"
+    )
+    p_auto.add_argument(
+        "--base",
+        help="Base ref (defaults to upstream of HEAD)",
+    )
+    p_auto.add_argument("--head", default="HEAD", help="Head ref (default: HEAD)")
+    p_auto.add_argument("--format", choices=["text", "md", "json"], default="text")
+    p_auto.add_argument("--pyproject", default="pyproject.toml")
+    p_auto.add_argument(
+        "--commit",
+        action="store_true",
+        help="git commit the version change",
+    )
+    p_auto.add_argument("--tag", action="store_true", help="git tag the new version")
+    p_auto.set_defaults(func=auto_command)
 
     args = parser.parse_args(argv)
     return args.func(args)

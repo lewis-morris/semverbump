@@ -48,6 +48,19 @@ pip install semverbump
    Omitting ``--level`` triggers an automatic decision using ``--base`` and
    ``--head`` in the same manner as the ``decide`` command.
 
+4. **Run everything in one step** and let semverbump infer the base reference:
+
+   ```console
+   $ semverbump auto --commit --tag
+   **semverbump** suggests: `minor`
+
+   - [MINOR] cli.new_command: added CLI entry 'greet'
+   Bumped version: 1.2.3 -> 1.3.0 (minor)
+   ```
+
+   When ``--base`` is omitted, the command uses the current branch's upstream
+   as the comparison reference.
+
 ## Configuration
 
 Only analysers explicitly set to ``true`` run. See ``docs/configuration.rst`` for
