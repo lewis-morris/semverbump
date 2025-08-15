@@ -23,8 +23,16 @@ PublicAPI = Dict[str, FuncSig]   # symbol -> function signature (functions & met
 
 # --------- Helpers ---------
 
-def _render(node: Optional[cst.CSTNode]) -> Optional[str]:
+def _render_expr(node: cst.CSTNode | None) -> str | None:
+    """Render arbitrary expressions (defaults, etc.)."""
     return cst.Module([]).code_for_node(node) if node is not None else None
+
+def _render_type(ann: cst.Annotation | None) -> str | None:
+    """Safely render type annotations (params & returns)."""
+    if ann is None:
+        return None
+    # LibCST’s Annotation needs its inner expression rendered, not the wrapper.
+    return cst.Module([]).code_for_node(ann.annotation)
 
 def _parse_exports(mod: cst.Module) -> Optional[set[str]]:
     # Honor simple __all__ = ["name", "name2"] at module top level
@@ -49,17 +57,22 @@ def _parse_exports(mod: cst.Module) -> Optional[set[str]]:
 def _param_list(params: cst.Parameters) -> List[Param]:
     out: List[Param] = []
     def _def(p: cst.Param) -> Optional[str]:
-        return _render(p.default) if p.default else None
+        return _render_expr(p.default) if p.default else None
     def _ann(p: cst.Param) -> Optional[str]:
-        return _render(p.annotation) if p.annotation else None
+        return _render_type(p.annotation) if p.annotation else None
 
     for p in params.posonly_params:
         out.append(Param(p.name.value, "posonly", _def(p), _ann(p)))
     for p in params.params:
         out.append(Param(p.name.value, "pos", _def(p), _ann(p)))
-    if params.star_arg:
-        p = params.star_arg
-        out.append(Param(p.name.value, "vararg", None, _ann(p)))
+    # *args or bare * (keyword-only marker)
+    sa = params.star_arg
+    if isinstance(sa, cst.Param):
+        # real vararg like *args
+        out.append(Param(sa.name.value, "vararg", None, _ann(sa)))
+    else:
+        # bare "*" (no vararg) — just a marker; nothing to add
+        pass
     for p in params.kwonly_params:
         out.append(Param(p.name.value, "kwonly", _def(p), _ann(p)))
     if params.star_kwarg:
@@ -85,7 +98,7 @@ class _APIVisitor(cst.CSTVisitor):
         if not _is_public(fn):
             return
         params = tuple(_param_list(node.params))
-        ret = _render(node.returns)
+        ret = _render_type(node.returns)
         self.sigs.append(FuncSig(f"{self.module_name}:{fn}", params, ret))
 
     def visit_ClassDef(self, node: cst.ClassDef) -> None:
@@ -104,7 +117,7 @@ class _APIVisitor(cst.CSTVisitor):
                 if not _is_public(mname):
                     continue
                 params = tuple(_param_list(elt.params))
-                ret = _render(elt.returns)
+                ret = _render_type(elt.returns)
                 self.sigs.append(FuncSig(f"{self.module_name}:{cname}.{mname}", params, ret))
 
 def module_name_from_path(root: str, path: str) -> str:
