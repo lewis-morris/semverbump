@@ -194,8 +194,8 @@ def decide_command(args: argparse.Namespace) -> int:
         Process exit code.
 
     Examples:
-        Compare the current commit to its parent (default ``--base`` is
-        ``HEAD^``) and display Markdown output:
+        Compare the current commit to its parent (default ``--base`` is the last
+        release commit or ``HEAD^``) and display Markdown output:
 
         $ bumpwright decide --format md
         **bumpwright** suggests: `patch`
@@ -247,8 +247,8 @@ def bump_command(args: argparse.Namespace) -> int:
     """CLI command to apply a version bump.
 
     If ``--level`` is not specified, the bump level is inferred by comparing
-    ``--base`` (defaults to the upstream of ``HEAD``) and ``--head`` (defaults
-    to ``HEAD``).
+    ``--base`` (defaults to the last release commit or the previous commit
+    ``HEAD^``) and ``--head`` (defaults to ``HEAD``).
 
     Args:
         args: Parsed command-line arguments.
@@ -257,7 +257,7 @@ def bump_command(args: argparse.Namespace) -> int:
         Process exit code.
 
     Examples:
-        Dry-run the inferred bump against the upstream branch:
+        Dry-run the inferred bump against the previous commit:
 
         $ bumpwright bump --dry-run
         Bumped version: 1.2.3 -> 1.2.4 (patch)
@@ -289,7 +289,7 @@ def bump_command(args: argparse.Namespace) -> int:
     elif level:
         base = "HEAD^"
     else:
-        base = last_release_commit() or _infer_base_ref()
+        base = last_release_commit() or "HEAD^"
     head = args.head
 
     try:
@@ -385,9 +385,9 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_decide.add_argument(
         "--base",
-        default="HEAD^",
         help=(
-            "Base git reference to compare against. Defaults to the previous commit (HEAD^)."
+            "Base git reference to compare against. Defaults to the last release commit "
+            "or the previous commit (HEAD^)."
         ),
     )
     p_decide.add_argument(
@@ -415,7 +415,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_bump.add_argument(
         "--base",
-        help="Base git reference when auto-deciding the level (uses upstream of HEAD by default).",
+        help=(
+            "Base git reference when auto-deciding the level. Defaults to the last release "
+            "commit or the previous commit (HEAD^)."
+        ),
     )
     p_bump.add_argument(
         "--head",

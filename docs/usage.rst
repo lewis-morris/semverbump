@@ -2,7 +2,9 @@ Usage
 =====
 
 The ``bumpwright`` command-line interface provides two subcommands to help
-manage project versions based on public API changes. This section explains each
+manage project versions based on public API changes. By default, both
+subcommands compare the current commit against the last release commit, or the
+previous commit (``HEAD^``) when no release exists. This section explains each
 command, its arguments, and expected outputs.
 
 Global options
@@ -21,7 +23,8 @@ Compare two git references and report the semantic version level they require.
 
 ``--base BASE``
     Base git reference to compare against, for example ``origin/main``.
-    Defaults to the previous commit (``HEAD^``).
+    Defaults to the last release commit if available, otherwise the previous
+    commit (``HEAD^``).
 
 ``--head HEAD``
     Head git reference. Defaults to ``HEAD``.
@@ -47,8 +50,8 @@ Compare two git references and report the semantic version level they require.
    }
 
 Running ``bumpwright decide`` without ``--base`` compares the current commit
-against its parent (``HEAD^``). Because this subcommand only inspects commits,
-there is no ``--dry-run`` flag.
+against the last release commit or, if none exists, its parent (``HEAD^``).
+Because this subcommand only inspects commits, there is no ``--dry-run`` flag.
 
 .. code-block:: console
 
@@ -81,8 +84,8 @@ Update version information in ``pyproject.toml`` and other files.
     determine the level automatically.
 
 ``--base BASE``
-    Base git reference when auto-deciding the level. Defaults to the current
-    branch's upstream.
+    Base git reference when auto-deciding the level. Defaults to the last
+    release commit if available, otherwise the previous commit (``HEAD^``).
 
 ``--head HEAD``
     Head git reference. Defaults to ``HEAD``.
@@ -135,8 +138,9 @@ Update version information in ``pyproject.toml`` and other files.
    bumpwright bump --level minor --pyproject pyproject.toml --commit --tag
 
 This prints the old and new versions and, when ``--commit`` and ``--tag`` are
-set, commits and tags the release. Omitting ``--base`` uses the branch's
-upstream, and omitting ``--head`` assumes ``HEAD``.
+set, commits and tags the release. Omitting ``--base`` compares against the
+last release commit or the previous commit (``HEAD^``), and omitting
+``--head`` assumes ``HEAD``.
 
 To preview changes without touching the filesystem, combine ``--dry-run`` with
 JSON output:
@@ -153,8 +157,8 @@ JSON output:
      "level": "patch"
    }
 
-Omitting ``--base`` compares against the branch's upstream; leaving out
-``--head`` uses the current ``HEAD``.
+Omitting ``--base`` compares against the last release commit or the previous
+commit (``HEAD^``); leaving out ``--head`` uses the current ``HEAD``.
 
 
 Full workflow
@@ -180,10 +184,6 @@ Common errors
 ``pyproject.toml`` not found
     Ensure you run the command at the project root or pass ``--pyproject`` with
     the correct path.
-
-No upstream configured for base
-    When ``--base`` is omitted, the upstream branch is used. Configure an
-    upstream with ``git push -u origin HEAD`` or provide ``--base`` explicitly.
 
 Changes not applied after running
     The ``--dry-run`` flag previews the bump without touching files. Remove it
