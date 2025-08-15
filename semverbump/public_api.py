@@ -1,15 +1,16 @@
-"""Extract and represent a package's public API using LibCST."""
+"""Extract and represent a package's public API using the stdlib AST.
+
+This module inspects Python source code to determine the exposed public API.
+It uses :mod:`ast` to avoid heavyweight third‑party dependencies while still
+capturing function and method signatures accurately.
+"""
 
 from __future__ import annotations
 
+import ast
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-
-try:  # pragma: no cover - needed for linting when dependency missing
-    import libcst as cst
-except ModuleNotFoundError as exc:  # pragma: no cover
-    raise RuntimeError("libcst is required to analyze public APIs") from exc
 
 # --------- Data model ---------
 
@@ -20,7 +21,8 @@ class Param:
 
     Attributes:
         name: Parameter name.
-        kind: Parameter kind (``"posonly"``, ``"pos"``, ``"vararg"``, ``"kwonly"``, or ``"varkw"``).
+        kind: Parameter kind (``"posonly"``, ``"pos"``, ``"vararg"``,
+            ``"kwonly"``, or ``"varkw"``).
         default: Default value expression if present.
         annotation: Type annotation if present.
     """
@@ -36,7 +38,8 @@ class FuncSig:
     """Public function or method signature.
 
     Attributes:
-        fullname: Fully qualified name (``module:func`` or ``module:Class.method``).
+        fullname: Fully qualified name (``module:func`` or
+            ``module:Class.method``).
         params: Ordered parameter definitions.
         returns: Return annotation if specified.
     """
@@ -48,23 +51,23 @@ class FuncSig:
 
 PublicAPI = Dict[str, FuncSig]  # symbol -> function signature (functions & methods)
 
+
 # --------- Helpers ---------
 
 
-def _render_expr(node: cst.CSTNode | None) -> str | None:
+def _render_expr(node: ast.AST | None) -> str | None:
     """Render arbitrary expressions (defaults, etc.)."""
-    return cst.Module([]).code_for_node(node) if node is not None else None
+
+    return ast.unparse(node) if node is not None else None
 
 
-def _render_type(ann: cst.Annotation | None) -> str | None:
+def _render_type(ann: ast.AST | None) -> str | None:
     """Safely render type annotations (params & returns)."""
-    if ann is None:
-        return None
-    # LibCST’s Annotation needs its inner expression rendered, not the wrapper.
-    return cst.Module([]).code_for_node(ann.annotation)
+
+    return ast.unparse(ann) if ann is not None else None
 
 
-def _parse_exports(mod: cst.Module) -> Optional[set[str]]:
+def _parse_exports(mod: ast.Module) -> Optional[set[str]]:
     """Parse ``__all__`` definitions from a module if present.
 
     Args:
@@ -74,73 +77,70 @@ def _parse_exports(mod: cst.Module) -> Optional[set[str]]:
         Set of exported symbol names or ``None`` if ``__all__`` is undefined.
     """
 
-    # Honor simple __all__ = ["name", "name2"] at module top level
-    for s in mod.body:
-        if not isinstance(s, cst.SimpleStatementLine):
-            continue
-        for a in s.body:
-            if not isinstance(a, cst.Assign):
+    for stmt in mod.body:
+        if isinstance(stmt, ast.Assign):
+            if len(stmt.targets) != 1:
                 continue
-            tgt = a.targets[0].target
-            if isinstance(tgt, cst.Name) and tgt.value == "__all__":
-                if isinstance(a.value, (cst.List, cst.Tuple)):
+            tgt = stmt.targets[0]
+            if isinstance(tgt, ast.Name) and tgt.id == "__all__":
+                if isinstance(stmt.value, (ast.List, ast.Tuple)):
                     vals: list[str] = []
-                    for el in a.value.elements:
-                        v = el.value
-                        if isinstance(v, cst.SimpleString):
-                            # safe: evaluated_value is just a literal
-                            vals.append(v.evaluated_value)
+                    for el in stmt.value.elts:
+                        if isinstance(el, ast.Constant) and isinstance(el.value, str):
+                            vals.append(el.value)
                     return set(vals)
     return None
 
 
-def _param_list(params: cst.Parameters) -> List[Param]:
-    """Convert LibCST parameters to :class:`Param` instances.
-
-    Args:
-        params: LibCST parameter container.
-
-    Returns:
-        Ordered list of :class:`Param` definitions.
-    """
+def _param_list(args: ast.arguments) -> List[Param]:
+    """Convert AST parameters to :class:`Param` instances."""
 
     out: List[Param] = []
 
-    def _def(p: cst.Param) -> Optional[str]:
-        return _render_expr(p.default) if p.default else None
+    def _ann(node: ast.expr | None) -> Optional[str]:
+        return _render_type(node) if node is not None else None
 
-    def _ann(p: cst.Param) -> Optional[str]:
-        return _render_type(p.annotation) if p.annotation else None
+    # Positional-only and positional params share defaults
+    posonly = list(args.posonlyargs)
+    pos = list(args.args)
+    defaults = list(args.defaults)
+    total = len(posonly) + len(pos)
+    d_start = total - len(defaults)
+    idx = 0
 
-    for p in params.posonly_params:
-        out.append(Param(p.name.value, "posonly", _def(p), _ann(p)))
-    for p in params.params:
-        out.append(Param(p.name.value, "pos", _def(p), _ann(p)))
-    # *args or bare * (keyword-only marker)
-    sa = params.star_arg
-    if isinstance(sa, cst.Param):
-        # real vararg like *args
-        out.append(Param(sa.name.value, "vararg", None, _ann(sa)))
-    else:
-        # bare "*" (no vararg) — just a marker; nothing to add
-        pass
-    for p in params.kwonly_params:
-        out.append(Param(p.name.value, "kwonly", _def(p), _ann(p)))
-    if params.star_kwarg:
-        p = params.star_kwarg
-        out.append(Param(p.name.value, "varkw", None, _ann(p)))
+    for p in posonly + pos:
+        default = _render_expr(defaults[idx - d_start]) if idx >= d_start else None
+        kind = "posonly" if idx < len(posonly) else "pos"
+        out.append(Param(p.arg, kind, default, _ann(p.annotation)))
+        idx += 1
+
+    # Var positional
+    if args.vararg:
+        out.append(Param(args.vararg.arg, "vararg", None, _ann(args.vararg.annotation)))
+
+    # Keyword-only params
+    for param, default in zip(args.kwonlyargs, args.kw_defaults):
+        out.append(
+            Param(param.arg, "kwonly", _render_expr(default), _ann(param.annotation))
+        )
+
+    # Var keyword
+    if args.kwarg:
+        out.append(Param(args.kwarg.arg, "varkw", None, _ann(args.kwarg.annotation)))
+
     return out
 
 
 def _is_public(name: str) -> bool:
     """Return ``True`` if ``name`` represents a public symbol."""
+
     return not name.startswith("_")
 
 
 # --------- Visitor that collects public API ---------
 
 
-class _APIVisitor(cst.CSTVisitor):
+class _APIVisitor(ast.NodeVisitor):
     """Collect public function and method signatures from a module."""
 
     def __init__(self, module_name: str, exports: Optional[set[str]]):
@@ -155,38 +155,36 @@ class _APIVisitor(cst.CSTVisitor):
         self.exports = exports
         self.sigs: List[FuncSig] = []
 
-    def visit_FunctionDef(
-        self, node: cst.FunctionDef
-    ) -> None:  # noqa: D401  # pylint: disable=invalid-name
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:  # noqa: D401
         """Collect function definitions."""
 
-        fn = node.name.value
+        fn = node.name
         if self.exports is not None and fn not in self.exports:
             return
         if not _is_public(fn):
             return
-        params = tuple(_param_list(node.params))
+        params = tuple(_param_list(node.args))
         ret = _render_type(node.returns)
         self.sigs.append(FuncSig(f"{self.module_name}:{fn}", params, ret))
 
-    def visit_ClassDef(
-        self, node: cst.ClassDef
-    ) -> None:  # noqa: D401  # pylint: disable=invalid-name
+    # Async functions have the same signature representation
+    visit_AsyncFunctionDef = visit_FunctionDef
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:  # noqa: D401
         """Collect method signatures from public classes."""
 
-        cname = node.name.value
+        cname = node.name
         if self.exports is not None and cname not in self.exports:
             return
         if not _is_public(cname):
             return
 
-        # Methods
-        for elt in node.body.body:
-            if isinstance(elt, cst.FunctionDef):
-                mname = elt.name.value
+        for elt in node.body:
+            if isinstance(elt, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                mname = elt.name
                 if not _is_public(mname):
                     continue
-                params = tuple(_param_list(elt.params))
+                params = tuple(_param_list(elt.args))
                 ret = _render_type(elt.returns)
                 self.sigs.append(
                     FuncSig(f"{self.module_name}:{cname}.{mname}", params, ret)
@@ -204,10 +202,8 @@ def module_name_from_path(root: str, path: str) -> str:
         Dotted module path corresponding to ``path``.
     """
 
-    # Convert path under root into a module name (strip .py and replace / with .)
     rp = Path(path).with_suffix("")
     parts = list(rp.parts)
-    # remove common leading '.' or root
     root_parts = list(Path(root).parts)
     while root_parts and parts and parts[0] == root_parts[0]:
         parts.pop(0)
@@ -226,8 +222,17 @@ def extract_public_api_from_source(module_name: str, code: str) -> PublicAPI:
         Mapping of symbol names to :class:`FuncSig` objects.
     """
 
-    mod = cst.parse_module(code)
+    mod = ast.parse(code)
     exports = _parse_exports(mod)
-    v = _APIVisitor(module_name, exports)
-    mod.visit(v)
-    return {s.fullname: s for s in v.sigs}
+    visitor = _APIVisitor(module_name, exports)
+    visitor.visit(mod)
+    return {s.fullname: s for s in visitor.sigs}
+
+
+__all__ = [
+    "Param",
+    "FuncSig",
+    "PublicAPI",
+    "module_name_from_path",
+    "extract_public_api_from_source",
+]
