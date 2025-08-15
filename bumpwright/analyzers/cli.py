@@ -187,7 +187,7 @@ def _build_cli_at_ref(
     return out
 
 
-@register("cli")
+@register("cli", "Analyze command-line interfaces for changes.")
 class CLIAnalyzer:
     """Analyzer plugin for command-line interfaces."""
 

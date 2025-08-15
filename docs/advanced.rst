@@ -89,7 +89,7 @@ Custom severity mapping and plugin analysers
       from bumpwright.analyzers import Analyzer, register
       from bumpwright.compare import Impact
 
-      @register("no_prints")
+      @register("no_prints", "Report usage of print statements")
       class NoPrints(Analyzer):
           def __init__(self, cfg):
               self.severity = getattr(cfg.rules, "print_call", "patch")
@@ -101,6 +101,9 @@ Custom severity mapping and plugin analysers
               if "print(" in new and "print(" not in old:
                   return [Impact(self.severity, "example.py", "Added print call")]
               return []
+
+   The optional description makes the plugin discoverable via
+   ``get_analyzer_info("no_prints")`` and the :func:`available` helper.
 
 2. Enable the plugin and map its finding to a version bump:
 
