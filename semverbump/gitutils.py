@@ -68,7 +68,7 @@ def list_py_files_at_ref(
     """
 
     out = _run(["git", "ls-tree", "-r", "--name-only", ref], cwd)
-    paths: List[str] = []
+    paths: Set[str] = set()
     roots_norm = [str(Path(r)) for r in roots]
     for line in out.splitlines():
         if not line.endswith(".py"):
@@ -80,8 +80,8 @@ def list_py_files_at_ref(
             s = str(p)
             if ignore_globs and any(fnmatch(s, pat) for pat in ignore_globs):
                 continue
-            paths.append(s)
-    return set(paths)
+            paths.add(s)
+    return paths
 
 
 def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> Optional[str]:
