@@ -2,7 +2,7 @@ from pathlib import Path
 
 from tomlkit import dumps as toml_dumps
 
-from semverbump.versioning import apply_bump, bump_string, read_project_version
+from bumpwright.versioning import apply_bump, bump_string, read_project_version
 
 
 def test_bump_string():

@@ -18,7 +18,7 @@ def test_decide_defaults_to_previous_commit(tmp_path: Path) -> None:
         [
             sys.executable,
             "-m",
-            "semverbump.cli",
+            "bumpwright.cli",
             "decide",
             "--format",
             "json",

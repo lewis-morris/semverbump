@@ -1,7 +1,22 @@
-# semverbump
+# bumpwright
 
 Keep your project's version numbers honest by inspecting public interfaces and
 recommending the next semantic version. It can even apply the bump for you.
+
+## Why semverbump
+
+Semantic versioning only works when releases accurately reflect the impact of
+code changes. Manually tracking public interfaces across a project is tedious
+and error-prone. **semverbump** automates this process by scanning source code
+for API changes and recommending the appropriate version bump.
+
+Design goals include:
+
+- **Safety** – catch breaking changes before they reach users.
+- **Determinism** – produce consistent results across environments.
+- **Extensibility** – support new domains through pluggable analysers.
+- **Ease of adoption** – require minimal configuration and integrate with
+  existing workflows.
 
 ## Features
 
@@ -13,12 +28,17 @@ recommending the next semantic version. It can even apply the bump for you.
 ## Installation
 
 ```bash
-pip install semverbump
+pip install bumpwright
 ```
 
 ## Quick start
+| Subcommand | Purpose | Key options |
+|------------|---------|-------------|
+| `decide`   | Recommend a bump between two references | `--base`, `--head`, `--format` |
+| `bump`     | Apply a specific version bump | `--level`, `--pyproject`, `--commit`, `--tag` |
+| `auto`     | Decide and bump in a single step | `--base`, `--head`, `--commit`, `--tag` |
 
-1. **Create a configuration file** (``semverbump.toml``) to customise behaviour:
+1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
 
    ```toml
    [analyzers]
@@ -29,45 +49,63 @@ pip install semverbump
 2. **Suggest the next version** between two git references:
 
    ```console
-   $ semverbump decide --base origin/main --head HEAD --format md
-   **semverbump** suggests: `minor`
+   $ semverbump decide --base origin/main --head HEAD --format text
+   semverbump suggests: minor
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
    ```
 
-    If ``--base`` is omitted, the command compares the current commit to its
-    immediate parent (``HEAD^``).
+   ```console
+   $ semverbump decide --base origin/main --head HEAD --format md
+   **semverbump** suggests: `minor`
 
-   Use ``--format text`` for plain output or ``--format json`` for
-   machine-readable results.
+
+   - [MINOR] cli.new_command: added CLI entry 'greet'
+   ```
+
+   ```console
+   $ semverbump decide --base origin/main --head HEAD --format json
+   {"level": "minor", "changes": [{"severity": "minor", "symbol": "cli.new_command", "description": "added CLI entry 'greet'"}]}
+   ```
+
+   If ``--base`` is omitted, the command compares the current commit to its
+   immediate parent (``HEAD^``).
 
 3. **Apply the bump** and optionally commit and tag the release:
 
    ```console
-   $ semverbump bump --level minor --pyproject pyproject.toml --commit --tag
+   $ bumpwright bump --level minor --pyproject pyproject.toml --commit --tag
    Bumped version: 1.2.3 -> 1.3.0 (minor)
    ```
 
    Omitting ``--level`` triggers an automatic decision using ``--base`` and
    ``--head`` in the same manner as the ``decide`` command.
 
-4. **Run everything in one step** and let semverbump infer the base reference:
+4. **Run everything in one step** with automatic bumping and tagging:
 
    ```console
-   $ semverbump auto --commit --tag
+   $ semverbump auto --base origin/main --commit --tag --pyproject pyproject.toml
    **semverbump** suggests: `minor`
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
    Bumped version: 1.2.3 -> 1.3.0 (minor)
+   Created tag: v1.3.0
    ```
 
-   When ``--base`` is omitted, the command uses the current branch's upstream
-   as the comparison reference.
+   The command infers the base reference when ``--base`` is omitted. After the
+   tag is created, push it upstream with:
+
+   ```console
+   $ git push --follow-tags
+   ```
+
+For deeper usage and configuration details, see the [usage guide](docs/usage.rst)
+and [configuration reference](docs/configuration.rst).
 
 ## Configuration
 
 Only analysers explicitly set to ``true`` run. See ``docs/configuration.rst`` for
-full details. The default file name is ``semverbump.toml`` but you may specify an
+full details. The default file name is ``bumpwright.toml`` but you may specify an
 alternative with ``--config``.
 
 ### Analyser reference

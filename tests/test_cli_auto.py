@@ -3,7 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from semverbump.versioning import read_project_version
+from bumpwright.versioning import read_project_version
 
 
 def _run(cmd: list[str], cwd: Path) -> str:
@@ -32,7 +32,7 @@ version = "0.1.0"
     (pkg / "__init__.py").write_text(
         "def foo() -> int:\n    return 1\n", encoding="utf-8"
     )
-    (repo / "semverbump.toml").write_text(
+    (repo / "bumpwright.toml").write_text(
         "[project]\npublic_roots=['pkg']\n", encoding="utf-8"
     )
     _run(["git", "add", "."], repo)
@@ -52,7 +52,7 @@ def test_auto_command_bumps_version(tmp_path: Path) -> None:
         [
             sys.executable,
             "-m",
-            "semverbump.cli",
+            "bumpwright.cli",
             "auto",
             "--base",
             base,
@@ -83,7 +83,7 @@ def test_auto_command_dry_run(tmp_path: Path) -> None:
         [
             sys.executable,
             "-m",
-            "semverbump.cli",
+            "bumpwright.cli",
             "auto",
             "--base",
             base,
@@ -106,14 +106,14 @@ def test_auto_command_dry_run(tmp_path: Path) -> None:
 
 def test_main_shows_help_when_no_args(tmp_path: Path) -> None:
     res = subprocess.run(
-        [sys.executable, "-m", "semverbump.cli"],
+        [sys.executable, "-m", "bumpwright.cli"],
         cwd=tmp_path,
         check=True,
         stdout=subprocess.PIPE,
         text=True,
         env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
     )
-    assert "usage: semverbump" in res.stdout
+    assert "usage: bumpwright" in res.stdout
 
 
 def test_bump_command_searches_pyproject(tmp_path: Path) -> None:
@@ -122,7 +122,7 @@ def test_bump_command_searches_pyproject(tmp_path: Path) -> None:
         [
             sys.executable,
             "-m",
-            "semverbump.cli",
+            "bumpwright.cli",
             "bump",
             "--level",
             "patch",

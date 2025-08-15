@@ -1,7 +1,7 @@
 Configuration
 =============
 
-``semverbump`` reads settings from ``semverbump.toml``. The file supports these
+``bumpwright`` reads settings from ``bumpwright.toml``. The file supports these
 sections with defaults shown:
 
 .. code-block:: toml

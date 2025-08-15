@@ -1,11 +1,11 @@
 Installation
 ============
 
-Install ``semverbump`` from PyPI:
+Install ``bumpwright`` from PyPI:
 
 .. code-block:: console
 
-   pip install semverbump
+   pip install bumpwright
 
 Optional analyzers may require extra dependencies:
 

@@ -95,6 +95,10 @@ Update version information in ``pyproject.toml`` and other files.
 ``--commit``
     Create a git commit for the version change.
 
+    .. note::
+        The version will bump on every invocation unless the change is
+        committed or reverted.
+
 ``--tag``
     Create a git tag for the new version.
 
@@ -171,6 +175,7 @@ Using ``--dry-run`` previews the new version without editing files or creating
 commits. Omitting ``--head`` uses the current ``HEAD``; leaving out ``--base``
 falls back to the branch's upstream.
 
+
 Full workflow
 -------------
 
@@ -194,5 +199,3 @@ Common errors
 * ``Refusing to commit with unclean working tree`` – commit or stash changes
   before using ``--commit`` or ``--tag``.
 
-All commands read configuration from ``bumpwright.toml`` by default. Use
-``--config`` to specify an alternate file.

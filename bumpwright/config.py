@@ -1,4 +1,4 @@
-"""Load and represent ``semverbump`` configuration files."""
+"""Load and represent ``bumpwright`` configuration files."""
 
 from __future__ import annotations
 
@@ -83,7 +83,7 @@ class VersionFiles:
 
 @dataclass
 class Config:
-    """Top-level configuration for semverbump.
+    """Top-level configuration for bumpwright.
 
     Attributes:
         project: Project settings.
@@ -109,7 +109,7 @@ def _merge_defaults(data: dict) -> dict:
     return out
 
 
-def load_config(path: str | Path = "semverbump.toml") -> Config:
+def load_config(path: str | Path = "bumpwright.toml") -> Config:
     """Load configuration from a TOML file.
 
     Args:

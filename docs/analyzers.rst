@@ -1,7 +1,7 @@
 Additional Analyzers
 ====================
 
-Enable optional analyzers in ``semverbump.toml``:
+Enable optional analyzers in ``bumpwright.toml``:
 
 .. code-block:: toml
 

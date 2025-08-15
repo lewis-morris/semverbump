@@ -8,8 +8,8 @@ try:  # pragma: no cover - handled when pytest not installed
 except ModuleNotFoundError:  # pragma: no cover
     pytest = None  # type: ignore
 
-from semverbump.analyzers.migrations import analyze_migrations
-from semverbump.config import Migrations
+from bumpwright.analyzers.migrations import analyze_migrations
+from bumpwright.config import Migrations
 
 
 def _run(cmd: list[str], cwd: Path) -> str:

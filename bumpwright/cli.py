@@ -1,4 +1,4 @@
-"""Command-line interface for the :mod:`semverbump` project.
+"""Command-line interface for the :mod:`bumpwright` project.
 
 This module exposes subcommands for suggesting and applying semantic version
 bumps based on public API differences and additional analyzers.
@@ -16,10 +16,8 @@ from .analyzers import available, load_enabled
 from .compare import Impact, decide_bump, diff_public_api
 from .config import Config, load_config
 from .gitutils import list_py_files_at_ref, read_file_at_ref
-from .public_api import (PublicAPI, extract_public_api_from_source,
-                         module_name_from_path)
-from .versioning import apply_bump
-
+from .public_api import PublicAPI, extract_public_api_from_source, module_name_from_path
+from .versioning import apply_bump, find_pyproject
 
 
 def _build_api_at_ref(ref: str, roots: list[str], ignores: Iterable[str]) -> PublicAPI:
@@ -32,6 +30,12 @@ def _build_api_at_ref(ref: str, roots: list[str], ignores: Iterable[str]) -> Pub
 
     Returns:
         Mapping of public symbols to signatures.
+
+    Examples:
+        Build the API for the current ``HEAD`` for modules under ``src``:
+
+        >>> _build_api_at_ref("HEAD", ["src"], [])
+        {'pkg.module.func': '() -> None', ...}
     """
 
     api: PublicAPI = {}
@@ -53,6 +57,12 @@ def _format_impacts_text(impacts: List[Impact]) -> str:
 
     Returns:
         Formatted Markdown-style bullet list.
+
+    Examples:
+        >>> _format_impacts_text([])
+        '(no API-impacting changes detected)'
+        >>> _format_impacts_text([Impact('warn', 'sym', 'reason')])
+        '- [WARN] sym: reason'
     """
 
     lines = []
@@ -71,6 +81,11 @@ def _run_analyzers(base: str, head: str, cfg: Config) -> List[Impact]:
 
     Returns:
         List of impacts reported by all analyzers.
+
+    Examples:
+        >>> cfg = load_config("bumpwright.toml")
+        >>> _run_analyzers("HEAD^", "HEAD", cfg)
+        [Impact(...), ...]
     """
 
     impacts: List[Impact] = []
@@ -87,6 +102,10 @@ def _infer_base_ref() -> str:
     Returns:
         Git reference of the upstream branch. Falls back to ``origin/HEAD`` if
         no upstream is configured.
+
+    Examples:
+        >>> _infer_base_ref()
+        'origin/main'
     """
 
     import subprocess
@@ -111,6 +130,12 @@ def _commit_tag(pyproject: str, version: str, commit: bool, tag: bool) -> None:
         version: New version string applied.
         commit: Whether to create a git commit.
         tag: Whether to create a git tag.
+
+    Examples:
+        Create a commit only:
+
+        >>> _commit_tag("pyproject.toml", "1.2.3", commit=True, tag=False)
+        # commits "chore(release): 1.2.3"
     """
 
     if not (commit or tag):
@@ -138,6 +163,10 @@ def _resolve_pyproject(path: str) -> Path:
 
     Raises:
         FileNotFoundError: If no ``pyproject.toml`` can be found.
+
+    Examples:
+        >>> _resolve_pyproject("pyproject.toml")  # doctest: +SKIP
+        PosixPath('pyproject.toml')
     """
 
     candidate = Path(path)
@@ -158,6 +187,23 @@ def decide_command(args: argparse.Namespace) -> int:
 
     Returns:
         Process exit code.
+
+    Examples:
+        Compare the current commit to its parent (default ``--base`` is
+        ``HEAD^``) and display Markdown output:
+
+        $ bumpwright decide --format md
+        **bumpwright** suggests: `patch`
+
+        (no API-impacting changes detected)
+
+        Emit machine-readable JSON instead:
+
+        $ bumpwright decide --format json
+        {
+          "level": "patch",
+          "impacts": []
+        }
     """
 
     cfg = load_config(args.config)
@@ -181,7 +227,7 @@ def decide_command(args: argparse.Namespace) -> int:
             )
         )
     elif args.format == "md":
-        print(f"**semverbump** suggests: `{level}`\n")
+        print(f"**bumpwright** suggests: `{level}`\n")
         print(_format_impacts_text(impacts))
     else:
         print(f"Suggested bump: {level}")
@@ -192,11 +238,26 @@ def decide_command(args: argparse.Namespace) -> int:
 def bump_command(args: argparse.Namespace) -> int:
     """CLI command to apply a version bump.
 
+    If ``--level`` is not specified, the bump level is inferred by comparing
+    ``--base`` (defaults to the upstream of ``HEAD``) and ``--head`` (defaults
+    to ``HEAD``).
+
     Args:
         args: Parsed command-line arguments.
 
     Returns:
         Process exit code.
+
+    Examples:
+        Dry-run the inferred bump against the upstream branch:
+
+        $ bumpwright bump --dry-run
+        Bumped version: 1.2.3 -> 1.2.4 (patch)
+
+        Apply an explicit minor bump and create a commit:
+
+        $ bumpwright bump --level minor --commit
+        Bumped version: 1.2.3 -> 1.3.0 (minor)
     """
 
     cfg = load_config(args.config)
@@ -237,11 +298,34 @@ def bump_command(args: argparse.Namespace) -> int:
 def auto_command(args: argparse.Namespace) -> int:
     """CLI command to decide and apply a version bump in one step.
 
+    When ``--base`` is omitted, the upstream of the current branch is used.
+    ``--head`` defaults to ``HEAD``.
+
     Args:
         args: Parsed command-line arguments.
 
     Returns:
         Process exit code.
+
+    Examples:
+        Show Markdown output and apply the bump:
+
+        $ bumpwright auto --format md
+        **bumpwright** suggests: `patch`
+
+        (no API-impacting changes detected)
+
+        Bumped version: 1.2.3 -> 1.2.4 (patch)
+
+        Emit JSON for automation:
+
+        $ bumpwright auto --format json
+        {
+          "level": "patch",
+          "impacts": [],
+          "old_version": "1.2.3",
+          "new_version": "1.2.4"
+        }
     """
 
     base = args.base or _infer_base_ref()
@@ -283,7 +367,7 @@ def auto_command(args: argparse.Namespace) -> int:
             )
         )
     elif args.format == "md":
-        print(f"**semverbump** suggests: `{level}`\n")
+        print(f"**bumpwright** suggests: `{level}`\n")
         print(_format_impacts_text(impacts))
         print()
         print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
@@ -298,7 +382,7 @@ def auto_command(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point for the ``semverbump`` CLI.
+    """Entry point for the ``bumpwright`` CLI.
 
     Args:
         argv: Optional argument vector.
@@ -309,13 +393,13 @@ def main(argv: list[str] | None = None) -> int:
 
     avail = ", ".join(available()) or "none"
     parser = argparse.ArgumentParser(
-        prog="semverbump",
+        prog="bumpwright",
         description=f"Suggest and apply semantic version bumps. Available analyzers: {avail}.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--config",
-        default="semverbump.toml",
+        default="bumpwright.toml",
         help="Path to configuration file.",
     )
 

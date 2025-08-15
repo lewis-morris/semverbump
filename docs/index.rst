@@ -1,4 +1,4 @@
-semverbump documentation
+bumpwright documentation
 ========================
 
 Static public-API diff and heuristics to suggest semantic version bumps.
