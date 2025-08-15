@@ -262,6 +262,15 @@ def bump_command(args: argparse.Namespace) -> int:
         $ bumpwright bump --dry-run
         Bumped version: 1.2.3 -> 1.2.4 (patch)
 
+        Emit JSON for automation:
+
+        $ bumpwright bump --dry-run --format json
+        {
+          "old_version": "1.2.3",
+          "new_version": "1.2.4",
+          "level": "patch"
+        }
+
         Apply an explicit minor bump and create a commit:
 
         $ bumpwright bump --level minor --commit
@@ -325,7 +334,21 @@ def bump_command(args: argparse.Namespace) -> int:
         paths=paths,
         ignore=ignore,
     )
-    print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
+    if args.format == "json":
+        print(
+            json.dumps(
+                {
+                    "old_version": vc.old,
+                    "new_version": vc.new,
+                    "level": vc.level,
+                },
+                indent=2,
+            )
+        )
+    elif args.format == "md":
+        print(f"Bumped version: `{vc.old}` -> `{vc.new}` ({vc.level})")
+    else:
+        print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
     if not args.dry_run:
         _commit_tag(str(pyproject), vc.new, args.commit, args.tag)
     return 0
@@ -508,6 +531,12 @@ def main(argv: list[str] | None = None) -> int:
         "--head",
         default="HEAD",
         help="Head git reference; defaults to the current HEAD.",
+    )
+    p_bump.add_argument(
+        "--format",
+        choices=["text", "md", "json"],
+        default="text",
+        help="Output style: plain text, Markdown, or machine-readable JSON.",
     )
     p_bump.add_argument(
         "--pyproject",

@@ -37,7 +37,7 @@ pip install bumpwright
 | Subcommand | Purpose | Key options |
 |------------|---------|-------------|
 | `decide`   | Recommend a bump between two references | `--base`, `--head`, `--format` |
-| `bump`     | Apply a specific version bump | `--level`, `--pyproject`, `--commit`, `--tag` |
+| `bump`     | Apply a specific version bump | `--level`, `--pyproject`, `--format`, `--commit`, `--tag` |
 | `auto`     | Decide and bump in a single step | `--base`, `--head`, `--commit`, `--tag` |
 
 1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
