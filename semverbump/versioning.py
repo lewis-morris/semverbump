@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Iterable
 
 try:  # pragma: no cover - needed for linting when dependency missing
     from packaging.version import Version
@@ -97,14 +99,34 @@ def write_project_version(
     p.write_text(toml_dumps(data), encoding="utf-8")
 
 
+def _replace_version(path: Path, old: str, new: str) -> None:
+    """Replace ``old`` version string with ``new`` in ``path`` if present."""
+
+    if not path.exists():
+        return
+    text = path.read_text(encoding="utf-8")
+    pattern = r"(__version__\s*=\s*)['\"]([^'\"]+)['\"]"
+    if re.search(pattern, text):
+        text = re.sub(pattern, r"\1'" + new + "'", text)
+    else:
+        text = text.replace(old, new)
+    path.write_text(text, encoding="utf-8")
+
+
 def apply_bump(
-    level: str, pyproject_path: str | Path = "pyproject.toml"
+    level: str,
+    pyproject_path: str | Path = "pyproject.toml",
+    package: str | None = None,
+    extra_files: Iterable[str | Path] | None = None,
 ) -> VersionChange:
-    """Apply a semantic version bump to ``pyproject.toml``.
+    """Apply a semantic version bump across multiple files.
 
     Args:
         level: Bump level to apply (``"major"``, ``"minor"``, or ``"patch"``).
         pyproject_path: Path to the ``pyproject.toml`` file.
+        package: Importable package name whose ``__init__`` defines
+            ``__version__``. If provided, that file will be updated.
+        extra_files: Additional file paths containing the version string.
 
     Returns:
         :class:`VersionChange` detailing the old and new versions.
@@ -113,4 +135,19 @@ def apply_bump(
     old = read_project_version(pyproject_path)
     new = bump_string(old, level)
     write_project_version(new, pyproject_path)
+
+    files: list[Path] = []
+    if package:
+        pkg_path = (
+            Path(pyproject_path).parent
+            / Path(package.replace(".", "/"))
+            / "__init__.py"
+        )
+        files.append(pkg_path)
+    if extra_files:
+        files.extend(Path(p) for p in extra_files)
+
+    for f in files:
+        _replace_version(f, old, new)
+
     return VersionChange(old=old, new=new, level=level)

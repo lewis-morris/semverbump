@@ -11,7 +11,12 @@ from pathlib import Path
 from typing import List, Set
 
 _DEFAULTS = {
-    "project": {"package": "", "public_roots": ["."], "index_file": "pyproject.toml"},
+    "project": {
+        "package": "",
+        "public_roots": ["."],
+        "index_file": "pyproject.toml",
+        "version_files": [],
+    },
     "ignore": {"paths": ["tests/**", "examples/**", "scripts/**"]},
     "rules": {"return_type_change": "minor"},  # or "major"
     "analyzers": {"cli": False},
@@ -28,11 +33,21 @@ class Rules:
 
 @dataclass
 class Project:
-    """Project metadata and locations."""
+    """Project metadata and locations.
+
+    Attributes:
+        package: Importable package name whose ``__init__`` module holds
+            ``__version__``.
+        public_roots: Roots to scan for public API extraction.
+        index_file: Path to the ``pyproject.toml`` file.
+        version_files: Additional files containing the project version that
+            should be kept in sync when bumping.
+    """
 
     package: str = ""
     public_roots: List[str] = field(default_factory=lambda: ["."])
     index_file: str = "pyproject.toml"
+    version_files: List[str] = field(default_factory=list)
 
 
 @dataclass

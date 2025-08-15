@@ -169,12 +169,12 @@ def bump_command(args: argparse.Namespace) -> int:
         Process exit code.
     """
 
+    cfg = load_config(args.config)
     # If level not provided, compute from base/head
     level = args.level
     base = args.base or _infer_base_ref()
     head = args.head
     if not level:
-        cfg = load_config(args.config)
         old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
         new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
         impacts = diff_public_api(
@@ -183,7 +183,12 @@ def bump_command(args: argparse.Namespace) -> int:
         impacts.extend(_run_analyzers(base, head, cfg))
         level = decide_bump(impacts)
 
-    vc = apply_bump(level, pyproject_path=args.pyproject)
+    vc = apply_bump(
+        level,
+        pyproject_path=args.pyproject,
+        package=cfg.project.package or None,
+        extra_files=cfg.project.version_files,
+    )
     print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
     _commit_tag(args.pyproject, vc.new, args.commit, args.tag)
     return 0
@@ -209,7 +214,12 @@ def auto_command(args: argparse.Namespace) -> int:
     )
     impacts.extend(_run_analyzers(base, head, cfg))
     level = decide_bump(impacts)
-    vc = apply_bump(level, pyproject_path=args.pyproject)
+    vc = apply_bump(
+        level,
+        pyproject_path=args.pyproject,
+        package=cfg.project.package or None,
+        extra_files=cfg.project.version_files,
+    )
 
     if args.format == "json":
         print(
