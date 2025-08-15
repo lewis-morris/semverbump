@@ -2,7 +2,7 @@ import os
 import subprocess
 from pathlib import Path
 
-from semverbump.cli import _build_api_at_ref
+from bumpwright.cli import _build_api_at_ref
 
 
 def _run(cmd: list[str], cwd: Path) -> str:

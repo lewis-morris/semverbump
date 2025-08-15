@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-project = "semverbump"
+project = "bumpwright"
 author = "Lewis Morris"
 copyright = f"{datetime.now():%Y}, {author}"
 html_title = project

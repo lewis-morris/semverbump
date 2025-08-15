@@ -1,4 +1,4 @@
-from semverbump.public_api import extract_public_api_from_source
+from bumpwright.public_api import extract_public_api_from_source
 
 
 def test_extracts_functions_and_methods():

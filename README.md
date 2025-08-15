@@ -1,4 +1,4 @@
-# semverbump
+# bumpwright
 
 Keep your project's version numbers honest by inspecting public interfaces and
 recommending the next semantic version. It can even apply the bump for you.
@@ -28,7 +28,7 @@ Design goals include:
 ## Installation
 
 ```bash
-pip install semverbump
+pip install bumpwright
 ```
 
 ## Quick start
@@ -38,7 +38,7 @@ pip install semverbump
 | `bump`     | Apply a specific version bump | `--level`, `--pyproject`, `--commit`, `--tag` |
 | `auto`     | Decide and bump in a single step | `--base`, `--head`, `--commit`, `--tag` |
 
-1. **Create a configuration file** (``semverbump.toml``) to customise behaviour:
+1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
 
    ```toml
    [analyzers]
@@ -59,6 +59,7 @@ pip install semverbump
    $ semverbump decide --base origin/main --head HEAD --format md
    **semverbump** suggests: `minor`
 
+
    - [MINOR] cli.new_command: added CLI entry 'greet'
    ```
 
@@ -73,7 +74,7 @@ pip install semverbump
 3. **Apply the bump** and optionally commit and tag the release:
 
    ```console
-   $ semverbump bump --level minor --pyproject pyproject.toml --commit --tag
+   $ bumpwright bump --level minor --pyproject pyproject.toml --commit --tag
    Bumped version: 1.2.3 -> 1.3.0 (minor)
    ```
 
@@ -104,7 +105,7 @@ and [configuration reference](docs/configuration.rst).
 ## Configuration
 
 Only analysers explicitly set to ``true`` run. See ``docs/configuration.rst`` for
-full details. The default file name is ``semverbump.toml`` but you may specify an
+full details. The default file name is ``bumpwright.toml`` but you may specify an
 alternative with ``--config``.
 
 ### Analyser reference

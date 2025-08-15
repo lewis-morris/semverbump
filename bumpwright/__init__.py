@@ -1,4 +1,4 @@
-"""Top-level package for :mod:`semverbump`.
+"""Top-level package for :mod:`bumpwright`.
 
 Exposes the ``main`` entry point used by the command-line interface. The
 package is intended primarily for CLI usage rather than direct imports.

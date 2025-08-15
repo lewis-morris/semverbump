@@ -2,9 +2,9 @@ import os
 import subprocess
 from pathlib import Path
 
-from semverbump.analyzers import load_enabled
-from semverbump.analyzers.cli import CLIAnalyzer, diff_cli, extract_cli_from_source
-from semverbump.config import Config, Ignore, Project
+from bumpwright.analyzers import load_enabled
+from bumpwright.analyzers.cli import CLIAnalyzer, diff_cli, extract_cli_from_source
+from bumpwright.config import Config, Ignore, Project
 
 
 def _build(src: str):

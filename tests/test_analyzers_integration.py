@@ -10,9 +10,9 @@ try:  # pragma: no cover - handled when pytest not installed
 except ModuleNotFoundError:  # pragma: no cover
     pytest = None  # type: ignore
 
-from semverbump.analyzers import load_enabled
-from semverbump.compare import Impact
-from semverbump.config import Config, Project
+from bumpwright.analyzers import load_enabled
+from bumpwright.compare import Impact
+from bumpwright.config import Config, Project
 
 
 def _run(cmd: List[str], cwd: Path) -> str:
