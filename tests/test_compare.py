@@ -1,5 +1,6 @@
+from semverbump.compare import compare_funcs, decide_bump, diff_public_api
 from semverbump.public_api import FuncSig, Param
-from semverbump.compare import compare_funcs, diff_public_api, decide_bump
+
 
 
 def _sig(name, params, returns=None):
