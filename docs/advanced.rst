@@ -47,7 +47,7 @@ Integrating with CI pipelines
               with:
                 python-version: '3.x'
             - run: pip install bumpwright
-            - run: bumpwright decide --base origin/main --head ${{ github.sha }}
+            - run: bumpwright bump --decide --base origin/main --head ${{ github.sha }}
 
 2. Review the workflow logs to see the suggested bump:
 
@@ -119,7 +119,7 @@ Custom severity mapping and plugin analysers
 
    .. code-block:: console
 
-      bumpwright decide --base HEAD^ --head HEAD
+      bumpwright bump --decide --base HEAD^ --head HEAD
 
    .. code-block:: text
 

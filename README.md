@@ -34,10 +34,10 @@ pip install bumpwright
 ```
 
 ## Quick start
-| Subcommand | Purpose | Key options |
-|------------|---------|-------------|
-| `decide`   | Recommend a bump between two references | `--base`, `--head`, `--format` |
-| `bump`     | Apply a specific version bump | `--level`, `--pyproject`, `--format`, `--commit`, `--tag` |
+| Command | Purpose | Key options |
+|---------|---------|-------------|
+| `bump --decide` | Recommend a bump between two references | `--base`, `--head`, `--format` |
+| `bump` | Apply a specific version bump | `--level`, `--pyproject`, `--format`, `--commit`, `--tag` |
 
 1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
 
@@ -50,14 +50,14 @@ pip install bumpwright
 2. **Suggest the next version** between two git references:
 
    ```console
-   $ bumpwright decide --base origin/main --head HEAD --format text
+   $ bumpwright bump --decide --base origin/main --head HEAD --format text
    bumpwright suggests: minor
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
    ```
 
    ```console
-   $ bumpwright decide --base origin/main --head HEAD --format md
+   $ bumpwright bump --decide --base origin/main --head HEAD --format md
    **bumpwright** suggests: `minor`
 
 
@@ -65,7 +65,7 @@ pip install bumpwright
    ```
 
    ```console
-   $ bumpwright decide --base origin/main --head HEAD --format json
+   $ bumpwright bump --decide --base origin/main --head HEAD --format json
    {"level": "minor", "changes": [{"severity": "minor", "symbol": "cli.new_command", "description": "added CLI entry 'greet'"}]}
    ```
 
@@ -80,7 +80,7 @@ pip install bumpwright
    ```
 
    Omitting ``--level`` triggers an automatic decision using ``--base`` and
-   ``--head`` in the same manner as the ``decide`` command.
+   ``--head``.
 
 4. **Run everything in one step** with automatic bumping and tagging:
 

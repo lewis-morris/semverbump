@@ -225,65 +225,6 @@ def init_command(args: argparse.Namespace) -> int:
     return 0
 
 
-def decide_command(args: argparse.Namespace) -> int:
-    """CLI command to suggest a version bump between two refs.
-
-    Args:
-        args: Parsed command-line arguments.
-
-    Returns:
-        Process exit code.
-
-    Examples:
-        Compare the current commit to its parent (default ``--base`` is the last
-        release commit or ``HEAD^``) and display Markdown output:
-
-        $ bumpwright decide --format md
-        **bumpwright** suggests: `patch`
-
-        (no API-impacting changes detected)
-
-        Emit machine-readable JSON instead:
-
-        $ bumpwright decide --format json
-        {
-          "level": "patch",
-          "impacts": []
-        }
-    """
-
-    cfg = load_config(args.config)
-    # Default to comparing the current commit against the latest release when no
-    # explicit base is provided.
-    if args.base:
-        base: str = args.base
-    else:
-        base = last_release_commit() or "HEAD^"
-    head: str = args.head
-    old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
-    new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
-
-    impacts = diff_public_api(
-        old_api, new_api, return_type_change=cfg.rules.return_type_change
-    )
-    impacts.extend(_run_analyzers(base, head, cfg))
-    level = decide_bump(impacts)
-
-    if args.format == "json":
-        print(
-            json.dumps(
-                {"level": level, "impacts": [i.__dict__ for i in impacts]}, indent=2
-            )
-        )
-    elif args.format == "md":
-        print(f"**bumpwright** suggests: `{level}`\n")
-        print(_format_impacts_text(impacts))
-    else:
-        print(f"Suggested bump: {level}")
-        print(_format_impacts_text(impacts))
-    return 0
-
-
 def bump_command(args: argparse.Namespace) -> int:
     """CLI command to apply a version bump.
 
@@ -294,36 +235,57 @@ def bump_command(args: argparse.Namespace) -> int:
     Args:
         args: Parsed command-line arguments.
 
+    Args:
+        args: Parsed command-line arguments.
+
     Returns:
         Process exit code.
 
     Examples:
-        Dry-run the inferred bump against the previous commit:
+        Suggest a bump between commits without touching files:
 
-        $ bumpwright bump --dry-run
-        Bumped version: 1.2.3 -> 1.2.4 (patch)
-
-        Emit JSON for automation:
-
-        $ bumpwright bump --dry-run --format json
-        {
-          "old_version": "1.2.3",
-          "new_version": "1.2.4",
-          "level": "patch"
-        }
+        $ bumpwright bump --decide
+        Suggested bump: patch
 
         Apply an explicit minor bump and create a commit:
 
         $ bumpwright bump --level minor --commit
         Bumped version: 1.2.3 -> 1.3.0 (minor)
 
-    If no relevant files have changed or no API impacts are detected, the
-    command prints ``No version bump needed`` and exits without modifying the
-    project version.
+    If ``--decide`` is given or no relevant files have changed, the command
+    reports ``No version bump needed`` and exits without modifying the project
+    version.
     """
 
     cfg = load_config(args.config)
-    # If level not provided, compute from base/head
+
+    # When --decide is used, simply report the suggested bump level.
+    if args.decide:
+        base = args.base or last_release_commit() or "HEAD^"
+        head = args.head
+        old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
+        new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
+        impacts = diff_public_api(
+            old_api, new_api, return_type_change=cfg.rules.return_type_change
+        )
+        impacts.extend(_run_analyzers(base, head, cfg))
+        level = decide_bump(impacts)
+        if args.format == "json":
+            print(
+                json.dumps(
+                    {"level": level, "impacts": [i.__dict__ for i in impacts]},
+                    indent=2,
+                )
+            )
+        elif args.format == "md":
+            print(f"**bumpwright** suggests: `{level}`\n")
+            print(_format_impacts_text(impacts))
+        else:
+            print(f"Suggested bump: {level}")
+            print(_format_impacts_text(impacts))
+        return 0
+
+    # If level not provided, compute from base/head.
     level = args.level
     if args.base:
         base = args.base
@@ -448,35 +410,6 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_init.set_defaults(func=init_command)
 
-    p_decide = sub.add_parser(
-        "decide",
-        help="Suggest bump between two refs",
-        description="Compare two git references and report the required semantic version bump.",
-    )
-    p_decide.add_argument(
-        "--base",
-        help=(
-            "Base git reference to compare against. Defaults to the last release commit "
-            "or the previous commit (HEAD^)."
-        ),
-    )
-    p_decide.add_argument(
-        "--head",
-        default="HEAD",
-        help="Head git reference; defaults to the current HEAD.",
-    )
-    p_decide.add_argument(
-        "--format",
-        choices=["text", "md", "json"],
-        default="text",
-        help="Output style: plain text, Markdown, or machine-readable JSON.",
-    )
-    p_decide.add_argument(
-        "--repo-url",
-        help="Base repository URL for linking commit hashes in Markdown output.",
-    )
-    p_decide.set_defaults(func=decide_command)
-
     p_bump = sub.add_parser(
         "bump",
         help="Apply a bump to pyproject.toml",
@@ -508,6 +441,11 @@ def main(argv: list[str] | None = None) -> int:
     p_bump.add_argument(
         "--repo-url",
         help="Base repository URL for linking commit hashes in Markdown output.",
+    )
+    p_bump.add_argument(
+        "--decide",
+        action="store_true",
+        help="Only determine the bump level without modifying any files.",
     )
     p_bump.add_argument(
         "--pyproject",

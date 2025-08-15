@@ -1,11 +1,11 @@
 Usage
 =====
 
-The ``bumpwright`` command-line interface provides three subcommands to help
+The ``bumpwright`` command-line interface provides two subcommands to help
 manage project versions based on public API changes. By default, the
-``decide`` and ``bump`` subcommands compare the current commit against the last
-release commit, or the previous commit (``HEAD^``) when no release exists. This
-section explains each command, its arguments, and expected outputs.
+``bump`` subcommand compares the current commit against the last release
+commit, or the previous commit (``HEAD^``) when no release exists. This section
+explains each command, its arguments, and expected outputs.
 
 Global options
 --------------
@@ -28,10 +28,12 @@ release commits.
 
    bumpwright init
 
-``decide`` – suggest a bump
----------------------------
 
-Compare two git references and report the semantic version level they require.
+``bump --decide`` – suggest a bump
+----------------------------------
+
+Compare two git references and report the semantic version level they
+require.
 
 **Arguments**
 
@@ -55,7 +57,7 @@ Compare two git references and report the semantic version level they require.
 .. code-block:: console
 
    # Omitting --head defaults to the current HEAD
-   bumpwright decide --base origin/main --format json
+   bumpwright bump --decide --base origin/main --format json
 
 .. code-block:: json
 
@@ -66,13 +68,13 @@ Compare two git references and report the semantic version level they require.
      ]
    }
 
-Running ``bumpwright decide`` without ``--base`` compares the current commit
-against the last release commit or, if none exists, its parent (``HEAD^``).
-Because this subcommand only inspects commits, there is no ``--dry-run`` flag.
+Running ``bumpwright bump --decide`` without ``--base`` compares the current
+commit against the last release commit or, if none exists, its parent (``HEAD^``).
+Because this mode only inspects commits, there is no effect on the filesystem.
 
 .. code-block:: console
 
-   bumpwright decide --format json
+   bumpwright bump --decide --format json
 
 .. code-block:: json
 
@@ -87,7 +89,7 @@ Omitting ``--head`` uses the current ``HEAD``:
 
 .. code-block:: console
 
-   bumpwright decide --base origin/main --format json
+   bumpwright bump --decide --base origin/main --format json
 
 ``bump`` – apply a bump
 -----------------------
