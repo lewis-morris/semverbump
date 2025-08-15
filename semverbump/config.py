@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-import tomllib
+try:  # pragma: no cover - exercised in Python <3.11 tests
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Set
