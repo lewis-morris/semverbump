@@ -19,4 +19,4 @@ Apply a bump and commit/tag automatically:
 
 .. code-block:: console
 
-   semverbump bump --base v1.0.0 --head HEAD --commit --tag
+   semverbump auto --base v1.0.0 --head HEAD --commit --tag
