@@ -55,3 +55,10 @@ def available() -> List[str]:
 
 # Import built-in analyzers for registration side-effects
 from . import cli, web_routes  # noqa: F401,E402
+
+__all__ = [
+    "Analyzer",
+    "register",
+    "load_enabled",
+    "available",
+]
