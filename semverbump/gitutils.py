@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shlex
 import subprocess
 from fnmatch import fnmatch
 from pathlib import Path
@@ -7,17 +8,17 @@ from typing import Iterable, List, Optional, Set
 
 
 def _run(cmd: List[str], cwd: str | None = None) -> str:
-    """Execute a subprocess command and return its output.
+    """Run a subprocess command and return its ``stdout``.
 
     Args:
-        cmd: Command and arguments to run.
-        cwd: Working directory for the subprocess.
+        cmd: Command and arguments to execute.
+        cwd: Directory in which to run the command.
 
     Returns:
         Captured standard output from the command.
 
     Raises:
-        RuntimeError: If the command exits with a non-zero status.
+        subprocess.CalledProcessError: If the command exits with a non-zero status.
     """
 
     res = subprocess.run(
@@ -29,7 +30,12 @@ def _run(cmd: List[str], cwd: str | None = None) -> str:
         check=False,
     )
     if res.returncode != 0:
-        raise RuntimeError(f"Command failed: {' '.join(cmd)}\n{res.stderr}")
+        raise subprocess.CalledProcessError(
+            res.returncode,
+            shlex.join(cmd),
+            output=res.stdout,
+            stderr=res.stderr,
+        )
     return res.stdout
 
 
@@ -98,5 +104,5 @@ def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> Optional[st
 
     try:
         return _run(["git", "show", f"{ref}:{path}"], cwd)
-    except RuntimeError:
+    except subprocess.CalledProcessError:
         return None
