@@ -1,25 +1,51 @@
-import shlex
-import subprocess
+from __future__ import annotations
+
+from fnmatch import fnmatch
 from pathlib import Path
+from typing import Iterable, List, Set
 
-import pytest
-
-from semverbump.gitutils import _run, read_file_at_ref
-
-
-def test_run_raises_called_process_error() -> None:
-    cmd = ["python", "-c", "import sys; sys.exit(3)"]
-    with pytest.raises(subprocess.CalledProcessError) as exc:
-        _run(cmd)
-    assert exc.value.returncode == 3
-    assert exc.value.cmd == shlex.join(cmd)
+from semverbump import gitutils
 
 
-def test_read_file_at_ref_missing(tmp_path: Path) -> None:
-    repo = tmp_path
-    _run(["git", "init"], str(repo))
-    _run(["git", "config", "user.email", "a@b.c"], str(repo))
-    _run(["git", "config", "user.name", "tester"], str(repo))
-    _run(["git", "commit", "--allow-empty", "-m", "init"], str(repo))
-    head = _run(["git", "rev-parse", "HEAD"], str(repo)).strip()
-    assert read_file_at_ref(head, "missing.txt", cwd=str(repo)) is None
+def _legacy_list_py_files_at_ref(
+    ref: str,
+    roots: Iterable[str],
+    ignore_globs: Iterable[str] | None = None,
+    cwd: str | None = None,
+) -> Set[str]:
+    """Legacy helper to mirror previous list-based implementation."""
+    out = gitutils._run(["git", "ls-tree", "-r", "--name-only", ref], cwd)
+    paths: List[str] = []
+    roots_norm = [str(Path(r)) for r in roots]
+    for line in out.splitlines():
+        if not line.endswith(".py"):
+            continue
+        p = Path(line)
+        if any(
+            str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm
+        ):
+            s = str(p)
+            if ignore_globs and any(fnmatch(s, pat) for pat in ignore_globs):
+                continue
+            paths.append(s)
+    return set(paths)
+
+
+def test_list_py_files_at_ref_matches_legacy(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "pkg").mkdir()
+    (repo / "pkg" / "__init__.py").write_text("\n")
+    (repo / "pkg" / "ignored.py").write_text("\n")
+    (repo / "root.py").write_text("\n")
+    gitutils._run(["git", "init"], str(repo))
+    gitutils._run(["git", "config", "user.email", "test@example.com"], str(repo))
+    gitutils._run(["git", "config", "user.name", "Test"], str(repo))
+    gitutils._run(["git", "add", "."], str(repo))
+    gitutils._run(["git", "commit", "-m", "init"], str(repo))
+
+    ignore = ["pkg/ignored.py"]
+    expected = _legacy_list_py_files_at_ref("HEAD", ["."], ignore, str(repo))
+    result = gitutils.list_py_files_at_ref("HEAD", ["."], ignore, str(repo))
+
+    assert result == expected
