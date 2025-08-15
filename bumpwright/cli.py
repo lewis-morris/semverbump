@@ -83,7 +83,7 @@ def _run_analyzers(base: str, head: str, cfg: Config) -> List[Impact]:
         List of impacts reported by all analyzers.
 
     Examples:
-        >>> cfg = load_config("semverbump.toml")
+        >>> cfg = load_config("bumpwright.toml")
         >>> _run_analyzers("HEAD^", "HEAD", cfg)
         [Impact(...), ...]
     """
@@ -192,14 +192,14 @@ def decide_command(args: argparse.Namespace) -> int:
         Compare the current commit to its parent (default ``--base`` is
         ``HEAD^``) and display Markdown output:
 
-        $ semverbump decide --format md
-        **semverbump** suggests: `patch`
+        $ bumpwright decide --format md
+        **bumpwright** suggests: `patch`
 
         (no API-impacting changes detected)
 
         Emit machine-readable JSON instead:
 
-        $ semverbump decide --format json
+        $ bumpwright decide --format json
         {
           "level": "patch",
           "impacts": []
@@ -251,12 +251,12 @@ def bump_command(args: argparse.Namespace) -> int:
     Examples:
         Dry-run the inferred bump against the upstream branch:
 
-        $ semverbump bump --dry-run
+        $ bumpwright bump --dry-run
         Bumped version: 1.2.3 -> 1.2.4 (patch)
 
         Apply an explicit minor bump and create a commit:
 
-        $ semverbump bump --level minor --commit
+        $ bumpwright bump --level minor --commit
         Bumped version: 1.2.3 -> 1.3.0 (minor)
     """
 
@@ -310,8 +310,8 @@ def auto_command(args: argparse.Namespace) -> int:
     Examples:
         Show Markdown output and apply the bump:
 
-        $ semverbump auto --format md
-        **semverbump** suggests: `patch`
+        $ bumpwright auto --format md
+        **bumpwright** suggests: `patch`
 
         (no API-impacting changes detected)
 
@@ -319,7 +319,7 @@ def auto_command(args: argparse.Namespace) -> int:
 
         Emit JSON for automation:
 
-        $ semverbump auto --format json
+        $ bumpwright auto --format json
         {
           "level": "patch",
           "impacts": [],
