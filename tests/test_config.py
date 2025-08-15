@@ -2,7 +2,6 @@ import builtins
 import importlib
 
 import tomli
-
 from semverbump.config import load_config
 
 
@@ -19,7 +18,7 @@ def test_load_config_defaults_analyzers(tmp_path):
 
 
 def test_tomli_fallback(monkeypatch, tmp_path):
-    """Ensure ``tomli`` is used when ``tomllib`` is unavailable."""
+    """Ensure ``tomli`` is used when ``tomllib`` is unavailable and parses TOML."""
     import semverbump.config as config
 
     original_import = builtins.__import__
@@ -32,6 +31,9 @@ def test_tomli_fallback(monkeypatch, tmp_path):
     monkeypatch.setattr(builtins, "__import__", fake_import)
     importlib.reload(config)
 
+    cfg_file = tmp_path / "semverbump.toml"
+    cfg_file.write_text('[project]\nindex_file = "custom.toml"\n')
+    cfg = config.load_config(cfg_file)
+
     assert config.tomllib is tomli
-    cfg = config.load_config(tmp_path / "missing.toml")
-    assert cfg.project.index_file == "pyproject.toml"
+    assert cfg.project.index_file == "custom.toml"
