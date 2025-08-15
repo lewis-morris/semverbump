@@ -96,3 +96,20 @@ Ensure project dependencies for analyzers are installed:
 - `flask` or `fastapi` for the web route analyzer
 - `alembic` for the migrations analyzer
 - Other plugins may require additional libraries such as `jsonschema`
+
+## Roadmap
+
+Planned enhancements and ideas for future development include:
+
+- **Additional analyzers**: support for GraphQL schemas, gRPC services,
+  and OpenAPI specifications to broaden coverage of public interfaces.
+- **Plugin architecture**: allow projects to register custom analyzers and
+  severity rules through a stable extension API.
+- **Configurable severity**: enable user-defined mapping of changes to
+  semantic version levels.
+- **Rich reports**: emit machine-readable JSON or human-friendly HTML
+  summaries of detected changes.
+- **CI integration**: provide streamlined helpers for GitHub Actions and
+  other CI systems.
+- **Performance improvements**: caching mechanisms and smarter diffing to
+  handle large repositories efficiently.
