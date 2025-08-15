@@ -9,7 +9,7 @@ authors = [{ name = "Lewis Morris", email = "lewis@arched.dev"}]
     "libcst>=1.4.0",
     "tomlkit>=0.13.2",
     "packaging>=24.0",
-    "tomli>=1.0.0; python_version < '3.11'"
+    "tomli>=1.0.0"
   ]
 
 [project.scripts]
