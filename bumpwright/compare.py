@@ -128,19 +128,16 @@ def diff_public_api(
     return impacts
 
 
-def decide_bump(impacts: List[Impact], optional:None | str=None) -> Optional[str]:
+def decide_bump(impacts: List[Impact]) -> Optional[str]:
     """Determine the bump level from a list of impacts.
 
     Args:
         impacts: Detected impacts from API comparison.
-        optional: optional val
 
     Returns:
         Suggested semantic version bump (``"major"``, ``"minor"``, or ``"patch"``) or
         ``None`` if ``impacts`` is empty.
     """
-    if optional:
-        return optional
 
     if not impacts:
         return None
