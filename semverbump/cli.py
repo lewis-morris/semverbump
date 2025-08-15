@@ -166,8 +166,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="semverbump",
         description=(
-            "Suggest and apply semantic version bumps. Available analyzers: "
-            f"{avail}.",
+            f"Suggest and apply semantic version bumps. Available analyzers: {avail}.",
         ),
     )
     parser.add_argument(
