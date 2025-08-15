@@ -7,8 +7,8 @@ Install ``bumpwright`` from PyPI:
 
    pip install bumpwright
 
-Optional analyzers may require extra dependencies:
+Optional analysers may require extra dependencies:
 
-- ``click`` for the CLI analyzer
-- ``flask`` or ``fastapi`` for the web route analyzer
-- ``alembic`` for the migrations analyzer
+- ``click`` for the CLI analyser
+- ``flask`` or ``fastapi`` for the web route analyser
+- ``alembic`` for the migrations analyser

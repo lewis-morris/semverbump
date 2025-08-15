@@ -1,7 +1,7 @@
 Advanced Usage
 ==============
 
-Customize rules for version decisions:
+Customise rules for version decisions:
 
 .. code-block:: toml
 
@@ -79,7 +79,7 @@ Handling multi-package repositories
 
       Updated packages/pkg_a/pyproject.toml from 0.4.1 to 0.5.0
 
-Custom severity mapping and plugin analyzers
+Custom severity mapping and plugin analysers
 --------------------------------------------
 
 1. Create a plugin that reports ``print`` usage:
@@ -112,7 +112,7 @@ Custom severity mapping and plugin analyzers
       [rules]
       print_call = "patch"
 
-3. Execute the analyzer:
+3. Execute the analyser:
 
    .. code-block:: console
 

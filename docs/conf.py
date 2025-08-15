@@ -33,7 +33,7 @@ napoleon_include_special_with_doc = True
 napoleon_use_param = True
 napoleon_use_rtype = True
 
-# Autodoc / typehints behavior
+# Autodoc / typehints behaviour
 autodoc_default_options = {
     "members": True,
     "inherited-members": True,
