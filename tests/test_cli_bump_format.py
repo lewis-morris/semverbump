@@ -4,12 +4,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from tests.test_cli_auto import _setup_repo
+from tests.cli_helpers import setup_repo
 
 
 def test_bump_command_json_format(tmp_path: Path) -> None:
     """Ensure bump emits machine-readable JSON when requested."""
-    repo, _, _ = _setup_repo(tmp_path)
+    repo, _, _ = setup_repo(tmp_path)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
     res = subprocess.run(
         [

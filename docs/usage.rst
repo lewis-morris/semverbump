@@ -1,7 +1,7 @@
 Usage
 =====
 
-The ``bumpwright`` command-line interface provides three subcommands to help
+The ``bumpwright`` command-line interface provides two subcommands to help
 manage project versions based on public API changes. This section explains each
 command, its arguments, and expected outputs.
 
@@ -156,68 +156,6 @@ JSON output:
 Omitting ``--base`` compares against the branch's upstream; leaving out
 ``--head`` uses the current ``HEAD``.
 
-``auto`` – decide and bump
-----------------------------
-
-Combine ``decide`` and ``bump`` to infer the level and update files in one
-command. When ``--base`` is omitted, the current branch's upstream is used.
-
-Supported arguments mirror those of ``decide`` and ``bump``:
-
-``--base``
-    Base git reference. Defaults to the upstream of the current branch.
-
-``--head``
-    Head git reference. Defaults to ``HEAD``.
-
-``--format``
-    Output style, as in ``decide``.
-
-``--pyproject``, ``--version-path``, ``--version-ignore``, ``--commit``, ``--tag``, ``--dry-run``
-    Behave the same as in ``bump``.
-
-**Examples**
-
-.. code-block:: console
-
-   # Omit --base and preview changes only
-   bumpwright auto --dry-run --format json
-
-.. code-block:: json
-
-   {
-     "level": "patch",
-     "impacts": [],
-     "old_version": "1.2.3",
-     "new_version": "1.2.4"
-   }
-
-.. code-block:: console
-
-   bumpwright auto --commit --tag
-
-Omitting ``--base`` compares against the upstream branch, and omitting
-``--head`` assumes ``HEAD``. With ``--dry-run`` no files are modified and no
-commit or tag is created.
-
-
-.. code-block:: console
-
-   bumpwright auto --dry-run --format json
-
-.. code-block:: json
-
-   {
-     "level": "minor",
-     "old_version": "1.2.3",
-     "new_version": "1.3.0",
-     "impacts": []
-   }
-
-Using ``--dry-run`` previews the new version without editing files or creating
-commits. Omitting ``--head`` uses the current ``HEAD``; leaving out ``--base``
-falls back to the branch's upstream.
-
 
 Full workflow
 -------------
@@ -229,7 +167,7 @@ A typical release sequence might look like this:
    git checkout -b feature/amazing-change
    # edit code
    git commit -am "feat: add amazing change"
-   bumpwright auto --commit --tag
+   bumpwright bump --commit --tag
    git push --follow-tags origin HEAD
 
 
