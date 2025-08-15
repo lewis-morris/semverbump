@@ -6,8 +6,8 @@ from pathlib import Path
 from tests.cli_helpers import run, setup_repo
 
 
-def test_bump_and_decide_agree_on_no_api_changes(tmp_path: Path) -> None:
-    """bump and decide should both detect no bump when API is unchanged."""
+def test_decide_flag_detects_no_api_changes(tmp_path: Path) -> None:
+    """``bump --decide`` should detect no bump when the API is unchanged."""
     repo, pkg, _ = setup_repo(tmp_path)
 
     # Modify implementation without changing the public API.
@@ -21,7 +21,7 @@ def test_bump_and_decide_agree_on_no_api_changes(tmp_path: Path) -> None:
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
 
     res_decide = subprocess.run(
-        [sys.executable, "-m", "bumpwright.cli", "decide"],
+        [sys.executable, "-m", "bumpwright.cli", "bump", "--decide"],
         cwd=repo,
         check=True,
         stdout=subprocess.PIPE,

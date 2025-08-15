@@ -7,7 +7,7 @@ from pathlib import Path
 from tests.cli_helpers import run, setup_repo
 
 
-def test_decide_defaults_to_previous_commit(tmp_path: Path) -> None:
+def test_decide_flag_defaults_to_previous_commit(tmp_path: Path) -> None:
     repo, pkg, _ = setup_repo(tmp_path)
 
     (pkg / "extra.py").write_text("def bar() -> int:\n    return 2\n", encoding="utf-8")
@@ -19,7 +19,8 @@ def test_decide_defaults_to_previous_commit(tmp_path: Path) -> None:
             sys.executable,
             "-m",
             "bumpwright.cli",
-            "decide",
+            "bump",
+            "--decide",
             "--format",
             "json",
         ],
