@@ -38,7 +38,6 @@ pip install bumpwright
 |------------|---------|-------------|
 | `decide`   | Recommend a bump between two references | `--base`, `--head`, `--format` |
 | `bump`     | Apply a specific version bump | `--level`, `--pyproject`, `--format`, `--commit`, `--tag` |
-| `auto`     | Decide and bump in a single step | `--base`, `--head`, `--commit`, `--tag` |
 
 1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
 
@@ -86,16 +85,13 @@ pip install bumpwright
 4. **Run everything in one step** with automatic bumping and tagging:
 
    ```console
-   $ bumpwright auto --base origin/main --commit --tag --pyproject pyproject.toml
-   **bumpwright** suggests: `minor`
-
-   - [MINOR] cli.new_command: added CLI entry 'greet'
+   $ bumpwright bump --base origin/main --commit --tag --pyproject pyproject.toml
    Bumped version: 1.2.3 -> 1.3.0 (minor)
    Created tag: v1.3.0
    ```
 
-   The command infers the base reference when ``--base`` is omitted. After the
-   tag is created, push it upstream with:
+   Omit ``--base`` to compare against the upstream branch automatically. After
+   the tag is created, push it upstream with:
 
    ```console
    $ git push --follow-tags

@@ -27,7 +27,7 @@ Apply a bump and commit/tag automatically:
 
 .. code-block:: console
 
-   bumpwright auto --base v1.0.0 --head HEAD --commit --tag
+   bumpwright bump --base v1.0.0 --head HEAD --commit --tag
 
 Integrating with CI pipelines
 -----------------------------
