@@ -149,7 +149,7 @@ def diff_routes(
     return impacts
 
 
-@register("web_routes")
+@register("web_routes", "Track changes in web application routes.")
 class WebRoutesAnalyzer:
     """Analyzer plugin for web application routes."""
 
