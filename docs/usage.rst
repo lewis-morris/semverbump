@@ -47,6 +47,9 @@ Compare two git references and report the semantic version level they require.
     Output style. ``text`` prints plain console output, ``md`` emits Markdown,
     and ``json`` produces machine-readable data. Defaults to ``text``.
 
+``--repo-url URL``
+    Base repository URL for linking commit hashes in Markdown output.
+
 **Examples**
 
 .. code-block:: console
@@ -112,6 +115,9 @@ files for a ``__version__`` variable. These locations can be customised via the
     Output style. ``text`` prints plain console output, ``md`` emits Markdown,
     and ``json`` produces machine-readable data. Defaults to ``text``.
 
+``--repo-url URL``
+    Base repository URL for linking commit hashes in Markdown output.
+
 ``--pyproject PATH``
     Path to the project's ``pyproject.toml`` file. Defaults to
     ``pyproject.toml``.
@@ -159,6 +165,17 @@ This prints the old and new versions and, when ``--commit`` and ``--tag`` are
 set, commits and tags the release. Omitting ``--base`` compares against the
 last release commit or the previous commit (``HEAD^``), and omitting
 ``--head`` assumes ``HEAD``.
+
+Generate a Markdown changelog with commit links:
+
+.. code-block:: console
+
+   bumpwright bump --dry-run --format md --repo-url https://github.com/me/project --changelog -
+
+.. code-block:: text
+
+   ## [v1.2.4] - 2024-04-01
+   - [abc123](https://github.com/me/project/commit/abc123) feat: change
 
 To preview changes without touching the filesystem, combine ``--dry-run`` with
 JSON output:

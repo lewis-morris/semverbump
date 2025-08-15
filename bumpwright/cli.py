@@ -380,7 +380,13 @@ def bump_command(args: argparse.Namespace) -> int:
         base = last_release_commit() or f"{args.head}^"
         commits = collect_commits(base, args.head)
         lines = [f"## [v{vc.new}] - {date.today().isoformat()}"]
-        lines.extend(f"- {sha} {subject}" for sha, subject in commits)
+        for sha, subject in commits:
+            if args.repo_url and args.format == "md":
+                base_url = args.repo_url.rstrip("/")
+                link = f"{base_url}/commit/{sha}"
+                lines.append(f"- [{sha}]({link}) {subject}")
+            else:
+                lines.append(f"- {sha} {subject}")
         changelog = "\n".join(lines) + "\n"
     if args.format == "json":
         print(
@@ -465,6 +471,10 @@ def main(argv: list[str] | None = None) -> int:
         default="text",
         help="Output style: plain text, Markdown, or machine-readable JSON.",
     )
+    p_decide.add_argument(
+        "--repo-url",
+        help="Base repository URL for linking commit hashes in Markdown output.",
+    )
     p_decide.set_defaults(func=decide_command)
 
     p_bump = sub.add_parser(
@@ -494,6 +504,10 @@ def main(argv: list[str] | None = None) -> int:
         choices=["text", "md", "json"],
         default="text",
         help="Output style: plain text, Markdown, or machine-readable JSON.",
+    )
+    p_bump.add_argument(
+        "--repo-url",
+        help="Base repository URL for linking commit hashes in Markdown output.",
     )
     p_bump.add_argument(
         "--pyproject",
