@@ -1,0 +1,19 @@
+[MASTER]
+ignore-paths=^docs/.*,^tests/.*
+
+[MESSAGES CONTROL]
+disable=
+    C0103,
+    C0114,
+    C0115,
+    C0116,
+    C0415,
+    R0801,
+    R0912,
+    R1702,
+    R0401,
+    W0212,
+    W0621,
+    W0622,
+    C1803,
+    C0104
