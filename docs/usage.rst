@@ -14,6 +14,10 @@ Global options
     Path to the configuration file. Defaults to ``bumpwright.toml`` in the
     current working directory.
 
+``--repo-url URL``
+    Base URL of the repository. When combined with ``--format md``, any commit
+    hashes in the output are rendered as links to ``{URL}/commit/{hash}``.
+
 ``decide`` – suggest a bump
 ---------------------------
 
@@ -71,6 +75,16 @@ Omitting ``--head`` uses the current ``HEAD``:
 .. code-block:: console
 
    bumpwright decide --base origin/main --format json
+
+Supplying ``--repo-url`` with Markdown output converts commit hashes into links:
+
+.. code-block:: console
+
+   bumpwright decide --format md --repo-url https://github.com/example/repo
+
+.. code-block:: text
+
+   - [MINOR] cli.new_command: added feature from [0123abcd](https://github.com/example/repo/commit/0123abcd)
 
 ``bump`` – apply a bump
 -----------------------

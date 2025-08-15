@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Iterable, List
@@ -54,11 +55,32 @@ def _build_api_at_ref(ref: str, roots: list[str], ignores: Iterable[str]) -> Pub
     return api
 
 
-def _format_impacts_text(impacts: List[Impact]) -> str:
+def _link_commits(text: str, repo_url: str | None) -> str:
+    """Replace commit hashes in ``text`` with Markdown links.
+
+    Args:
+        text: Original text potentially containing commit hashes.
+        repo_url: Base repository URL.
+
+    Returns:
+        Text with hashes like ``abcdef1`` converted to
+        ``[abcdef1]({repo_url}/commit/abcdef1)`` when ``repo_url`` is provided.
+    """
+
+    if not repo_url:
+        return text
+    pattern = re.compile(r"\b([0-9a-f]{7,40})\b")
+    return pattern.sub(
+        lambda m: f"[{m.group(1)}]({repo_url}/commit/{m.group(1)})", text
+    )
+
+
+def _format_impacts_text(impacts: List[Impact], repo_url: str | None = None) -> str:
     """Render a list of impacts as human-readable text.
 
     Args:
         impacts: Detected impacts.
+        repo_url: Base repository URL for linking commit hashes.
 
     Returns:
         Formatted Markdown-style bullet list.
@@ -66,13 +88,15 @@ def _format_impacts_text(impacts: List[Impact]) -> str:
     Examples:
         >>> _format_impacts_text([])
         '(no API-impacting changes detected)'
-        >>> _format_impacts_text([Impact('warn', 'sym', 'reason')])
-        '- [WARN] sym: reason'
+        >>> _format_impacts_text([Impact('warn', 'sym', 'abc1234')], repo_url='https://x')
+        '- [WARN] sym: [abc1234](https://x/commit/abc1234)'
     """
 
     lines = []
     for i in impacts:
-        lines.append(f"- [{i.severity.upper()}] {i.symbol}: {i.reason}")
+        symbol = _link_commits(i.symbol, repo_url)
+        reason = _link_commits(i.reason, repo_url)
+        lines.append(f"- [{i.severity.upper()}] {symbol}: {reason}")
     return "\n".join(lines) if lines else "(no API-impacting changes detected)"
 
 
@@ -236,7 +260,7 @@ def decide_command(args: argparse.Namespace) -> int:
         )
     elif args.format == "md":
         print(f"**bumpwright** suggests: `{level}`\n")
-        print(_format_impacts_text(impacts))
+        print(_format_impacts_text(impacts, repo_url=args.repo_url))
     else:
         print(f"Suggested bump: {level}")
         print(_format_impacts_text(impacts))
@@ -374,6 +398,13 @@ def main(argv: list[str] | None = None) -> int:
         "--config",
         default="bumpwright.toml",
         help="Path to configuration file.",
+    )
+    parser.add_argument(
+        "--repo-url",
+        help=(
+            "Repository base URL used to expand commit hashes into links when "
+            "--format md is set."
+        ),
     )
 
     sub = parser.add_subparsers(dest="cmd")
