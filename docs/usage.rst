@@ -30,19 +30,25 @@ Compare two git references and report the semantic version level they require.
     Output style. ``text`` prints plain console output, ``md`` emits Markdown,
     and ``json`` produces machine-readable data. Defaults to ``text``.
 
-**Example**
+**Examples**
 
 .. code-block:: console
 
-   bumpwright decide --base origin/main --head HEAD --format md
+   # Omitting --head defaults to the current HEAD
+   bumpwright decide --base origin/main --format json
 
-.. code-block:: text
+.. code-block:: json
 
-   **bumpwright** suggests: `minor`
-   - [MINOR] cli.new_command: added CLI entry 'greet'
+   {
+     "level": "minor",
+     "impacts": [
+       {"severity": "minor", "symbol": "cli.new_command", "reason": "added CLI entry 'greet'"}
+     ]
+   }
 
 Running ``bumpwright decide`` without ``--base`` compares the current commit
-against its parent (``HEAD^``).
+against its parent (``HEAD^``). Because this subcommand only inspects commits,
+there is no ``--dry-run`` flag.
 
 ``bump`` – apply a bump
 -----------------------
@@ -86,14 +92,28 @@ Update version information in ``pyproject.toml`` and other files.
 ``--dry-run``
     Display the new version without modifying any files.
 
-**Example**
+**Examples**
+
+.. code-block:: console
+
+   # Preview the inferred bump without changing files
+   bumpwright bump --dry-run --format json
+
+.. code-block:: json
+
+   {
+     "old_version": "1.2.3",
+     "new_version": "1.2.4",
+     "level": "patch"
+   }
 
 .. code-block:: console
 
    bumpwright bump --level minor --pyproject pyproject.toml --commit --tag
 
 This prints the old and new versions and, when ``--commit`` and ``--tag`` are
-set, commits and tags the release.
+set, commits and tags the release. Omitting ``--base`` uses the branch's
+upstream, and omitting ``--head`` assumes ``HEAD``.
 
 ``auto`` – decide and bump
 ----------------------------
@@ -115,11 +135,29 @@ Supported arguments mirror those of ``decide`` and ``bump``:
 ``--pyproject``, ``--version-path``, ``--version-ignore``, ``--commit``, ``--tag``, ``--dry-run``
     Behave the same as in ``bump``.
 
-**Example**
+**Examples**
+
+.. code-block:: console
+
+   # Omit --base and preview changes only
+   bumpwright auto --dry-run --format json
+
+.. code-block:: json
+
+   {
+     "level": "patch",
+     "impacts": [],
+     "old_version": "1.2.3",
+     "new_version": "1.2.4"
+   }
 
 .. code-block:: console
 
    bumpwright auto --commit --tag
+
+Omitting ``--base`` compares against the upstream branch, and omitting
+``--head`` assumes ``HEAD``. With ``--dry-run`` no files are modified and no
+commit or tag is created.
 
 Full workflow
 -------------
@@ -136,3 +174,18 @@ A typical release sequence might look like this:
 
 All commands read configuration from ``bumpwright.toml`` by default. Use
 ``--config`` to specify an alternate file.
+
+Common errors
+-------------
+
+``pyproject.toml`` not found
+    Ensure you run the command at the project root or pass ``--pyproject`` with
+    the correct path.
+
+No upstream configured for base
+    When ``--base`` is omitted, the upstream branch is used. Configure an
+    upstream with ``git push -u origin HEAD`` or provide ``--base`` explicitly.
+
+Changes not applied after running
+    The ``--dry-run`` flag previews the bump without touching files. Remove it
+    and, if desired, add ``--commit`` and ``--tag`` to persist the change.
