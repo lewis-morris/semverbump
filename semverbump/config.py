@@ -10,6 +10,7 @@ _DEFAULTS = {
     "ignore": {"paths": ["tests/**", "examples/**", "scripts/**"]},
     "rules": {"return_type_change": "minor"},  # or "major"
     "analyzers": {},
+    "migrations": {"paths": ["migrations"]},
 }
 
 
@@ -50,6 +51,13 @@ class Analyzers:
 
 
 @dataclass
+class Migrations:
+    """Settings for the migrations analyzer."""
+
+    paths: List[str] = field(default_factory=lambda: ["migrations"])
+
+
+@dataclass
 class Config:
     """Top-level configuration for semverbump.
 
@@ -64,6 +72,7 @@ class Config:
     rules: Rules = field(default_factory=Rules)
     ignore: Ignore = field(default_factory=Ignore)
     analyzers: Analyzers = field(default_factory=Analyzers)
+    migrations: Migrations = field(default_factory=Migrations)
 
 
 def _merge_defaults(data: dict) -> dict:
@@ -93,4 +102,11 @@ def load_config(path: str | Path = "semverbump.toml") -> Config:
     ign = Ignore(**d["ignore"])
     enabled = {name for name, enabled in d["analyzers"].items() if enabled}
     analyzers = Analyzers(enabled=enabled)
-    return Config(project=proj, rules=rules, ignore=ign, analyzers=analyzers)
+    migrations = Migrations(**d.get("migrations", {}))
+    return Config(
+        project=proj,
+        rules=rules,
+        ignore=ign,
+        analyzers=analyzers,
+        migrations=migrations,
+    )
