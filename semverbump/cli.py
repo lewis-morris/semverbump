@@ -268,95 +268,142 @@ def main(argv: list[str] | None = None) -> int:
     avail = ", ".join(available()) or "none"
     parser = argparse.ArgumentParser(
         prog="semverbump",
-        description=(
-            f"Suggest and apply semantic version bumps. Available analyzers: {avail}.",
-        ),
+        description=f"Suggest and apply semantic version bumps. Available analyzers: {avail}.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "--config",
         default="semverbump.toml",
-        help="Path to config (default: semverbump.toml)",
+        help="Path to configuration file.",
     )
 
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    p_decide = sub.add_parser("decide", help="Suggest bump between two refs")
-    p_decide.add_argument(
-        "--base", required=True, help="Base ref (e.g., origin/master)"
+    p_decide = sub.add_parser(
+        "decide",
+        help="Suggest bump between two refs",
+        description="Compare two git references and report the required semantic version bump.",
     )
-    p_decide.add_argument("--head", default="HEAD", help="Head ref (default: HEAD)")
-    p_decide.add_argument("--format", choices=["text", "md", "json"], default="text")
+    p_decide.add_argument(
+        "--base",
+        required=True,
+        help="Base git reference to compare against (for example 'origin/main').",
+    )
+    p_decide.add_argument(
+        "--head",
+        default="HEAD",
+        help="Head git reference; defaults to the current HEAD.",
+    )
+    p_decide.add_argument(
+        "--format",
+        choices=["text", "md", "json"],
+        default="text",
+        help="Output style: plain text, Markdown, or machine-readable JSON.",
+    )
     p_decide.set_defaults(func=decide_command)
 
-    p_bump = sub.add_parser("bump", help="Apply a bump to pyproject.toml")
+    p_bump = sub.add_parser(
+        "bump",
+        help="Apply a bump to pyproject.toml",
+        description="Update project version metadata and optionally commit and tag the change.",
+    )
     p_bump.add_argument(
         "--level",
         choices=["major", "minor", "patch"],
-        help="Bump level; if omitted, auto-decide from refs",
+        help="Desired bump level; if omitted, it is inferred from --base and --head.",
     )
     p_bump.add_argument(
         "--base",
-        help="Base ref (defaults to upstream of HEAD when --level omitted)",
+        help="Base git reference when auto-deciding the level (uses upstream of HEAD by default).",
     )
-    p_bump.add_argument("--head", default="HEAD", help="Head ref (default: HEAD)")
-    p_bump.add_argument("--pyproject", default="pyproject.toml")
+    p_bump.add_argument(
+        "--head",
+        default="HEAD",
+        help="Head git reference; defaults to the current HEAD.",
+    )
+    p_bump.add_argument(
+        "--pyproject",
+        default="pyproject.toml",
+        help="Path to the project's pyproject.toml file.",
+    )
     p_bump.add_argument(
         "--version-path",
         action="append",
         dest="version_path",
-        help="Glob of files containing the project version (repeatable)",
+        help="Glob pattern for files that contain the project version (repeatable).",
     )
     p_bump.add_argument(
         "--version-ignore",
         action="append",
         dest="version_ignore",
-        help="Glob of paths to ignore when updating version",
+        help="Glob pattern for paths to exclude from version updates.",
     )
     p_bump.add_argument(
         "--commit",
         action="store_true",
-        help="git commit the version change",
+        help="Create a git commit for the version change.",
     )
-    p_bump.add_argument("--tag", action="store_true", help="git tag the new version")
+    p_bump.add_argument(
+        "--tag", action="store_true", help="Create a git tag for the new version."
+    )
     p_bump.add_argument(
         "--dry-run",
         action="store_true",
-        help="show new version without modifying files",
+        help="Display the new version without modifying any files.",
     )
     p_bump.set_defaults(func=bump_command)
 
     p_auto = sub.add_parser(
-        "auto", help="Decide and apply bump, committing and tagging optionally"
+        "auto",
+        help="Decide and apply bump, committing and tagging optionally",
+        description=(
+            "Combine 'decide' and 'bump' to infer the level and update files in one step."
+        ),
     )
     p_auto.add_argument(
         "--base",
-        help="Base ref (defaults to upstream of HEAD)",
+        help="Base git reference; defaults to the upstream of the current branch.",
     )
-    p_auto.add_argument("--head", default="HEAD", help="Head ref (default: HEAD)")
-    p_auto.add_argument("--format", choices=["text", "md", "json"], default="text")
-    p_auto.add_argument("--pyproject", default="pyproject.toml")
+    p_auto.add_argument(
+        "--head",
+        default="HEAD",
+        help="Head git reference; defaults to the current HEAD.",
+    )
+    p_auto.add_argument(
+        "--format",
+        choices=["text", "md", "json"],
+        default="text",
+        help="Output style: plain text, Markdown, or machine-readable JSON.",
+    )
+    p_auto.add_argument(
+        "--pyproject",
+        default="pyproject.toml",
+        help="Path to the project's pyproject.toml file.",
+    )
     p_auto.add_argument(
         "--version-path",
         action="append",
         dest="version_path",
-        help="Glob of files containing the project version (repeatable)",
+        help="Glob pattern for files that contain the project version (repeatable).",
     )
     p_auto.add_argument(
         "--version-ignore",
         action="append",
         dest="version_ignore",
-        help="Glob of paths to ignore when updating version",
+        help="Glob pattern for paths to exclude from version updates.",
     )
     p_auto.add_argument(
         "--commit",
         action="store_true",
-        help="git commit the version change",
+        help="Create a git commit for the version change.",
     )
-    p_auto.add_argument("--tag", action="store_true", help="git tag the new version")
+    p_auto.add_argument(
+        "--tag", action="store_true", help="Create a git tag for the new version."
+    )
     p_auto.add_argument(
         "--dry-run",
         action="store_true",
-        help="show new version without modifying files",
+        help="Display the new version without modifying any files.",
     )
     p_auto.set_defaults(func=auto_command)
 
