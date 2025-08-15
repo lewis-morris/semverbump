@@ -44,6 +44,25 @@ Compare two git references and report the semantic version level they require.
 Running ``bumpwright decide`` without ``--base`` compares the current commit
 against its parent (``HEAD^``).
 
+.. code-block:: console
+
+   bumpwright decide --format json
+
+.. code-block:: json
+
+   {
+     "level": "minor",
+     "impacts": [
+       {"severity": "minor", "symbol": "cli.new_command", "reason": "added CLI entry 'greet'"}
+     ]
+   }
+
+Omitting ``--head`` uses the current ``HEAD``:
+
+.. code-block:: console
+
+   bumpwright decide --base origin/main --format json
+
 ``bump`` – apply a bump
 -----------------------
 
@@ -95,6 +114,24 @@ Update version information in ``pyproject.toml`` and other files.
 This prints the old and new versions and, when ``--commit`` and ``--tag`` are
 set, commits and tags the release.
 
+To preview changes without touching the filesystem, combine ``--dry-run`` with
+JSON output:
+
+.. code-block:: console
+
+   bumpwright bump --dry-run --format json
+
+.. code-block:: json
+
+   {
+     "old_version": "1.2.3",
+     "new_version": "1.2.4",
+     "level": "patch"
+   }
+
+Omitting ``--base`` compares against the branch's upstream; leaving out
+``--head`` uses the current ``HEAD``.
+
 ``auto`` – decide and bump
 ----------------------------
 
@@ -121,6 +158,24 @@ Supported arguments mirror those of ``decide`` and ``bump``:
 
    bumpwright auto --commit --tag
 
+.. code-block:: console
+
+   bumpwright auto --dry-run --format json
+
+.. code-block:: json
+
+   {
+     "level": "minor",
+     "old_version": "1.2.3",
+     "new_version": "1.3.0",
+     "impacts": []
+   }
+
+Using ``--dry-run`` previews the new version without editing files or creating
+commits. Omitting ``--head`` uses the current ``HEAD``; leaving out ``--base``
+falls back to the branch's upstream.
+
+
 Full workflow
 -------------
 
@@ -134,5 +189,13 @@ A typical release sequence might look like this:
    bumpwright auto --commit --tag
    git push --follow-tags origin HEAD
 
-All commands read configuration from ``bumpwright.toml`` by default. Use
-``--config`` to specify an alternate file.
+Common errors
+-------------
+
+* ``pyproject.toml not found`` – ensure the project file exists or provide a
+  correct path via ``--pyproject``.
+* ``Error: unknown revision`` – verify that the git references supplied to
+  ``--base`` and ``--head`` are valid.
+* ``Refusing to commit with unclean working tree`` – commit or stash changes
+  before using ``--commit`` or ``--tag``.
+
