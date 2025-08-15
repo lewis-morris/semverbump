@@ -170,12 +170,14 @@ def diff_cli(old: Dict[str, Command], new: Dict[str, Command]) -> List[Impact]:
     return impacts
 
 
-def _build_cli_at_ref(ref: str, roots: Iterable[str]) -> Dict[str, Command]:
+def _build_cli_at_ref(
+    ref: str, roots: Iterable[str], ignores: Iterable[str]
+) -> Dict[str, Command]:
     """Collect commands for all modules at a git ref."""
 
     out: Dict[str, Command] = {}
     for root in roots:
-        for path in list_py_files_at_ref(ref, [root]):
+        for path in list_py_files_at_ref(ref, [root], ignore_globs=ignores):
             code = read_file_at_ref(ref, path)
             if code is None:
                 continue
@@ -183,12 +185,19 @@ def _build_cli_at_ref(ref: str, roots: Iterable[str]) -> Dict[str, Command]:
     return out
 
 
-def analyze(base: str, head: str, cfg: Config) -> List[Impact]:
-    """Analyzer entry point used by the plugin registry."""
+@register("cli")
+class CLIAnalyzer:
+    """Analyzer plugin for command-line interfaces."""
 
-    old = _build_cli_at_ref(base, cfg.project.public_roots)
-    new = _build_cli_at_ref(head, cfg.project.public_roots)
-    return diff_cli(old, new)
+    def __init__(self, cfg: Config) -> None:
+        self.cfg = cfg
 
+    def collect(self, ref: str) -> Dict[str, Command]:
+        """Collect CLI commands at the given ref."""
+        return _build_cli_at_ref(
+            ref, self.cfg.project.public_roots, self.cfg.ignore.paths
+        )
 
-register("cli", analyze)
+    def compare(self, old: Dict[str, Command], new: Dict[str, Command]) -> List[Impact]:
+        """Compare two command mappings and return impacts."""
+        return diff_cli(old, new)

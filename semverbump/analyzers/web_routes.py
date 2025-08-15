@@ -98,13 +98,13 @@ def extract_routes_from_source(code: str) -> Dict[Tuple[str, str], Route]:
 
 
 def _build_routes_at_ref(
-    ref: str, roots: Iterable[str]
+    ref: str, roots: Iterable[str], ignores: Iterable[str]
 ) -> Dict[Tuple[str, str], Route]:
     """Collect routes for all modules under given roots at a git ref."""
 
     out: Dict[Tuple[str, str], Route] = {}
     for root in roots:
-        for path in list_py_files_at_ref(ref, [root]):
+        for path in list_py_files_at_ref(ref, [root], ignore_globs=ignores):
             code = read_file_at_ref(ref, path)
             if code is None:
                 continue
@@ -150,12 +150,21 @@ def diff_routes(
     return impacts
 
 
-def analyze(base: str, head: str, cfg: Config) -> List[Impact]:
-    """Analyzer entry point used by the plugin registry."""
+@register("web_routes")
+class WebRoutesAnalyzer:
+    """Analyzer plugin for web application routes."""
 
-    old = _build_routes_at_ref(base, cfg.project.public_roots)
-    new = _build_routes_at_ref(head, cfg.project.public_roots)
-    return diff_routes(old, new)
+    def __init__(self, cfg: Config) -> None:
+        self.cfg = cfg
 
+    def collect(self, ref: str) -> Dict[Tuple[str, str], Route]:
+        """Collect route definitions at ``ref``."""
+        return _build_routes_at_ref(
+            ref, self.cfg.project.public_roots, self.cfg.ignore.paths
+        )
 
-register("web_routes", analyze)
+    def compare(
+        self, old: Dict[Tuple[str, str], Route], new: Dict[Tuple[str, str], Route]
+    ) -> List[Impact]:
+        """Compare two route mappings and return impacts."""
+        return diff_routes(old, new)
