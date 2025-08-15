@@ -179,12 +179,11 @@ def _build_cli_at_ref(
     """Collect commands for all modules at a git ref."""
 
     out: Dict[str, Command] = {}
-    for root in roots:
-        for path in list_py_files_at_ref(ref, [root], ignore_globs=ignores):
-            code = read_file_at_ref(ref, path)
-            if code is None:
-                continue
-            out.update(extract_cli_from_source(code))
+    for path in list_py_files_at_ref(ref, roots, ignore_globs=ignores):
+        code = read_file_at_ref(ref, path)
+        if code is None:
+            continue
+        out.update(extract_cli_from_source(code))
     return out
 
 

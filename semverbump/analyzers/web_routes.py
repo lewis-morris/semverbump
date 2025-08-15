@@ -1,4 +1,10 @@
-"""Web route analyzer for Flask and FastAPI apps."""
+"""Analyzer for detecting changes in web application routes.
+
+This module scans Python source files for framework-specific route decorators
+(such as Flask or FastAPI) and records the exposed HTTP endpoints. It can
+compare routes between two git references to determine whether breaking or
+backwards-compatible changes have occurred.
+"""
 
 from __future__ import annotations
 
@@ -38,17 +44,10 @@ def _extract_params(args: ast.arguments) -> Dict[str, bool]:
         Mapping of parameter name to required flag.
     """
 
-    params: Dict[str, bool] = {}
     pos = list(args.posonlyargs) + list(args.args)
-    defaults = [None] * (len(pos) - len(args.defaults)) + list(args.defaults)
-    for a, d in zip(pos, defaults):
-        if a.arg == "self":
-            continue
-        required = d is None
-        params[a.arg] = required
-    for a, d in zip(args.kwonlyargs, args.kw_defaults):
-        required = d is None
-        params[a.arg] = required
+    pos_defaults = [None] * (len(pos) - len(args.defaults)) + list(args.defaults)
+    params = {a.arg: d is None for a, d in zip(pos, pos_defaults) if a.arg != "self"}
+    params.update({a.arg: d is None for a, d in zip(args.kwonlyargs, args.kw_defaults)})
     return params
 
 
@@ -104,12 +103,11 @@ def _build_routes_at_ref(
     """Collect routes for all modules under given roots at a git ref."""
 
     out: Dict[Tuple[str, str], Route] = {}
-    for root in roots:
-        for path in list_py_files_at_ref(ref, [root], ignore_globs=ignores):
-            code = read_file_at_ref(ref, path)
-            if code is None:
-                continue
-            out.update(extract_routes_from_source(code))
+    for path in list_py_files_at_ref(ref, roots, ignore_globs=ignores):
+        code = read_file_at_ref(ref, path)
+        if code is None:
+            continue
+        out.update(extract_routes_from_source(code))
     return out
 
 
