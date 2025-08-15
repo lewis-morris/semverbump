@@ -98,13 +98,16 @@ def write_project_version(
 
 
 def apply_bump(
-    level: str, pyproject_path: str | Path = "pyproject.toml"
+    level: str,
+    pyproject_path: str | Path = "pyproject.toml",
+    dry_run: bool = False,
 ) -> VersionChange:
     """Apply a semantic version bump to ``pyproject.toml``.
 
     Args:
         level: Bump level to apply (``"major"``, ``"minor"``, or ``"patch"``).
         pyproject_path: Path to the ``pyproject.toml`` file.
+        dry_run: If ``True``, compute the new version without writing to disk.
 
     Returns:
         :class:`VersionChange` detailing the old and new versions.
@@ -112,5 +115,6 @@ def apply_bump(
 
     old = read_project_version(pyproject_path)
     new = bump_string(old, level)
-    write_project_version(new, pyproject_path)
+    if not dry_run:
+        write_project_version(new, pyproject_path)
     return VersionChange(old=old, new=new, level=level)

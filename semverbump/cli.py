@@ -183,9 +183,10 @@ def bump_command(args: argparse.Namespace) -> int:
         impacts.extend(_run_analyzers(base, head, cfg))
         level = decide_bump(impacts)
 
-    vc = apply_bump(level, pyproject_path=args.pyproject)
+    vc = apply_bump(level, pyproject_path=args.pyproject, dry_run=args.dry_run)
     print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
-    _commit_tag(args.pyproject, vc.new, args.commit, args.tag)
+    if not args.dry_run:
+        _commit_tag(args.pyproject, vc.new, args.commit, args.tag)
     return 0
 
 
@@ -209,7 +210,7 @@ def auto_command(args: argparse.Namespace) -> int:
     )
     impacts.extend(_run_analyzers(base, head, cfg))
     level = decide_bump(impacts)
-    vc = apply_bump(level, pyproject_path=args.pyproject)
+    vc = apply_bump(level, pyproject_path=args.pyproject, dry_run=args.dry_run)
 
     if args.format == "json":
         print(
@@ -233,7 +234,8 @@ def auto_command(args: argparse.Namespace) -> int:
         print(_format_impacts_text(impacts))
         print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
 
-    _commit_tag(args.pyproject, vc.new, args.commit, args.tag)
+    if not args.dry_run:
+        _commit_tag(args.pyproject, vc.new, args.commit, args.tag)
     return 0
 
 
@@ -288,6 +290,11 @@ def main(argv: list[str] | None = None) -> int:
         help="git commit the version change",
     )
     p_bump.add_argument("--tag", action="store_true", help="git tag the new version")
+    p_bump.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="show new version without modifying files",
+    )
     p_bump.set_defaults(func=bump_command)
 
     p_auto = sub.add_parser(
@@ -306,6 +313,11 @@ def main(argv: list[str] | None = None) -> int:
         help="git commit the version change",
     )
     p_auto.add_argument("--tag", action="store_true", help="git tag the new version")
+    p_auto.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="show new version without modifying files",
+    )
     p_auto.set_defaults(func=auto_command)
 
     args = parser.parse_args(argv)
