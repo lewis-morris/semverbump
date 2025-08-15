@@ -15,7 +15,8 @@ from .analyzers import available, load_enabled
 from .compare import Impact, decide_bump, diff_public_api
 from .config import Config, load_config
 from .gitutils import list_py_files_at_ref, read_file_at_ref
-from .public_api import PublicAPI, extract_public_api_from_source, module_name_from_path
+from .public_api import (PublicAPI, extract_public_api_from_source,
+                         module_name_from_path)
 from .versioning import apply_bump
 
 
@@ -135,13 +136,17 @@ def decide_command(args: argparse.Namespace) -> int:
     """
 
     cfg = load_config(args.config)
-    old_api = _build_api_at_ref(args.base, cfg.project.public_roots, cfg.ignore.paths)
-    new_api = _build_api_at_ref(args.head, cfg.project.public_roots, cfg.ignore.paths)
+    # Default to comparing the current commit against its immediate parent when no base
+    # reference is provided.
+    base: str = args.base or "HEAD^"
+    head: str = args.head
+    old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
+    new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
 
     impacts = diff_public_api(
         old_api, new_api, return_type_change=cfg.rules.return_type_change
     )
-    impacts.extend(_run_analyzers(args.base, args.head, cfg))
+    impacts.extend(_run_analyzers(base, head, cfg))
     level = decide_bump(impacts)
 
     if args.format == "json":
@@ -286,8 +291,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_decide.add_argument(
         "--base",
-        required=True,
-        help="Base git reference to compare against (for example 'origin/main').",
+        default="HEAD^",
+        help=(
+            "Base git reference to compare against. Defaults to the previous commit (HEAD^)."
+        ),
     )
     p_decide.add_argument(
         "--head",
