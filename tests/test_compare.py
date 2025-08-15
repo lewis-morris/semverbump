@@ -2,7 +2,6 @@ from semverbump.compare import compare_funcs, decide_bump, diff_public_api
 from semverbump.public_api import FuncSig, Param
 
 
-
 def _sig(name, params, returns=None):
     return FuncSig(name, tuple(params), returns)
 
