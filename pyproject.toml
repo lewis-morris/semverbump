@@ -3,13 +3,14 @@ name = "semverbump"
 version = "0.1.0"
 description = "Static public-API diff + heuristics to suggest semantic version bumps."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 authors = [{ name = "Lewis Morris", email = "lewis@arched.dev"}]
-dependencies = [
-  "libcst>=1.4.0",
-  "tomlkit>=0.13.2",
-  "packaging>=24.0"
-]
+  dependencies = [
+    "libcst>=1.4.0",
+    "tomlkit>=0.13.2",
+    "packaging>=24.0",
+    "tomli>=1.0.0; python_version < '3.11'"
+  ]
 
 [project.scripts]
 semverbump = "semverbump.cli:main"
