@@ -26,6 +26,9 @@ Example configuration showing all available sections and their default values:
    [migrations]
    paths = ["migrations"]
 
+   [changelog]
+   path = "CHANGELOG.md"
+
    [version]
    paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/*.py"]
    ignore = []
@@ -145,6 +148,22 @@ Controls where version strings are read and updated.
      - list[str]
      - ``[]``
      - Glob patterns excluded from version replacement.
+
+Changelog
+~~~~~~~~~
+
+.. list-table:: Changelog options
+   :header-rows: 1
+
+   * - Key
+     - Type
+     - Default
+     - Description
+   * - ``path``
+     - str
+     - ``""``
+     - Default file appended when running ``bumpwright bump`` with
+       ``--changelog`` omitted.
 
 All sections and keys are optional; unspecified values fall back to the
 defaults shown above.

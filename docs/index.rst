@@ -9,6 +9,7 @@ Static public-API diff and heuristics to suggest semantic version bumps.
 
    installation
    usage
+   changelog
    analysers
    advanced
    configuration

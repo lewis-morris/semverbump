@@ -17,6 +17,7 @@ Ecosystem enhancements
 * Pluggable analyser API so projects can ship custom rules
 * User-defined severity mappings and thresholds
 * Machine-readable (JSON) and rich HTML reports
+* Built-in changelog templating and defaults
 * Official helpers for common CI providers
 * Performance work such as caching and incremental diffing
 
