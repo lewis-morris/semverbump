@@ -1,4 +1,4 @@
-import sys, os
+import sys
 from pathlib import Path
 
 # Ensure local package importable when running tests from repo root
