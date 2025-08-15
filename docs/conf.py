@@ -39,8 +39,8 @@ autodoc_default_options = {
     "inherited-members": True,
     "show-inheritance": True,
 }
-autodoc_typehints = "description"       # move hints into the description
-autodoc_typehints_format = "short"      # short type names where possible
+autodoc_typehints = "description"  # move hints into the description
+autodoc_typehints_format = "short"  # short type names where possible
 typehints_fully_qualified = False
 always_document_param_types = True
 
@@ -49,10 +49,10 @@ always_document_param_types = True
 
 # MyST (Markdown) quality-of-life
 myst_enable_extensions = [
-    "colon_fence",     # ::: fenced blocks
-    "deflist",         # definition lists
-    "substitution",    # |subst| support
-    "tasklist",        # - [ ] tasks
+    "colon_fence",  # ::: fenced blocks
+    "deflist",  # definition lists
+    "substitution",  # |subst| support
+    "tasklist",  # - [ ] tasks
 ]
 
 # -- HTML output -------------------------------------------------------------
