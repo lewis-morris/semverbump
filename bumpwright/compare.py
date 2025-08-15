@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from .public_api import FuncSig, Param, PublicAPI
 
@@ -128,16 +128,19 @@ def diff_public_api(
     return impacts
 
 
-def decide_bump(impacts: List[Impact]) -> str:
+def decide_bump(impacts: List[Impact]) -> Optional[str]:
     """Determine the bump level from a list of impacts.
 
     Args:
         impacts: Detected impacts from API comparison.
 
     Returns:
-        Suggested semantic version bump (``"major"``, ``"minor"``, or ``"patch"``).
+        Suggested semantic version bump (``"major"``, ``"minor"``, or ``"patch"``) or
+        ``None`` if ``impacts`` is empty.
     """
 
+    if not impacts:
+        return None
     if any(i.severity == "major" for i in impacts):
         return "major"
     if any(i.severity == "minor" for i in impacts):
