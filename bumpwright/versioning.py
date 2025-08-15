@@ -9,6 +9,8 @@ from glob import glob
 from pathlib import Path
 from typing import Iterable, List, Optional
 
+from .config import load_config
+
 try:  # pragma: no cover - needed for linting when dependency missing
     from packaging.version import Version
 except ModuleNotFoundError as exc:  # pragma: no cover
@@ -135,6 +137,7 @@ def apply_bump(
     dry_run: bool = False,
     paths: Iterable[str] | None = None,
     ignore: Iterable[str] | None = None,
+    config_path: str | Path = "bumpwright.toml",
 ) -> VersionChange:
     """Apply a semantic version bump and update version strings.
 
@@ -143,12 +146,24 @@ def apply_bump(
         pyproject_path: Path to the canonical ``pyproject.toml`` file.
         dry_run: If ``True``, compute the new version without writing to disk.
         paths: Glob patterns pointing to files that may contain the version.
+            If ``None``, patterns are loaded from ``config_path``.
             The canonical ``pyproject.toml`` is always updated.
-        ignore: Glob patterns to exclude from ``paths``.
+        ignore: Glob patterns to exclude from ``paths``. Defaults to values from
+            ``config_path`` when ``None``.
+        config_path: Path to a ``bumpwright`` configuration file defining
+            default version locations.
 
     Returns:
         :class:`VersionChange` detailing the old and new versions.
     """
+
+    cfg = None
+    if paths is None or ignore is None:
+        cfg = load_config(config_path)
+    if paths is None:
+        paths = cfg.version.paths
+    if ignore is None:
+        ignore = cfg.version.ignore
 
     old = read_project_version(pyproject_path)
     new = bump_string(old, level)
@@ -156,7 +171,7 @@ def apply_bump(
         return VersionChange(old=old, new=new, level=level)
 
     write_project_version(new, pyproject_path)
-    _update_additional_files(new, old, paths or [], ignore or [], pyproject_path)
+    _update_additional_files(new, old, paths, ignore, pyproject_path)
     return VersionChange(old=old, new=new, level=level)
 
 
@@ -177,7 +192,8 @@ def _update_additional_files(
         pyproject_path: Canonical ``pyproject.toml`` path to skip (already updated).
     """
 
-    files = _resolve_files(patterns, ignore)
+    base = Path(pyproject_path).resolve().parent
+    files = _resolve_files(patterns, ignore, base)
     canon = Path(pyproject_path).resolve()
     for f in files:
         if f.resolve() == canon:
@@ -185,17 +201,27 @@ def _update_additional_files(
         _replace_version(f, old, new)
 
 
-def _resolve_files(patterns: Iterable[str], ignore: Iterable[str]) -> List[Path]:
-    """Expand glob patterns while applying ignore rules."""
+def _resolve_files(
+    patterns: Iterable[str], ignore: Iterable[str], base_dir: Path
+) -> List[Path]:
+    """Expand glob patterns while applying ignore rules relative to ``base_dir``."""
 
     out: List[Path] = []
     ignore_list = list(ignore)
+    base = Path(base_dir).resolve()
     for pat in patterns:
-        for match in glob(pat, recursive=True):
+        pat_path = Path(pat)
+        search = pat if pat_path.is_absolute() else str(base / pat)
+        for match in glob(search, recursive=True):
             p = Path(match)
             if not p.is_file():
                 continue
-            if any(fnmatch(str(p), ig) for ig in ignore_list):
+            path_str = str(p)
+            try:
+                rel_str = str(p.resolve().relative_to(base))
+            except ValueError:
+                rel_str = path_str
+            if any(fnmatch(path_str, ig) or fnmatch(rel_str, ig) for ig in ignore_list):
                 continue
             out.append(p)
     return out

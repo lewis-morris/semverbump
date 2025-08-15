@@ -90,6 +90,10 @@ Omitting ``--head`` uses the current ``HEAD``:
 -----------------------
 
 Update version information in ``pyproject.toml`` and other files.
+By default, ``bumpwright`` also searches ``setup.py`` and any ``__init__.py``
+files for a ``__version__`` variable. These locations can be customised via the
+``[version]`` section in ``bumpwright.toml`` or overridden with
+``--version-path``/``--version-ignore``.
 
 **Arguments**
 

@@ -17,7 +17,7 @@ _DEFAULTS = {
     "analyzers": {"cli": False},
     "migrations": {"paths": ["migrations"]},
     "version": {
-        "paths": ["pyproject.toml", "setup.py", "setup.cfg", "**/*.py"],
+        "paths": ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py"],
         "ignore": [],
     },
 }
@@ -76,7 +76,12 @@ class VersionFiles:
     """
 
     paths: List[str] = field(
-        default_factory=lambda: ["pyproject.toml", "setup.py", "setup.cfg", "**/*.py"]
+        default_factory=lambda: [
+            "pyproject.toml",
+            "setup.py",
+            "setup.cfg",
+            "**/__init__.py",
+        ]
     )
     ignore: List[str] = field(default_factory=list)
 
