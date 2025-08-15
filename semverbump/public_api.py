@@ -167,9 +167,7 @@ class _APIVisitor(cst.CSTVisitor):
 
         cname = node.name.value
         if self.exports is not None and cname not in self.exports:
-            # If __all__ explicitly exports the class name list, we honor it
-            if not any(isinstance(b, cst.SimpleStatementLine) for b in node.body.body):
-                return
+            return
         if not _is_public(cname):
             return
 
