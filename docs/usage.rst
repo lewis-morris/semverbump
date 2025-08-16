@@ -49,9 +49,6 @@ require.
     Output style. ``text`` prints plain console output, ``md`` emits Markdown,
     and ``json`` produces machine-readable data. Defaults to ``text``.
 
-``--repo-url URL``
-    Base repository URL for linking commit hashes in Markdown output.
-
 ``--enable-analyser NAME``
     Enable analyser ``NAME`` in addition to configuration. Repeatable.
 
