@@ -25,9 +25,14 @@ Example configuration showing all available sections and their default values:
     grpc = false
     web_routes = false
     migrations = false
+    openapi = false
+    graphql = false
 
     [migrations]
     paths = ["migrations"]
+
+    [openapi]
+    paths = ["openapi.yaml", "openapi.yml", "openapi.json"]
 
     [changelog]
     path = ""
@@ -132,6 +137,12 @@ settings. Built-in analysers include:
    * - ``migrations``
      - Scans Alembic migrations for schema impacts.
      - ``false``
+   * - ``openapi``
+     - Detects changes to OpenAPI specification files.
+     - ``false``
+   * - ``graphql``
+     - Detects GraphQL schema changes.
+     - ``false``
 
 Migrations
 ~~~~~~~~~~
@@ -143,10 +154,28 @@ Migrations
      - Type
      - Default
      - Description
-   * - ``paths``
+  * - ``paths``
      - list[str]
      - ``["migrations"]``
      - Directories containing Alembic migration scripts to inspect.
+
+OpenAPI
+~~~~~~~
+
+.. list-table:: OpenAPI options
+   :header-rows: 1
+
+   * - Key
+     - Type
+     - Default
+     - Description
+   * - ``paths``
+     - list[str]
+     - ``["openapi.yaml", "openapi.yml", "openapi.json"]``
+     - Paths to OpenAPI specification documents.
+
+GraphQL requires no additional configuration; set ``graphql = true`` under
+``[analysers]`` to enable schema checks.
 
 Version
 ~~~~~~~
