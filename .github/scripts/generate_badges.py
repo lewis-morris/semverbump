@@ -14,6 +14,7 @@ Defaults to: docs/_static/badges
 
 from __future__ import annotations
 
+from importlib.metadata import version as dist_version  # py3.11+
 import argparse
 import html
 import re
@@ -47,7 +48,6 @@ def extract_version(project: dict) -> str:
     name = project.get("name")
     if name:
         try:
-            from importlib.metadata import version as dist_version  # py3.11+
             return dist_version(name)
         except Exception:
             pass
@@ -63,12 +63,13 @@ def extract_license(project: dict) -> str:
             return str(lic["text"])
         if "file" in lic and lic["file"]:
             f = Path(lic["file"])
+            constraint_val = 40
             if f.exists():
                 # read first non-empty line as short name
                 for line in f.read_text(encoding="utf-8").splitlines():
-                    line = line.strip()
-                    if line:
-                        return line[:40] + ("…" if len(line) > 40 else "")
+                    ln = line.strip()
+                    if ln:
+                        return ln[:constraint_val] + ("…" if len(ln) > constraint_val else "")
             return str(lic["file"])
     elif isinstance(lic, str):
         return lic
