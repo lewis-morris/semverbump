@@ -130,7 +130,10 @@ def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
         cfg.project.private_prefixes,
     )
     impacts = diff_public_api(
-        old_api, new_api, return_type_change=cfg.rules.return_type_change
+        old_api,
+        new_api,
+        return_type_change=cfg.rules.return_type_change,
+        param_annotation_change=cfg.rules.param_annotation_change,
     )
     impacts.extend(
         _run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser)
@@ -178,7 +181,10 @@ def _infer_level(
         cfg.project.private_prefixes,
     )
     impacts = diff_public_api(
-        old_api, new_api, return_type_change=cfg.rules.return_type_change
+        old_api,
+        new_api,
+        return_type_change=cfg.rules.return_type_change,
+        param_annotation_change=cfg.rules.param_annotation_change,
     )
     impacts.extend(
         _run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser)

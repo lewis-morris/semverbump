@@ -1,6 +1,6 @@
 [project]
 name = "bumpwright"
-version = "1.0.0"
+version = "2.0.0"
 description = "Static public-API diff + heuristics to suggest semantic version bumps."
 readme = "README.md"
 requires-python = ">=3.11"

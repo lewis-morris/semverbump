@@ -18,16 +18,26 @@ from . import register
 
 
 @dataclass(frozen=True)
+class Operation:
+    """Details of a single API operation."""
+
+    parameters: dict[tuple[str, str], bool]
+    responses: dict[str, Any]
+
+
+@dataclass(frozen=True)
 class Spec:
     """Collected data from an OpenAPI specification.
 
     Attributes:
         endpoints: Set of ``(path, method)`` tuples for all operations.
         schemas: Mapping of component schema names to their definitions.
+        operations: Mapping of endpoints to operation details.
     """
 
     endpoints: set[tuple[str, str]]
     schemas: dict[str, Any]
+    operations: dict[tuple[str, str], Operation]
 
 
 def _parse_spec(content: str) -> Spec:
@@ -37,17 +47,40 @@ def _parse_spec(content: str) -> Spec:
         content: YAML or JSON formatted OpenAPI document.
 
     Returns:
-        Parsed :class:`Spec` containing endpoints and schema definitions.
+        Parsed :class:`Spec` containing endpoints, parameters, responses, and
+        schema definitions.
     """
 
     data = yaml.safe_load(content) or {}
     paths: dict[str, dict[str, Any]] = data.get("paths", {})
     endpoints: set[tuple[str, str]] = set()
-    for path, methods in paths.items():
-        for method in methods:
-            endpoints.add((path, method.upper()))
+    operations: dict[tuple[str, str], Operation] = {}
+    for path, path_item in paths.items():
+        path_params = {
+            (p.get("name", ""), p.get("in", "")): p.get("required", False)
+            for p in path_item.get("parameters", [])
+        }
+        for method, op in path_item.items():
+            if method == "parameters":
+                continue
+            meth = method.upper()
+            endpoints.add((path, meth))
+            op_params = path_params.copy()
+            for param in op.get("parameters", []):
+                key = (param.get("name", ""), param.get("in", ""))
+                op_params[key] = param.get("required", False)
+            responses = {}
+            for status, resp in op.get("responses", {}).items():
+                schema = (
+                    resp.get("content", {}).get("application/json", {}).get("schema")
+                )
+                if schema is not None:
+                    responses[status] = schema
+            operations[(path, meth)] = Operation(
+                parameters=op_params, responses=responses
+            )
     schemas = data.get("components", {}).get("schemas", {})
-    return Spec(endpoints=endpoints, schemas=schemas)
+    return Spec(endpoints=endpoints, schemas=schemas, operations=operations)
 
 
 def diff_specs(old: Spec, new: Spec) -> list[Impact]:
@@ -73,6 +106,51 @@ def diff_specs(old: Spec, new: Spec) -> list[Impact]:
     for name in old.schemas.keys() & new.schemas.keys():
         if old.schemas[name] != new.schemas[name]:
             impacts.append(Impact("major", name, "Changed schema"))
+
+    for ep in old.operations.keys() & new.operations.keys():
+        old_op = old.operations[ep]
+        new_op = new.operations[ep]
+
+        for param in old_op.parameters.keys() - new_op.parameters.keys():
+            impacts.append(
+                Impact("major", f"{ep[1]} {ep[0]}", f"Removed parameter {param[0]}")
+            )
+        for param in new_op.parameters.keys() - old_op.parameters.keys():
+            impacts.append(
+                Impact("minor", f"{ep[1]} {ep[0]}", f"Added parameter {param[0]}")
+            )
+        for param in old_op.parameters.keys() & new_op.parameters.keys():
+            old_req = old_op.parameters[param]
+            new_req = new_op.parameters[param]
+            if old_req != new_req:
+                severity = "major" if new_req and not old_req else "minor"
+                change = "now required" if new_req else "no longer required"
+                impacts.append(
+                    Impact(
+                        severity,
+                        f"{ep[1]} {ep[0]}",
+                        f"Parameter {param[0]} {change}",
+                    )
+                )
+
+        for status in old_op.responses.keys() - new_op.responses.keys():
+            impacts.append(
+                Impact("major", f"{ep[1]} {ep[0]}", f"Removed response {status}")
+            )
+        for status in new_op.responses.keys() - old_op.responses.keys():
+            impacts.append(
+                Impact("minor", f"{ep[1]} {ep[0]}", f"Added response {status}")
+            )
+        for status in old_op.responses.keys() & new_op.responses.keys():
+            if old_op.responses[status] != new_op.responses[status]:
+                impacts.append(
+                    Impact(
+                        "major",
+                        f"{ep[1]} {ep[0]}",
+                        f"Changed response {status} schema",
+                    )
+                )
+
     return impacts
 
 
@@ -103,13 +181,15 @@ class OpenAPIAnalyser:
         contents = read_files_at_ref(ref, paths)
         endpoints: set[tuple[str, str]] = set()
         schemas: dict[str, Any] = {}
+        operations: dict[tuple[str, str], Operation] = {}
         for content in contents.values():
             if content is None:
                 continue
             spec = _parse_spec(content)
             endpoints |= spec.endpoints
             schemas.update(spec.schemas)
-        return Spec(endpoints=endpoints, schemas=schemas)
+            operations.update(spec.operations)
+        return Spec(endpoints=endpoints, schemas=schemas, operations=operations)
 
     def compare(self, old: Spec, new: Spec) -> list[Impact]:
         """Compare two collected specs and report impacts."""
