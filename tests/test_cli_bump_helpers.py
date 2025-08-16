@@ -148,6 +148,24 @@ def test_build_changelog_uses_read_template(monkeypatch) -> None:
     assert result == "Version=0.2.0\n"
 
 
+def test_build_changelog_excludes_patterns(monkeypatch) -> None:
+    args = argparse.Namespace(
+        changelog="CHANGELOG.md",
+        head="HEAD",
+        repo_url=None,
+        changelog_template=None,
+        changelog_exclude=["^chore"],
+    )
+    commits = [("1", "feat: add"), ("2", "chore: skip")]
+    monkeypatch.setattr(
+        "bumpwright.cli.bump.collect_commits", lambda base, head: commits
+    )
+    monkeypatch.setattr("bumpwright.cli.bump.last_release_commit", lambda: None)
+    result = _build_changelog(args, "0.2.0")
+    assert "feat: add" in result
+    assert "chore: skip" not in result
+
+
 def test_commit_tag_existing_tag(tmp_path: Path) -> None:
     repo, _, _ = setup_repo(tmp_path)
     pyproj = repo / "pyproject.toml"
