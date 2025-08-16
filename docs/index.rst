@@ -8,6 +8,7 @@ Static public-API diff and heuristics to suggest semantic version bumps.
    :caption: Getting Started
 
    installation
+   quickstart
    usage
    cli_reference
 

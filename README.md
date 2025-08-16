@@ -39,6 +39,8 @@ pip install bumpwright
 ```
 
 ## Quick start
+See [docs/quickstart.rst](docs/quickstart.rst) for a step-by-step example.
+
 | Command | Purpose |
 |---------|---------|
 | `bump --decide` | Recommend a bump between two references |
