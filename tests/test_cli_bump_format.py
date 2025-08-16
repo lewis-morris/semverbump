@@ -28,10 +28,11 @@ def test_bump_command_json_format(tmp_path: Path) -> None:
         cwd=repo,
         check=True,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
         env=env,
     )
-    data = json.loads(res.stdout)
+    data = json.loads(res.stderr)
     assert data["old_version"] == "0.1.0"
     assert data["new_version"] == "0.2.0"
     assert data["level"] == "minor"

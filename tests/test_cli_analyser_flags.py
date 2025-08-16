@@ -7,7 +7,9 @@ from pathlib import Path
 from cli_helpers import run, setup_repo
 
 
-def _setup_cli_repo(tmp_path: Path, enable_in_config: bool = False) -> tuple[Path, str, str]:
+def _setup_cli_repo(
+    tmp_path: Path, enable_in_config: bool = False
+) -> tuple[Path, str, str]:
     """Create a repository with a CLI command that is later removed."""
     repo, pkg, _ = setup_repo(tmp_path)
     if enable_in_config:
@@ -63,10 +65,11 @@ def test_enable_analyser_flag(tmp_path: Path) -> None:
         cwd=repo,
         check=True,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
         env=env,
     )
-    data = json.loads(res.stdout)
+    data = json.loads(res.stderr)
     assert data["level"] == "major"
     assert data["confidence"] == 1.0
     assert data["reasons"] == ["Removed command"]
@@ -95,10 +98,11 @@ def test_disable_analyser_flag(tmp_path: Path) -> None:
         cwd=repo,
         check=True,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
         env=env,
     )
-    data = json.loads(res.stdout)
+    data = json.loads(res.stderr)
     assert data["level"] is None
     assert data["confidence"] == 0.0
     assert data["reasons"] == []

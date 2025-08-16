@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import subprocess
-import sys
 from datetime import date
 from pathlib import Path
 from typing import Any, Iterable
@@ -18,12 +18,17 @@ from ..gitutils import changed_paths, collect_commits, last_release_commit
 from ..versioning import VersionChange, apply_bump, find_pyproject
 from .decide import _decide_only, _infer_level
 
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger(__name__)
+
 _DEFAULT_TEMPLATE = (
     Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
 ).read_text(encoding="utf-8")
 
 
-def _commit_tag(files: Iterable[str | Path], version: str, commit: bool, tag: bool) -> None:
+def _commit_tag(
+    files: Iterable[str | Path], version: str, commit: bool, tag: bool
+) -> None:
     """Optionally commit and tag the updated version.
 
     Args:
@@ -54,7 +59,9 @@ def _commit_tag(files: Iterable[str | Path], version: str, commit: bool, tag: bo
     if commit:
         for file in files:
             subprocess.run(["git", "add", str(file)], check=True)
-        subprocess.run(["git", "commit", "-m", f"chore(release): {version}"], check=True)
+        subprocess.run(
+            ["git", "commit", "-m", f"chore(release): {version}"], check=True
+        )
 
     if tag:
         subprocess.run(["git", "tag", f"v{version}"], check=True)
@@ -177,7 +184,7 @@ def _display_result(
     """Show bump outcome using the selected format."""
 
     if args.format == "json":
-        print(
+        logger.info(
             json.dumps(
                 {
                     "old_version": vc.old,
@@ -192,15 +199,21 @@ def _display_result(
             )
         )
     elif args.format == "md":
-        print(f"Bumped version: `{vc.old}` -> `{vc.new}` ({vc.level})")
-        print("Updated files:\n" + "\n".join(f"- `{p}`" for p in vc.files))
+        logger.info("Bumped version: `%s` -> `%s` (%s)", vc.old, vc.new, vc.level)
+        logger.info(
+            "Updated files:\n%s",
+            "\n".join(f"- `{p}`" for p in vc.files),
+        )
         if vc.skipped:
-            print("Skipped files:\n" + "\n".join(f"- `{p}`" for p in vc.skipped))
+            logger.info(
+                "Skipped files:\n%s",
+                "\n".join(f"- `{p}`" for p in vc.skipped),
+            )
     else:
-        print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
-        print("Updated files: " + ", ".join(str(p) for p in vc.files))
+        logger.info("Bumped version: %s -> %s (%s)", vc.old, vc.new, vc.level)
+        logger.info("Updated files: %s", ", ".join(str(p) for p in vc.files))
         if vc.skipped:
-            print("Skipped files: " + ", ".join(str(p) for p in vc.skipped))
+            logger.info("Skipped files: %s", ", ".join(str(p) for p in vc.skipped))
 
 
 def _write_changelog(args: argparse.Namespace, changelog: str | None) -> None:
@@ -209,7 +222,7 @@ def _write_changelog(args: argparse.Namespace, changelog: str | None) -> None:
     if changelog is None:
         return
     if args.changelog == "-":
-        print(changelog, end="")
+        logger.info("%s", changelog.rstrip())
     else:
         with open(args.changelog, "a", encoding="utf-8") as fh:
             fh.write(changelog)
@@ -292,17 +305,17 @@ def bump_command(args: argparse.Namespace) -> int:
     try:
         pyproject = _resolve_pyproject(args.pyproject)
     except FileNotFoundError as exc:
-        print(f"Error: {exc}", file=sys.stderr)
+        logger.error("Error: %s", exc)
         return 1
     paths = _prepare_version_files(cfg, args, pyproject, base, head)
     if paths is None:
-        print("No version bump needed")
+        logger.info("No version bump needed")
         return 0
 
     if not level:
         decision = _infer_level(base, head, cfg, args)
         if decision.level is None:
-            print("No version bump needed")
+            logger.info("No version bump needed")
             return 0
         level = decision.level
     else:
@@ -316,7 +329,7 @@ def bump_command(args: argparse.Namespace) -> int:
             text=True,
         )
         if status.stdout.strip():
-            print("Error: working directory has uncommitted changes", file=sys.stderr)
+            logger.error("Error: working directory has uncommitted changes")
             return 1
 
     ignore = list(cfg.version.ignore)

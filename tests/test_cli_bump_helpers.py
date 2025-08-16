@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 from pathlib import Path
 
@@ -18,7 +19,7 @@ from bumpwright.cli.bump import (  # isort:skip
 )
 
 
-def test_prepare_version_files_no_relevant_changes(tmp_path):
+def test_prepare_version_files_no_relevant_changes(tmp_path: Path) -> None:
     repo, _, base = setup_repo(tmp_path)
     pyproj = repo / "pyproject.toml"
     pyproj.write_text(pyproj.read_text().replace("0.1.0", "0.1.1"), encoding="utf-8")
@@ -35,17 +36,18 @@ def test_prepare_version_files_no_relevant_changes(tmp_path):
     assert paths is None
 
 
-def test_display_result_json(capsys):
+def test_display_result_json(caplog) -> None:
     args = argparse.Namespace(format="json")
     vc = VersionChange("0.1.0", "0.2.0", "minor", [Path("pyproject.toml")])
     dec = Decision("minor", 1.0, [])
-    _display_result(args, vc, dec)
-    data = json.loads(capsys.readouterr().out)
+    with caplog.at_level(logging.INFO):
+        _display_result(args, vc, dec)
+    data = json.loads(caplog.records[0].message)
     assert data["new_version"] == "0.2.0"
     assert data["skipped"] == []
 
 
-def test_display_result_text_skipped(capsys):
+def test_display_result_text_skipped(caplog) -> None:
     args = argparse.Namespace(format="text")
     vc = VersionChange(
         "0.1.0",
@@ -55,19 +57,20 @@ def test_display_result_text_skipped(capsys):
         [Path("extra.py")],
     )
     dec = Decision("minor", 1.0, [])
-    _display_result(args, vc, dec)
-    out = capsys.readouterr().out
+    with caplog.at_level(logging.INFO):
+        _display_result(args, vc, dec)
+    out = "\n".join(record.message for record in caplog.records)
     assert "Skipped files: extra.py" in out
 
 
-def test_write_changelog_to_file(tmp_path):
+def test_write_changelog_to_file(tmp_path: Path) -> None:
     args = argparse.Namespace(changelog=str(tmp_path / "CHANGELOG.md"))
     content = "entry\n"
     _write_changelog(args, content)
     assert (tmp_path / "CHANGELOG.md").read_text(encoding="utf-8") == content
 
 
-def test_commit_tag_existing_tag(tmp_path):
+def test_commit_tag_existing_tag(tmp_path: Path) -> None:
     repo, _, _ = setup_repo(tmp_path)
     pyproj = repo / "pyproject.toml"
     # Simulate bumping to a new version that already has a tag
@@ -84,7 +87,7 @@ def test_commit_tag_existing_tag(tmp_path):
     assert head == "base"
 
 
-def test_commit_tag_stages_all_files(tmp_path):
+def test_commit_tag_stages_all_files(tmp_path: Path) -> None:
     repo, pkg, _ = setup_repo(tmp_path)
     pyproj = repo / "pyproject.toml"
     init_file = pkg / "__init__.py"
@@ -96,7 +99,9 @@ def test_commit_tag_stages_all_files(tmp_path):
         _commit_tag([pyproj, init_file], "0.1.1", commit=True, tag=False)
     finally:
         os.chdir(cwd)
-    files = run(["git", "show", "--pretty=format:", "--name-only", "HEAD"], repo).splitlines()
+    files = run(
+        ["git", "show", "--pretty=format:", "--name-only", "HEAD"], repo
+    ).splitlines()
     assert "pyproject.toml" in files
     assert "pkg/__init__.py" in files
     msg = run(["git", "log", "-1", "--pretty=%s"], repo)

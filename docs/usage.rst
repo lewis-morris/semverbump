@@ -49,9 +49,6 @@ require.
     Output style. ``text`` prints plain console output, ``md`` emits Markdown,
     and ``json`` produces machine-readable data. Defaults to ``text``.
 
-``--repo-url URL``
-    Base repository URL for linking commit hashes in Markdown output.
-
 ``--enable-analyser NAME``
     Enable analyser ``NAME`` in addition to configuration. Repeatable.
 
@@ -91,7 +88,7 @@ Because this mode only inspects commits, there is no effect on the filesystem.
 Update version information in ``pyproject.toml`` and other files.
 By default, ``bumpwright`` also searches ``setup.py``, ``setup.cfg`` and any
 ``__init__.py``, ``version.py`` or ``_version.py`` files for a version
-assignment. Files inside common build artifacts and virtual environments are
+assignment. Files inside common build artefacts and virtual environments are
 ignored by default (``build/**``, ``dist/**``, ``*.egg-info/**``, ``.eggs/**``,
 ``.venv/**``, ``venv/**``, ``.env/**`` and ``**/__pycache__/**``). These
 locations can be customised via the ``[version]`` section in ``bumpwright.toml``
@@ -128,11 +125,14 @@ patterns.
 ``--changelog [FILE]``
     Append release notes for the new version to ``FILE``.
     When ``FILE`` is omitted or set to ``-``, the changelog entry is printed to
-    standard output. If the option is omitted, no changelog entry is produced.
+    standard output. If the option is omitted entirely, the
+    ``[changelog].path`` setting provides a default location. See
+    :doc:`configuration` for more detail.
 
 ``--changelog-template PATH``
     Jinja2 template file used when rendering changelog entries. Defaults to the
-    built-in template.
+    built-in template or ``[changelog].template`` when configured. See
+    :doc:`configuration` for more detail.
 
 ``--pyproject PATH``
     Path to the project's ``pyproject.toml`` file. Defaults to
