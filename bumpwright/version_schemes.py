@@ -16,7 +16,10 @@ except ModuleNotFoundError as exc:  # pragma: no cover
 
 MIN_RELEASE_PARTS = 3
 
-_SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-.]+))?(?:\+([0-9A-Za-z-.]+))?$")
+# SemVer segments disallow leading zeros per specification.
+_SEMVER_RE = re.compile(
+    r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-.]+))?(?:\+([0-9A-Za-z-.]+))?$"
+)
 
 
 def _bump_segment(segment: str | None, default: str) -> str:
