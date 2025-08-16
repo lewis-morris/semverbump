@@ -24,6 +24,7 @@ Specify additional version file locations:
    [version]
    paths = ["pyproject.toml", "setup.py", "src/pkg/__init__.py"]
    ignore = ["examples/**"]
+   scheme = "semver"
 
 Apply a bump and commit/tag automatically:
 

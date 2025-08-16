@@ -35,6 +35,13 @@ def test_load_config_changelog_default(tmp_path: Path) -> None:
     assert cfg.changelog.template == ""
 
 
+def test_load_config_default_scheme(tmp_path: Path) -> None:
+    """Default configuration uses the semantic versioning scheme."""
+
+    cfg = load_config(tmp_path / "missing.toml")
+    assert cfg.version.scheme == "semver"
+
+
 def test_tomli_fallback(monkeypatch, tmp_path: Path) -> None:
     """Ensure ``tomli`` is used when ``tomllib`` is unavailable."""
     from bumpwright import config  # noqa: PLC0415
