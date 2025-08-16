@@ -1,16 +1,18 @@
 Versioning
 ==========
 
-``bumpwright`` provides multiple versioning schemes. Release-level bumps
+``bumpwright`` supports multiple versioning schemes. The CLI defaults to
+Semantic Versioning (``semver``) but can operate in `PEP 440`_ mode by setting
+``[version].scheme = "pep440"`` in ``bumpwright.toml``. Release-level bumps
 (``major``, ``minor``, ``patch``) reset any prerelease or build/local segments.
-Use the dedicated ``pre`` and ``build`` levels to update those segments
-independently.
+Library callers may use the dedicated ``pre`` and ``build`` levels to update
+those segments independently.
 
 .. note::
 
-   The :func:`bumpwright.versioning.bump_string` utility supports
-   additional ``pre`` and ``build`` increments. The CLI exposes only the
-   ``major``, ``minor``, and ``patch`` levels.
+   The :func:`bumpwright.versioning.bump_string` helper accepts the extra
+   ``pre`` and ``build`` levels. The command-line interface exposes only the
+   ``major``, ``minor``, and ``patch`` options.
 
 SemVer
 ------
@@ -43,3 +45,5 @@ release bumps drop these components:
 
 Use these bump levels to manage prerelease and build metadata without altering
 the main release components.
+
+.. _PEP 440: https://peps.python.org/pep-0440/

@@ -160,7 +160,7 @@ scheme is applied.
      - str
      - ``"semver"``
      - Versioning scheme used when bumping. Supported values include
-       ``"semver"`` and ``"pep440"``.
+       ``"semver"`` and ``"pep440"``. See :doc:`../versioning` for details.
 
 Version replacement ignores build and environment artefacts by default:
 ``build/**``, ``dist/**``, ``*.egg-info/**``, ``.eggs/**``, ``.venv/**``,
