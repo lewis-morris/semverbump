@@ -1,7 +1,21 @@
+from __future__ import annotations
+
+import importlib.util
+import sys
+from pathlib import Path
+
 import pytest
 
-from bumpwright.public_api import (extract_public_api_from_source,
-                                   module_name_from_path)
+spec = importlib.util.spec_from_file_location(
+    "bumpwright.public_api",
+    Path(__file__).resolve().parents[1] / "bumpwright" / "public_api.py",
+)
+public_api = importlib.util.module_from_spec(spec)
+sys.modules["bumpwright.public_api"] = public_api
+assert spec.loader  # noqa: PT018 - ensure loader exists for mypy
+spec.loader.exec_module(public_api)
+extract_public_api_from_source = public_api.extract_public_api_from_source
+module_name_from_path = public_api.module_name_from_path
 
 
 def test_extracts_functions_and_methods():
@@ -21,7 +35,9 @@ class Bar:
     assert "pkg.mod:Bar._private" not in keys
 
     foo = api["pkg.mod:foo"]
-    assert foo.returns == "-> int" or foo.returns.endswith("int")  # libcst emits "-> int" style string
+    assert foo.returns == "-> int" or foo.returns.endswith(
+        "int"
+    )  # libcst emits "-> int" style string
     assert any(p.name == "y" and p.default is not None for p in foo.params)
 
 
@@ -91,3 +107,25 @@ def test_extract_invalid_code_raises() -> None:
 
     with pytest.raises(SyntaxError):
         extract_public_api_from_source("pkg.mod", "def bad(:\n pass")
+
+
+@pytest.mark.parametrize(
+    "prefix",
+    [
+        "__all__ = ['foo'] + ['bar']",
+        "names = ['foo']\nextra = ['bar']\n__all__ = names + extra",
+    ],
+)
+def test_extracts_all_from_concatenation(prefix: str) -> None:
+    """Detect ``__all__`` constructed via simple concatenation."""
+
+    code = f"""
+{prefix}
+def foo():
+    pass
+def bar():
+    pass
+"""
+    api = extract_public_api_from_source("pkg.mod", code)
+    keys = set(api.keys())
+    assert {"pkg.mod:foo", "pkg.mod:bar"} == keys
