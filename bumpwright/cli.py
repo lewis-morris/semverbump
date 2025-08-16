@@ -79,13 +79,17 @@ def _format_impacts_text(impacts: List[Impact]) -> str:
     return "\n".join(lines) if lines else "(no API-impacting changes detected)"
 
 
-def _run_analyzers(base: str, head: str, cfg: Config) -> List[Impact]:
-    """Run enabled analyzer plugins and collect impacts.
+def _run_analyzers(
+    base: str, head: str, cfg: Config, names: Iterable[str] | None = None
+) -> List[Impact]:
+    """Run selected analyzer plugins and collect impacts.
 
     Args:
         base: Base git reference.
         head: Head git reference.
         cfg: Project configuration.
+        names: Optional collection of analyzer names to execute. When ``None``,
+            analyzers enabled in ``cfg`` are used.
 
     Returns:
         List of impacts reported by all analyzers.
@@ -97,7 +101,7 @@ def _run_analyzers(base: str, head: str, cfg: Config) -> List[Impact]:
     """
 
     impacts: List[Impact] = []
-    for analyzer in load_enabled(cfg):
+    for analyzer in load_enabled(cfg, names):
         old = analyzer.collect(base)
         new = analyzer.collect(head)
         impacts.extend(analyzer.compare(old, new))
@@ -350,7 +354,11 @@ def bump_command(args: argparse.Namespace) -> int:
         Process exit code.
     """
 
-    cfg = load_config(args.config)
+    cfg = load_config(
+        args.config,
+        enable=args.enable_analyzer,
+        disable=args.disable_analyzer,
+    )
     if args.decide:
         return _decide_only(args, cfg)
 
@@ -515,6 +523,18 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "Glob pattern for paths to exclude from version updates " "(repeatable)."
         ),
+    )
+    p_bump.add_argument(
+        "--enable-analyzer",
+        action="append",
+        dest="enable_analyzer",
+        help="Enable analyzer NAME for this run (repeatable).",
+    )
+    p_bump.add_argument(
+        "--disable-analyzer",
+        action="append",
+        dest="disable_analyzer",
+        help="Disable analyzer NAME for this run (repeatable).",
     )
     p_bump.add_argument(
         "--commit",

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Protocol, Type
+from typing import Callable, Dict, Iterable, List, Protocol, Type
 
 from ..compare import Impact
 from ..config import Config
@@ -67,21 +67,24 @@ def register(
     return _wrap
 
 
-def load_enabled(cfg: Config) -> List[Analyzer]:
-    """Instantiate analyzers enabled via configuration.
+def load_enabled(cfg: Config, names: Iterable[str] | None = None) -> List[Analyzer]:
+    """Instantiate analyzers enabled via configuration or overrides.
 
     Args:
         cfg: Global configuration object.
+        names: Optional explicit collection of analyzer names to load. When
+            ``None``, the names configured in ``cfg`` are used.
 
     Returns:
         List of instantiated analyzers.
 
     Raises:
-        ValueError: If a configured analyzer name is not registered.
+        ValueError: If a requested analyzer name is not registered.
     """
 
+    selected = set(cfg.analyzers.enabled if names is None else names)
     out: List[Analyzer] = []
-    for name in cfg.analyzers.enabled:
+    for name in selected:
         info = REGISTRY.get(name)
         if info is None:
             raise ValueError(f"Analyzer '{name}' is not registered")

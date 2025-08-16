@@ -8,7 +8,7 @@ except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Set
+from typing import Iterable, List, Set
 
 _DEFAULTS = {
     "project": {"package": "", "public_roots": ["."], "index_file": "pyproject.toml"},
@@ -131,15 +131,23 @@ def _merge_defaults(data: dict | None) -> dict:
     return out
 
 
-def load_config(path: str | Path = "bumpwright.toml") -> Config:
-    """Load configuration from a TOML file.
+def load_config(
+    path: str | Path = "bumpwright.toml",
+    *,
+    enable: Iterable[str] | None = None,
+    disable: Iterable[str] | None = None,
+) -> Config:
+    """Load configuration from a TOML file and apply overrides.
 
     Args:
         path: Path to the configuration file.
+        enable: Analyzer names to force-enable.
+        disable: Analyzer names to disable even if configured.
 
     Returns:
-        Parsed configuration object.
+        Parsed configuration object with overrides applied.
     """
+
     p = Path(path)
     if not p.exists():
         d = _merge_defaults({})
@@ -149,6 +157,10 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
     rules = Rules(**d["rules"])
     ign = Ignore(**d["ignore"])
     enabled = {name for name, enabled in d["analyzers"].items() if enabled}
+    if enable:
+        enabled.update(enable)
+    if disable:
+        enabled.difference_update(disable)
     analyzers = Analyzers(enabled=enabled)
     migrations = Migrations(**d.get("migrations", {}))
     version = VersionFiles(**d.get("version", {}))
