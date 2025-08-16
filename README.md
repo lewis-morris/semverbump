@@ -46,24 +46,25 @@ See [docs/quickstart.rst](docs/quickstart.rst) for a step-by-step example.
 
 | Command | Purpose |
 |---------|---------|
-| `bump --decide` | Recommend a bump between two references |
-| `bump` | Apply a specific version bump |
+| `bumpwright init` | Record a baseline release commit |
+| `bumpwright bump --decide` | Recommend a bump between two references |
+| `bumpwright bump` | Apply a specific version bump |
 
-### `bump --decide` options
+### `bumpwright bump --decide` options
 
-- `--base`: base git reference
-- `--head`: head git reference
-- `--format`: output format
+- `--base`: base git reference. Defaults to the last release commit or `HEAD^`.
+- `--head`: head git reference. Defaults to `HEAD`.
+- `--format`: output format (`text`, `md`, or `json`). Defaults to `text`.
 - `--enable-analyser` or `--disable-analyser`: toggle analysers
 - See [CLI reference](docs/cli_reference.rst) for details.
 
-### `bump` options
+### `bumpwright bump` options
 
-- `--level`: bump level to apply
-- `--pyproject`: path to pyproject file
-- `--format`: output format
-- `--commit`: commit the version bump
-- `--tag`: create a git tag
+- `--level`: bump level to apply. When omitted, the level is inferred from history.
+- `--pyproject`: path to `pyproject.toml`. Defaults to `pyproject.toml` in the current directory.
+- `--format`: output format (`text`, `md`, or `json`). Defaults to `text`.
+- `--commit`: commit the version bump.
+- `--tag`: create a git tag.
 - `--enable-analyser` or `--disable-analyser`: toggle analysers
 - See [CLI reference](docs/cli_reference.rst) for details.
 
@@ -91,14 +92,14 @@ aborts if uncommitted changes are detected.
 2. **Suggest the next version** between two git references:
 
    ```console
-   $ bumpwright bump --decide --base origin/main --head HEAD --format text
+   $ bumpwright bump --decide --base origin/main --format text
    bumpwright suggests: minor
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
    ```
 
    ```console
-   $ bumpwright bump --decide --base origin/main --head HEAD --format md
+   $ bumpwright bump --decide --base origin/main --format md
    **bumpwright** suggests: `minor`
 
 
@@ -106,7 +107,7 @@ aborts if uncommitted changes are detected.
    ```
 
    ```console
-   $ bumpwright bump --decide --base origin/main --head HEAD --format json
+   $ bumpwright bump --decide --base origin/main --format json
    {
      "level": "minor",
      "confidence": 1.0,

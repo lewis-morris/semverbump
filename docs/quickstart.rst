@@ -67,6 +67,16 @@ Start with a tiny example project to see **bumpwright** in action.
    semantic version. The lines following the suggestion list the impacts that
    informed it.
 
+#. Apply the bump and tag the release.
+
+   .. code-block:: bash
+
+      bumpwright bump --commit --tag
+
+   This updates version files, creates a ``chore(release): <version>`` commit,
+   and tags the release. Omit ``--commit`` and ``--tag`` to preview the bump
+   without modifying the repository.
+
 Flow
 ----
 
@@ -79,6 +89,12 @@ Flow
        |
        v
    Version recommendation
+       |
+       v
+   bumpwright bump --commit --tag
+       |
+       v
+   Release
 
 For deeper explanations of commands, flags, and configuration, see
 :doc:`usage` and :doc:`configuration`.

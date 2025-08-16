@@ -29,8 +29,8 @@ release commits.
    bumpwright init
 
 
-``bump --decide`` – suggest a bump
-----------------------------------
+``bumpwright bump --decide`` – suggest a bump
+---------------------------------------------
 
 Compare two git references and report the semantic version level they
 require.
@@ -82,8 +82,8 @@ Because this mode only inspects commits, there is no effect on the filesystem.
 
 
 
-``bump`` – apply a bump
------------------------
+``bumpwright bump`` – apply a bump
+----------------------------------
 
 Update version information in ``pyproject.toml`` and other files.
 By default, ``bumpwright`` also searches ``setup.py``, ``setup.cfg`` and any
