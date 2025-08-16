@@ -95,6 +95,14 @@ Examples & Recipes
 
    recipes/index
 
+CI integration
+--------------
+
+.. toctree::
+   :maxdepth: 2
+
+   ci/github-actions
+
 Troubleshooting & FAQ
 ---------------------
 
