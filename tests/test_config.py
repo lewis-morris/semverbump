@@ -48,3 +48,16 @@ def test_tomli_fallback(monkeypatch, tmp_path: Path) -> None:
     assert config.tomllib is tomli
     cfg = config.load_config(tmp_path / "missing.toml")
     assert cfg.project.index_file == "pyproject.toml"
+
+
+def test_mutating_config_does_not_alter_defaults(tmp_path: Path) -> None:
+    """Ensure modifying a loaded config leaves defaults unchanged."""
+
+    cfg = load_config(tmp_path / "missing.toml")
+    cfg.project.public_roots.append("src")
+
+    import bumpwright.config as config_module
+
+    fresh = load_config(tmp_path / "missing.toml")
+    assert config_module._DEFAULTS["project"]["public_roots"] == ["."]
+    assert fresh.project.public_roots == ["."]
