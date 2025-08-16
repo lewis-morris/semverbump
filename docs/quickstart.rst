@@ -36,7 +36,7 @@ Start with a tiny example project to see **bumpwright** in action.
       bumpwright init
 
    Records a ``chore(release): initialise baseline`` commit so later runs
-   know where to start. Learn more about this step in :doc:`usage`.
+   know where to start. Learn more about this step in :doc:`usage/index`.
 
 #. Make a change and commit it.
 
@@ -116,5 +116,5 @@ Flow
    Release
 
 For deeper explanations of commands, flags, and configuration, see
-:doc:`usage` and :doc:`configuration`.
+:doc:`usage/index` and :doc:`configuration`.
 

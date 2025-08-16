@@ -6,6 +6,10 @@ how to automatically apply a version bump on pushes to your main branch,
 suggest the next semantic version, and run a manual release. Place these files
 in the ``.github/workflows`` directory of your project to use them.
 
+Workflows that create commits or tags require ``permissions: contents: write``
+and authenticate using the default ``GITHUB_TOKEN``. When referencing the
+current commit, ``${{ github.sha }}`` expands to the workflow's commit SHA.
+
 Automatic version bump on push
 ------------------------------
 

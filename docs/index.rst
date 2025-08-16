@@ -68,7 +68,7 @@ Getting Started
 
    installation
    quickstart
-   usage
+   usage/index
 
 User Guide
 ----------
