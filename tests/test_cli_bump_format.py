@@ -32,7 +32,9 @@ def test_bump_command_json_format(tmp_path: Path) -> None:
         text=True,
         env=env,
     )
-    data = json.loads(res.stderr)
+    assert "Failed to compute changed paths" in res.stderr
+    json_str = res.stderr.split("\n", 1)[1]
+    data = json.loads(json_str)
     assert data["old_version"] == "0.1.0"
     assert data["new_version"] == "0.2.0"
     assert data["level"] == "minor"

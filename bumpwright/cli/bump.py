@@ -115,11 +115,20 @@ def _resolve_refs(args: argparse.Namespace, level: str | None) -> tuple[str, str
 
 
 def _safe_changed_paths(base: str, head: str) -> set[str] | None:
-    """Return changed paths, handling missing history gracefully."""
+    """Return changed paths, handling missing history gracefully.
+
+    Args:
+        base: Base git reference for comparison.
+        head: Head git reference for comparison.
+
+    Returns:
+        A set of changed paths or ``None`` when the diff cannot be determined.
+    """
 
     try:
         return changed_paths(base, head)
     except subprocess.CalledProcessError:
+        logger.warning("Failed to compute changed paths between %s and %s", base, head)
         return None
 
 
