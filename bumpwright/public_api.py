@@ -54,30 +54,17 @@ PublicAPI = dict[str, FuncSig]  # symbol -> function signature (functions & meth
 # --------- Helpers ---------
 
 
-def _render_expr(node: ast.AST | None) -> str | None:
-    """Render arbitrary expressions such as default values.
+def render_node(node: ast.AST | None) -> str | None:
+    """Render AST nodes such as expressions or annotations.
 
     Args:
         node: AST node to render.
 
     Returns:
-        String representation of ``node`` or ``None`` if ``node`` is ``None``.
+        String representation of the node or ``None`` if ``node`` is ``None``.
     """
 
     return ast.unparse(node) if node is not None else None
-
-
-def _render_type(ann: ast.AST | None) -> str | None:
-    """Safely render type annotations for parameters and returns.
-
-    Args:
-        ann: Annotation node to render.
-
-    Returns:
-        String form of the annotation or ``None`` if absent.
-    """
-
-    return ast.unparse(ann) if ann is not None else None
 
 
 def _parse_exports(mod: ast.Module) -> set[str] | None:
@@ -156,9 +143,9 @@ def _positional_params(args: ast.arguments) -> list[Param]:
     out: list[Param] = []
 
     for idx, param in enumerate(posonly + pos):
-        default = _render_expr(defaults[idx - d_start]) if idx >= d_start else None
+        default = render_node(defaults[idx - d_start]) if idx >= d_start else None
         kind = "posonly" if idx < len(posonly) else "pos"
-        out.append(Param(param.arg, kind, default, _render_type(param.annotation)))
+        out.append(Param(param.arg, kind, default, render_node(param.annotation)))
     return out
 
 
@@ -167,7 +154,7 @@ def _vararg_param(args: ast.arguments) -> list[Param]:
 
     if args.vararg:
         return [
-            Param(args.vararg.arg, "vararg", None, _render_type(args.vararg.annotation))
+            Param(args.vararg.arg, "vararg", None, render_node(args.vararg.annotation))
         ]
     return []
 
@@ -181,8 +168,8 @@ def _kwonly_params(args: ast.arguments) -> list[Param]:
             Param(
                 param.arg,
                 "kwonly",
-                _render_expr(default),
-                _render_type(param.annotation),
+                render_node(default),
+                render_node(param.annotation),
             )
         )
     return out
@@ -193,7 +180,7 @@ def _varkw_param(args: ast.arguments) -> list[Param]:
 
     if args.kwarg:
         return [
-            Param(args.kwarg.arg, "varkw", None, _render_type(args.kwarg.annotation))
+            Param(args.kwarg.arg, "varkw", None, render_node(args.kwarg.annotation))
         ]
     return []
 
@@ -266,7 +253,7 @@ class _APIVisitor(ast.NodeVisitor):
         if not _is_public(fn):
             return
         params = tuple(_param_list(node.args))
-        ret = _render_type(node.returns)
+        ret = render_node(node.returns)
         self.sigs.append(FuncSig(f"{self.module_name}:{fn}", params, ret))
 
     # Async functions have the same signature representation
@@ -287,7 +274,7 @@ class _APIVisitor(ast.NodeVisitor):
                 if not _is_public(mname):
                     continue
                 params = tuple(_param_list(elt.args))
-                ret = _render_type(elt.returns)
+                ret = render_node(elt.returns)
                 self.sigs.append(
                     FuncSig(f"{self.module_name}:{cname}.{mname}", params, ret)
                 )
