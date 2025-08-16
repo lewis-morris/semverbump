@@ -23,10 +23,11 @@ def test_bump_command_searches_pyproject(tmp_path: Path) -> None:
         cwd=pkg,
         check=True,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
         env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
     )
-    assert "Bumped version: 0.1.0 -> 0.1.1 (patch)" in res.stdout
+    assert "Bumped version: 0.1.0 -> 0.1.1 (patch)" in res.stderr
     assert read_project_version(repo / "pyproject.toml") == "0.1.1"
 
 

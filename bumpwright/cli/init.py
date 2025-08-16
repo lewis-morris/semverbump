@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import subprocess
 
 from ..gitutils import last_release_commit
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+logger = logging.getLogger(__name__)
 
 
 def init_command(_args: argparse.Namespace) -> int:
@@ -25,7 +29,7 @@ def init_command(_args: argparse.Namespace) -> int:
     """
 
     if last_release_commit() is not None:
-        print("Baseline already initialised.")
+        logger.info("Baseline already initialised.")
         return 0
 
     subprocess.run(
@@ -38,5 +42,5 @@ def init_command(_args: argparse.Namespace) -> int:
         ],
         check=True,
     )
-    print("Created baseline release commit.")
+    logger.info("Created baseline release commit.")
     return 0

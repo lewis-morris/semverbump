@@ -27,11 +27,12 @@ def test_decide_flag_defaults_to_previous_commit(tmp_path: Path) -> None:
         cwd=repo,
         check=True,
         stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
         env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
     )
 
-    data = json.loads(res.stdout)
+    data = json.loads(res.stderr)
     assert data["level"] == "minor"
     assert data["confidence"] == 1.0
     assert data["reasons"] == ["Added public symbol"]

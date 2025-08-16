@@ -13,10 +13,14 @@ from ..analysers.utils import iter_py_files_at_ref
 from ..compare import Decision, Impact, decide_bump, diff_public_api
 from ..config import Config
 from ..gitutils import last_release_commit
-from ..public_api import (PublicAPI, extract_public_api_from_source,
-                          module_name_from_path)
+from ..public_api import (
+    PublicAPI,
+    extract_public_api_from_source,
+    module_name_from_path,
+)
 from . import add_analyser_toggles, add_ref_options
 
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -25,7 +29,9 @@ def _build_api_at_ref(ref: str, roots: list[str], ignores: Iterable[str]) -> Pub
 
     api: PublicAPI = {}
     for root in roots:
-        for path, code in sorted(iter_py_files_at_ref(ref, [root], ignores), key=lambda t: t[0]):
+        for path, code in sorted(
+            iter_py_files_at_ref(ref, [root], ignores), key=lambda t: t[0]
+        ):
             modname = module_name_from_path(root, path)
             api.update(extract_public_api_from_source(modname, code))
     return api
@@ -107,11 +113,15 @@ def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
     head = args.head
     old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
     new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
-    impacts = diff_public_api(old_api, new_api, return_type_change=cfg.rules.return_type_change)
-    impacts.extend(_run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser))
+    impacts = diff_public_api(
+        old_api, new_api, return_type_change=cfg.rules.return_type_change
+    )
+    impacts.extend(
+        _run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser)
+    )
     decision = decide_bump(impacts)
     if args.format == "json":
-        print(
+        logger.info(
             json.dumps(
                 {
                     "level": decision.level,
@@ -123,11 +133,11 @@ def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
             )
         )
     elif args.format == "md":
-        print(f"**bumpwright** suggests: `{decision.level}`\n")
-        print(_format_impacts_text(impacts))
+        logger.info("**bumpwright** suggests: `%s`\n", decision.level)
+        logger.info("%s", _format_impacts_text(impacts))
     else:
-        print(f"Suggested bump: {decision.level}")
-        print(_format_impacts_text(impacts))
+        logger.info("Suggested bump: %s", decision.level)
+        logger.info("%s", _format_impacts_text(impacts))
     return 0
 
 
@@ -141,6 +151,10 @@ def _infer_level(
 
     old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
     new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
-    impacts = diff_public_api(old_api, new_api, return_type_change=cfg.rules.return_type_change)
-    impacts.extend(_run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser))
+    impacts = diff_public_api(
+        old_api, new_api, return_type_change=cfg.rules.return_type_change
+    )
+    impacts.extend(
+        _run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser)
+    )
     return decide_bump(impacts)
