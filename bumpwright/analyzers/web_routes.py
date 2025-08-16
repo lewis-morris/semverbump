@@ -8,8 +8,8 @@ from dataclasses import dataclass
 
 from ..compare import Impact
 from ..config import Config
-from ..gitutils import list_py_files_at_ref, read_file_at_ref
 from . import register
+from .utils import iter_py_files_at_ref
 
 HTTP_METHODS = {"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"}
 
@@ -114,10 +114,7 @@ def _build_routes_at_ref(
     """
 
     out: dict[tuple[str, str], Route] = {}
-    for path in list_py_files_at_ref(ref, roots, ignore_globs=ignores):
-        code = read_file_at_ref(ref, path)
-        if code is None:
-            continue
+    for _path, code in iter_py_files_at_ref(ref, roots, ignores):
         out.update(extract_routes_from_source(code))
     return out
 

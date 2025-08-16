@@ -8,8 +8,8 @@ from dataclasses import dataclass
 
 from ..compare import Impact
 from ..config import Config
-from ..gitutils import list_py_files_at_ref, read_file_at_ref
 from . import register
+from .utils import iter_py_files_at_ref
 
 
 @dataclass(frozen=True)
@@ -227,10 +227,7 @@ def _build_cli_at_ref(
     """
 
     out: dict[str, Command] = {}
-    for path in list_py_files_at_ref(ref, roots, ignore_globs=ignores):
-        code = read_file_at_ref(ref, path)
-        if code is None:
-            continue
+    for _path, code in iter_py_files_at_ref(ref, roots, ignores):
         out.update(extract_cli_from_source(code))
     return out
 
