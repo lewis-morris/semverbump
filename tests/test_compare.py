@@ -3,6 +3,7 @@
 from bumpwright.compare import (
     Impact,
     _added_params,
+    _param_annotation_changes,
     _param_kind_changes,
     _removed_params,
     _return_annotation_change,
@@ -64,6 +65,15 @@ def test_param_kind_changes_detected():
     assert Impact(MAJOR, "m:f", "Param 'y' kind changed pos→posonly") in impacts
 
 
+def test_param_annotation_changes_detected():
+    old = _sig("m:f", [_p("x", ann="int"), _p("y", ann="str")], "-> int")
+    new = _sig("m:f", [_p("x", ann="int"), _p("y", ann="bytes")], "-> int")
+    impacts = _param_annotation_changes(
+        {p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f"
+    )
+    assert Impact(MINOR, "m:f", "Param 'y' annotation changed str→bytes") in impacts
+
+
 def test_return_annotation_change_helper():
     old = _sig("m:f", [_p("x")], "int")
     new = _sig("m:f", [_p("x")], "str")
@@ -108,6 +118,13 @@ def test_compare_funcs_return_type_change_major():
     new = _sig("m:f", [_p("x")], "str")
     impacts = compare_funcs(old, new, return_type_change=MAJOR)
     assert impacts == [Impact(MAJOR, "m:f", "Return annotation changed")]
+
+
+def test_compare_funcs_param_annotation_change_major():
+    old = _sig("m:f", [_p("x", ann="int")], None)
+    new = _sig("m:f", [_p("x", ann="str")], None)
+    impacts = compare_funcs(old, new, param_annotation_change=MAJOR)
+    assert impacts == [Impact(MAJOR, "m:f", "Param 'x' annotation changed int→str")]
 
 
 def test_diff_public_api_added_symbol():
