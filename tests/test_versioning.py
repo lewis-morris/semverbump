@@ -4,9 +4,8 @@ import pytest
 from tomlkit import dumps as toml_dumps
 from tomlkit.exceptions import ParseError
 
-from bumpwright.config import Config, load_config
 from bumpwright import versioning
-
+from bumpwright.config import Config, load_config
 from bumpwright.versioning import (
     _replace_version,
     _resolve_files,
@@ -59,8 +58,6 @@ def test_bump_string_semver_prerelease_and_build() -> None:
 @pytest.mark.parametrize("version", ["01.2.3", "1.02.3", "1.2.03"])
 def test_bump_string_semver_rejects_leading_zeros(version: str) -> None:
     """SemVer parsing rejects numeric components with leading zeros."""
-
-
 
     with pytest.raises(ValueError):
         bump_string(version, "patch", scheme="semver")
@@ -263,6 +260,19 @@ def test_replace_version_returns_false_when_unmodified(tmp_path: Path) -> None:
 
     assert not _replace_version(target, "0.1.0", "0.2.0")
     assert target.read_text(encoding="utf-8") == "print('hello')"
+
+
+def test_replace_version_uses_module_patterns(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Ensure module-level regex patterns drive version replacement."""
+
+    target = tmp_path / "module.py"
+    target.write_text("__version__ = '0.1.0'", encoding="utf-8")
+    monkeypatch.setattr(versioning, "_VERSION_RE_PATTERNS", [])
+
+    assert not _replace_version(target, "0.1.0", "0.2.0")
+    assert target.read_text(encoding="utf-8") == "__version__ = '0.1.0'"
 
 
 def test_apply_bump_respects_scheme(
