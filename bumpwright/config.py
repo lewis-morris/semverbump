@@ -11,12 +11,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 _DEFAULTS = {
-    "project": {"package": "", "public_roots": ["."], "index_file": "pyproject.toml"},
+    "project": {"package": "", "public_roots": ["."]},
     "ignore": {"paths": ["tests/**", "examples/**", "scripts/**"]},
     "rules": {"return_type_change": "minor"},  # or "major"
-    "analyzers": {"cli": False},
+    "analysers": {"cli": False},
     "migrations": {"paths": ["migrations"]},
-    "changelog": {"path": ""},
+    "changelog": {"path": "", "template": ""},
     "version": {
         "paths": [
             "pyproject.toml",
@@ -27,6 +27,7 @@ _DEFAULTS = {
             "**/_version.py",
         ],
         "ignore": [],
+        "scheme": "semver",
     },
 }
 
@@ -40,11 +41,16 @@ class Rules:
 
 @dataclass
 class Project:
-    """Project metadata and locations."""
+    """Project metadata and public API configuration.
+
+    Attributes:
+        package: Importable package containing the project's code. When empty the
+            repository layout is used.
+        public_roots: Paths whose contents constitute the public API.
+    """
 
     package: str = ""
     public_roots: list[str] = field(default_factory=lambda: ["."])
-    index_file: str = "pyproject.toml"
 
 
 @dataclass
@@ -57,11 +63,11 @@ class Ignore:
 
 
 @dataclass
-class Analyzers:
-    """Analyzer plugin configuration.
+class Analysers:
+    """Analyser plugin configuration.
 
     Attributes:
-        enabled: Names of enabled analyzer plugins.
+        enabled: Names of enabled analyser plugins.
     """
 
     enabled: set[str] = field(default_factory=set)
@@ -69,7 +75,7 @@ class Analyzers:
 
 @dataclass
 class Migrations:
-    """Settings for the migrations analyzer."""
+    """Settings for the migrations analyser."""
 
     paths: list[str] = field(default_factory=lambda: ["migrations"])
 
@@ -80,9 +86,12 @@ class Changelog:
 
     Attributes:
         path: Default changelog file path. Empty string disables changelog generation.
+        template: Jinja2 template file for changelog entries. Empty string selects
+            the built-in template.
     """
 
     path: str = ""
+    template: str = ""
 
 
 @dataclass
@@ -92,6 +101,7 @@ class VersionFiles:
     Attributes:
         paths: Glob patterns to search for version declarations.
         ignore: Glob patterns to skip during version replacement.
+        scheme: Versioning scheme identifier. Defaults to ``"semver"``.
     """
 
     paths: list[str] = field(
@@ -105,6 +115,7 @@ class VersionFiles:
         ]
     )
     ignore: list[str] = field(default_factory=list)
+    scheme: str = "semver"
 
 
 @dataclass
@@ -115,15 +126,15 @@ class Config:
         project: Project settings.
         rules: Rules controlling version bumps.
         ignore: Paths to exclude when scanning.
-        analyzers: Optional analyzer plugin settings.
-        changelog: Default changelog file location.
+        analysers: Optional analyser plugin settings.
+        changelog: Changelog file path and template defaults.
         version: Locations containing version strings.
     """
 
     project: Project = field(default_factory=Project)
     rules: Rules = field(default_factory=Rules)
     ignore: Ignore = field(default_factory=Ignore)
-    analyzers: Analyzers = field(default_factory=Analyzers)
+    analysers: Analysers = field(default_factory=Analysers)
     migrations: Migrations = field(default_factory=Migrations)
     changelog: Changelog = field(default_factory=Changelog)
     version: VersionFiles = field(default_factory=VersionFiles)
@@ -162,8 +173,8 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
     proj = Project(**d["project"])
     rules = Rules(**d["rules"])
     ign = Ignore(**d["ignore"])
-    enabled = {name for name, enabled in d["analyzers"].items() if enabled}
-    analyzers = Analyzers(enabled=enabled)
+    enabled = {name for name, enabled in d["analysers"].items() if enabled}
+    analysers = Analysers(enabled=enabled)
     migrations = Migrations(**d.get("migrations", {}))
     changelog = Changelog(**d.get("changelog", {}))
     version = VersionFiles(**d.get("version", {}))
@@ -171,7 +182,7 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
         project=proj,
         rules=rules,
         ignore=ign,
-        analyzers=analyzers,
+        analysers=analysers,
         migrations=migrations,
         changelog=changelog,
         version=version,

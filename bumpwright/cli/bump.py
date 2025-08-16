@@ -8,12 +8,19 @@ import subprocess
 import sys
 from datetime import date
 from pathlib import Path
+from typing import Any
+
+from jinja2 import Template
 
 from ..compare import Decision
 from ..config import Config, load_config
 from ..gitutils import changed_paths, collect_commits, last_release_commit
-from ..versioning import apply_bump, find_pyproject
+from ..versioning import VersionChange, apply_bump, find_pyproject
 from .decide import _decide_only, _infer_level
+
+_DEFAULT_TEMPLATE = (
+    Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
+).read_text(encoding="utf-8")
 
 
 def _commit_tag(pyproject: str, version: str, commit: bool, tag: bool) -> None:
@@ -65,21 +72,119 @@ def _safe_changed_paths(base: str, head: str) -> set[str] | None:
 
 
 def _build_changelog(args: argparse.Namespace, new_version: str) -> str | None:
-    """Generate changelog text if requested."""
+    """Generate changelog text if requested.
+
+    Changelog entries are rendered using a Jinja2 template. Users may supply a
+    custom template via ``--changelog-template`` or configuration; otherwise the
+    built-in template is used. Available template variables include:
+
+    ``version``
+        New project version string.
+    ``date``
+        Current date in ISO format.
+    ``commits``
+        Sequence of mappings with ``sha``, ``subject``, and optional ``link``
+        keys representing commits since the previous release.
+    """
 
     if args.changelog is None:
         return None
     base = last_release_commit() or f"{args.head}^"
     commits = collect_commits(base, args.head)
-    lines = [f"## [v{new_version}] - {date.today().isoformat()}"]
+    entries: list[dict[str, Any]] = []
     for sha, subject in commits:
-        if args.repo_url and args.format == "md":
+        link = None
+        if args.repo_url:
             base_url = args.repo_url.rstrip("/")
             link = f"{base_url}/commit/{sha}"
-            lines.append(f"- [{sha}]({link}) {subject}")
-        else:
-            lines.append(f"- {sha} {subject}")
-    return "\n".join(lines) + "\n"
+        entries.append({"sha": sha, "subject": subject, "link": link})
+    template_path = getattr(args, "changelog_template", None)
+    template_txt = (
+        Path(template_path).read_text(encoding="utf-8")
+        if template_path
+        else _DEFAULT_TEMPLATE
+    )
+    tmpl = Template(template_txt)
+    rendered = tmpl.render(
+        version=new_version,
+        date=date.today().isoformat(),
+        commits=entries,
+        repo_url=args.repo_url,
+    )
+    return rendered.rstrip() + "\n"
+
+
+def _prepare_version_files(
+    cfg: Config,
+    args: argparse.Namespace,
+    pyproject: Path,
+    base: str,
+    head: str,
+) -> list[str] | None:
+    """Build version file list and decide if a bump is necessary.
+
+    Args:
+        cfg: Project configuration object.
+        args: Parsed command line arguments.
+        pyproject: Path to the canonical ``pyproject.toml`` file.
+        base: Git reference representing the comparison base.
+        head: Git reference representing the comparison head.
+
+    Returns:
+        List of file patterns to update, or ``None`` when no bump is required.
+    """
+
+    paths = list(cfg.version.paths)
+    if args.version_path:
+        paths.extend(args.version_path)
+    version_files = {p for p in paths if not any(ch in p for ch in "*?[")}
+    changed = _safe_changed_paths(base, head)
+    if changed is not None:
+        filtered = {
+            p for p in changed if p != pyproject.name and p not in version_files
+        }
+        if not filtered:
+            return None
+    return paths
+
+
+def _display_result(
+    args: argparse.Namespace, vc: VersionChange, decision: Decision
+) -> None:
+    """Show bump outcome using the selected format."""
+
+    if args.format == "json":
+        print(
+            json.dumps(
+                {
+                    "old_version": vc.old,
+                    "new_version": vc.new,
+                    "level": vc.level,
+                    "confidence": decision.confidence,
+                    "reasons": decision.reasons,
+                    "files": [str(p) for p in vc.files],
+                },
+                indent=2,
+            )
+        )
+    elif args.format == "md":
+        print(f"Bumped version: `{vc.old}` -> `{vc.new}` ({vc.level})")
+        print("Updated files:\n" + "\n".join(f"- `{p}`" for p in vc.files))
+    else:
+        print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
+        print("Updated files: " + ", ".join(str(p) for p in vc.files))
+
+
+def _write_changelog(args: argparse.Namespace, changelog: str | None) -> None:
+    """Persist changelog content based on user options."""
+
+    if changelog is None:
+        return
+    if args.changelog == "-":
+        print(changelog, end="")
+    else:
+        with open(args.changelog, "a", encoding="utf-8") as fh:
+            fh.write(changelog)
 
 
 def bump_command(args: argparse.Namespace) -> int:
@@ -88,6 +193,8 @@ def bump_command(args: argparse.Namespace) -> int:
     cfg: Config = load_config(args.config)
     if args.changelog is None and cfg.changelog.path:
         args.changelog = cfg.changelog.path
+    if getattr(args, "changelog_template", None) is None and cfg.changelog.template:
+        args.changelog_template = cfg.changelog.template
     if args.decide:
         return _decide_only(args, cfg)
 
@@ -100,19 +207,10 @@ def bump_command(args: argparse.Namespace) -> int:
     except FileNotFoundError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
-
-    paths = list(cfg.version.paths)
-    if args.version_path:
-        paths.extend(args.version_path)
-    version_files = {p for p in paths if not any(ch in p for ch in "*?[")}
-    changed = _safe_changed_paths(base, head)
-    if changed is not None:
-        filtered = {
-            p for p in changed if p != Path(pyproject).name and p not in version_files
-        }
-        if not filtered:
-            print("No version bump needed")
-            return 0
+    paths = _prepare_version_files(cfg, args, pyproject, base, head)
+    if paths is None:
+        print("No version bump needed")
+        return 0
 
     if not level:
         decision = _infer_level(base, head, cfg, args)
@@ -134,32 +232,8 @@ def bump_command(args: argparse.Namespace) -> int:
         ignore=ignore,
     )
     changelog = _build_changelog(args, vc.new)
-    if args.format == "json":
-        print(
-            json.dumps(
-                {
-                    "old_version": vc.old,
-                    "new_version": vc.new,
-                    "level": vc.level,
-                    "confidence": decision.confidence,
-                    "reasons": decision.reasons,
-                    "files": [str(p) for p in vc.files],
-                },
-                indent=2,
-            )
-        )
-    elif args.format == "md":
-        print(f"Bumped version: `{vc.old}` -> `{vc.new}` ({vc.level})")
-        print("Updated files:\n" + "\n".join(f"- `{p}`" for p in vc.files))
-    else:
-        print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
-        print("Updated files: " + ", ".join(str(p) for p in vc.files))
+    _display_result(args, vc, decision)
     if not args.dry_run:
         _commit_tag(str(pyproject), vc.new, args.commit, args.tag)
-    if changelog is not None:
-        if args.changelog == "-":
-            print(changelog, end="")
-        else:
-            with open(args.changelog, "a", encoding="utf-8") as fh:
-                fh.write(changelog)
+    _write_changelog(args, changelog)
     return 0

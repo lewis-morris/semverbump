@@ -52,11 +52,11 @@ require.
 ``--repo-url URL``
     Base repository URL for linking commit hashes in Markdown output.
 
-``--enable-analyzer NAME``
-    Enable analyzer ``NAME`` in addition to configuration. Repeatable.
+``--enable-analyser NAME``
+    Enable analyser ``NAME`` in addition to configuration. Repeatable.
 
-``--disable-analyzer NAME``
-    Disable analyzer ``NAME`` even if enabled in configuration. Repeatable.
+``--disable-analyser NAME``
+    Disable analyser ``NAME`` even if enabled in configuration. Repeatable.
 
 **Examples**
 
@@ -92,8 +92,9 @@ Update version information in ``pyproject.toml`` and other files.
 By default, ``bumpwright`` also searches ``setup.py``, ``setup.cfg`` and any
 ``__init__.py``, ``version.py`` or ``_version.py`` files for a version
 assignment. These locations can be customised via the ``[version]`` section in
-``bumpwright.toml`` or augmented with ``--version-path`` and
-``--version-ignore`` to add or exclude patterns.
+``bumpwright.toml``. The section also allows selecting a versioning scheme with
+``scheme = "semver"`` or ``"pep440"``. Command-line options ``--version-path``
+and ``--version-ignore`` extend these patterns for one-off runs.
 
 **Arguments**
 
@@ -115,16 +116,20 @@ assignment. These locations can be customised via the ``[version]`` section in
 ``--repo-url URL``
     Base repository URL for linking commit hashes in Markdown output.
 
-``--enable-analyzer NAME``
-    Enable analyzer ``NAME`` in addition to configuration. Repeatable.
+``--enable-analyser NAME``
+    Enable analyser ``NAME`` in addition to configuration. Repeatable.
 
-``--disable-analyzer NAME``
-    Disable analyzer ``NAME`` even if enabled in configuration. Repeatable.
+``--disable-analyser NAME``
+    Disable analyser ``NAME`` even if enabled in configuration. Repeatable.
 
 ``--changelog [FILE]``
     Append release notes for the new version to ``FILE``.
     When ``FILE`` is omitted or set to ``-``, the changelog entry is printed to
     standard output. If the option is omitted, no changelog entry is produced.
+
+``--changelog-template PATH``
+    Jinja2 template file used when rendering changelog entries. Defaults to the
+    built-in template.
 
 ``--pyproject PATH``
     Path to the project's ``pyproject.toml`` file. Defaults to
@@ -187,6 +192,16 @@ Entries follow a simple Markdown structure:
 Each entry begins with a version heading and date, followed by a list of commit
 shas and subjects since the previous release.
 
+Templates receive the following variables:
+
+``version``
+    The new version string.
+``date``
+    Current date in ISO format.
+``commits``
+    List of mappings with ``sha``, ``subject``, and optional ``link`` keys for
+    commits since the previous release.
+
 Projects can set a default changelog path in ``bumpwright.toml`` so the
 ``bump`` command writes to that location when ``--changelog`` is omitted:
 
@@ -194,10 +209,12 @@ Projects can set a default changelog path in ``bumpwright.toml`` so the
 
    [changelog]
    path = "CHANGELOG.md"
+   template = "changelog.j2"
 
 With this configuration, running ``bumpwright bump`` automatically appends the
-release notes to ``CHANGELOG.md``. To print to stdout instead, invoke
-``bumpwright bump --changelog`` (or pass ``--changelog -`` for clarity).
+release notes to ``CHANGELOG.md`` using ``changelog.j2``. To print to stdout
+instead, invoke ``bumpwright bump --changelog`` (or pass ``--changelog -`` for
+clarity).
 
 To preview changes without touching the filesystem, combine ``--dry-run`` with
 JSON output:

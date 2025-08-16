@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import ast
+
 from bumpwright import gitutils
-from bumpwright.analyzers.utils import iter_py_files_at_ref
+from bumpwright.analysers.utils import _is_const_str, iter_py_files_at_ref
 
 
 def test_iter_py_files_at_ref(tmp_path):
@@ -23,3 +25,10 @@ def test_iter_py_files_at_ref(tmp_path):
 
     files = dict(iter_py_files_at_ref("HEAD", ["pkg"], ["pkg/mod.py"], str(repo)))
     assert set(files) == {"pkg/__init__.py"}
+
+
+def test_is_const_str() -> None:
+    const_node = ast.parse("'foo'").body[0].value  # type: ignore[assignment]
+    other_node = ast.parse("1").body[0].value  # type: ignore[assignment]
+    assert _is_const_str(const_node)
+    assert not _is_const_str(other_node)

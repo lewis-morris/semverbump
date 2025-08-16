@@ -42,5 +42,5 @@ Example:
    Updated files: pyproject.toml
 
 The ``--config`` option reads from :doc:`configuration`, while
-``--enable-analyzer`` and ``--disable-analyzer`` control optional analysers
-as described in :doc:`analyzers/index`.
+``--enable-analyser`` and ``--disable-analyser`` control optional analysers
+as described in :doc:`analysers/index`.

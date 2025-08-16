@@ -8,10 +8,9 @@ Example configuration showing all available sections and their default values:
 
 .. code-block:: toml
 
-   [project]
-   package = ""
-   public_roots = ["."]
-   index_file = "pyproject.toml"
+    [project]
+    package = ""
+    public_roots = ["."]
 
    [ignore]
    paths = ["tests/**", "examples/**", "scripts/**"]
@@ -19,7 +18,7 @@ Example configuration showing all available sections and their default values:
    [rules]
    return_type_change = "minor"  # or "major"
 
-   [analyzers]
+   [analysers]
    cli = false
    web_routes = false
 
@@ -28,10 +27,12 @@ Example configuration showing all available sections and their default values:
 
    [changelog]
    path = ""
+   template = ""
 
    [version]
    paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]
    ignore = []
+   scheme = "semver"
 
 Set an analyser value to ``true`` to enable it.
 
@@ -57,10 +58,6 @@ Project
      - list[str]
      - ``["."]``
      - Paths whose contents constitute the public API.
-   * - ``index_file``
-     - str
-     - ``"pyproject.toml"``
-     - File containing project metadata used for version discovery.
 
 Ignore
 ~~~~~~
@@ -95,8 +92,8 @@ Rules
 Analysers
 ~~~~~~~~~
 
-Each key under ``[analyzers]`` toggles a plugin. Unknown names raise an error
-at run time. Command-line flags ``--enable-analyzer`` and ``--disable-analyzer``
+Each key under ``[analysers]`` toggles a plugin. Unknown names raise an error
+at run time. Command-line flags ``--enable-analyser`` and ``--disable-analyser``
 temporarily override these settings. Built-in analysers include:
 
 .. list-table:: Available analysers
@@ -132,7 +129,8 @@ Migrations
 Version
 ~~~~~~~
 
-Controls where version strings are read and updated.
+Controls where version strings are read and updated and which versioning
+scheme is applied.
 
 .. list-table:: Version options
    :header-rows: 1
@@ -149,6 +147,11 @@ Controls where version strings are read and updated.
      - list[str]
      - ``[]``
      - Glob patterns excluded from version replacement.
+   * - ``scheme``
+     - str
+     - ``"semver"``
+     - Versioning scheme used when bumping. Supported values include
+       ``"semver"`` and ``"pep440"``.
 
 Command-line options ``--version-path`` and ``--version-ignore`` extend these
 defaults for one-off runs.
@@ -166,8 +169,13 @@ Changelog
    * - ``path``
      - str
      - ``""``
-     - Default file appended when running ``bumpwright bump`` with
-       ``--changelog`` omitted. Empty string means no default file.
+     - Default file appended when running ``bumpwright bump`` with ``--changelog``
+       omitted. Empty string means no default file.
+   * - ``template``
+     - str
+     - ``""``
+     - Jinja2 template file for changelog entries. Empty string selects the
+       built-in template.
 
 All sections and keys are optional; unspecified values fall back to the
 defaults shown above.

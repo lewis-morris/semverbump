@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import builtins
 import importlib
 from pathlib import Path
@@ -7,33 +9,42 @@ import tomli
 from bumpwright.config import load_config
 
 
-def test_load_config_parses_analyzers(tmp_path: Path) -> None:
+def test_load_config_parses_analysers(tmp_path: Path) -> None:
     cfg_file = tmp_path / "bumpwright.toml"
-    cfg_file.write_text("[analyzers]\nflask_routes = true\nsqlalchemy = false\n")
+    cfg_file.write_text("[analysers]\nflask_routes = true\nsqlalchemy = false\n")
     cfg = load_config(cfg_file)
-    assert cfg.analyzers.enabled == {"flask_routes"}
+    assert cfg.analysers.enabled == {"flask_routes"}
 
 
-def test_load_config_defaults_analyzers(tmp_path: Path) -> None:
+def test_load_config_defaults_analysers(tmp_path: Path) -> None:
     cfg = load_config(tmp_path / "missing.toml")
-    assert cfg.analyzers.enabled == set()
+    assert cfg.analysers.enabled == set()
 
 
 def test_load_config_changelog(tmp_path: Path) -> None:
     cfg_file = tmp_path / "bumpwright.toml"
-    cfg_file.write_text("[changelog]\npath='NEWS.md'\n")
+    cfg_file.write_text("[changelog]\npath='NEWS.md'\ntemplate='tmpl.j2'\n")
     cfg = load_config(cfg_file)
     assert cfg.changelog.path == "NEWS.md"
+    assert cfg.changelog.template == "tmpl.j2"
 
 
 def test_load_config_changelog_default(tmp_path: Path) -> None:
     cfg = load_config(tmp_path / "missing.toml")
     assert cfg.changelog.path == ""
+    assert cfg.changelog.template == ""
+
+
+def test_load_config_default_scheme(tmp_path: Path) -> None:
+    """Default configuration uses the semantic versioning scheme."""
+
+    cfg = load_config(tmp_path / "missing.toml")
+    assert cfg.version.scheme == "semver"
 
 
 def test_tomli_fallback(monkeypatch, tmp_path: Path) -> None:
     """Ensure ``tomli`` is used when ``tomllib`` is unavailable."""
-    from bumpwright import config
+    from bumpwright import config  # noqa: PLC0415
 
     original_import = builtins.__import__
 
@@ -47,7 +58,7 @@ def test_tomli_fallback(monkeypatch, tmp_path: Path) -> None:
 
     assert config.tomllib is tomli
     cfg = config.load_config(tmp_path / "missing.toml")
-    assert cfg.project.index_file == "pyproject.toml"
+    assert cfg.project.public_roots == ["."]
 
 
 def test_mutating_config_does_not_alter_defaults(tmp_path: Path) -> None:
@@ -56,7 +67,7 @@ def test_mutating_config_does_not_alter_defaults(tmp_path: Path) -> None:
     cfg = load_config(tmp_path / "missing.toml")
     cfg.project.public_roots.append("src")
 
-    import bumpwright.config as config_module
+    import bumpwright.config as config_module  # noqa: PLC0415
 
     fresh = load_config(tmp_path / "missing.toml")
     assert config_module._DEFAULTS["project"]["public_roots"] == ["."]

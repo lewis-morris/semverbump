@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 """Click wrappers for documenting the :mod:`bumpwright` CLI."""
 
+from __future__ import annotations
+
 import argparse
-
 import click
-
 from bumpwright.cli.bump import bump_command
 from bumpwright.cli.init import init_command
 
@@ -64,14 +62,14 @@ def init(args: argparse.Namespace) -> int:
     help="Only determine the bump level without modifying any files.",
 )
 @click.option(
-    "--enable-analyzer",
+    "--enable-analyser",
     multiple=True,
-    help="Enable analyzer NAME (repeatable) in addition to configuration.",
+    help="Enable analyser NAME (repeatable) in addition to configuration.",
 )
 @click.option(
-    "--disable-analyzer",
+    "--disable-analyser",
     multiple=True,
-    help="Disable analyzer NAME (repeatable) even if configured.",
+    help="Disable analyser NAME (repeatable) even if configured.",
 )
 @click.option(
     "--pyproject",
@@ -103,14 +101,19 @@ def init(args: argparse.Namespace) -> int:
     type=str,
     help="Append release notes to FILE or stdout when no path is given.",
 )
+@click.option(
+    "--changelog-template",
+    type=str,
+    help=("Jinja2 template file for changelog entries; defaults to built-in template."),
+)
 @click.pass_obj
 def bump(args: argparse.Namespace, **kwargs: object) -> int:
     """Update project version metadata and optionally commit and tag the change."""
 
     params = vars(args).copy()
     params.update(kwargs)
-    params["enable_analyzer"] = list(params.get("enable_analyzer", []))
-    params["disable_analyzer"] = list(params.get("disable_analyzer", []))
+    params["enable_analyser"] = list(params.get("enable_analyser", []))
+    params["disable_analyser"] = list(params.get("disable_analyser", []))
     params["version_path"] = list(params.get("version_path", []))
     params["version_ignore"] = list(params.get("version_ignore", []))
     params["format"] = params.pop("format_")

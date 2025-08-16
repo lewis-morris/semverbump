@@ -9,7 +9,9 @@ from bumpwright.versioning import (
     _resolve_files_cached,
     apply_bump,
     bump_string,
+    find_pyproject,
     read_project_version,
+    write_project_version,
 )
 
 
@@ -60,7 +62,9 @@ def pyproject_malformed(tmp_path: Path) -> Path:
         ("pyproject_malformed", ParseError),
     ],
 )
-def test_read_project_version_errors(path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest) -> None:
+def test_read_project_version_errors(
+    path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest
+) -> None:
     """Validate ``read_project_version`` error handling for bad inputs."""
 
     path = request.getfixturevalue(path_fixture)
@@ -123,6 +127,32 @@ def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
     assert init not in out.files
 
 
+def test_apply_bump_respects_scheme(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Use configured version scheme when bumping."""
+
+    (tmp_path / "bumpwright.toml").write_text("[version]\nscheme='pep440'\n")
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "1!1.0.0"}}))
+    monkeypatch.chdir(tmp_path)
+    out = apply_bump("patch", py)
+    assert out.new == "1!1.0.1"
+
+
+def test_apply_bump_invalid_scheme(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Invalid version schemes raise clear errors."""
+
+    (tmp_path / "bumpwright.toml").write_text("[version]\nscheme='unknown'\n")
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(ValueError, match="Unknown version scheme"):
+        apply_bump("patch", py)
+
+
 def test_resolve_files_nested_dirs_sorted(tmp_path: Path) -> None:
     """Resolve nested patterns and ensure results are deterministically ordered."""
 
@@ -173,14 +203,17 @@ def test_resolve_files_absolute_paths_and_ignore_patterns(tmp_path: Path) -> Non
     expected = [abs_file, keep_rel]
     assert out == expected
 
-def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+
+def test_resolve_files_uses_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Ensure repeated resolution reuses cached results."""
 
     (tmp_path / "a.txt").write_text("1", encoding="utf-8")
     (tmp_path / "b.txt").write_text("2", encoding="utf-8")
     _resolve_files_cached.cache_clear()
     calls = {"count": 0}
-    from bumpwright.versioning import glob as glob_orig
+    from bumpwright.versioning import glob as glob_orig  # noqa: PLC0415
 
     def fake_glob(pattern: str, recursive: bool = True) -> list[str]:
         calls["count"] += 1
@@ -192,16 +225,60 @@ def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     assert calls["count"] == 1
 
 
-def test_apply_bump_clears_resolve_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_apply_bump_clears_resolve_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Verify custom patterns trigger cache invalidation."""
 
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
-    cleared = {"flag": False}
+    cfg = tmp_path / "extra.cfg"
+    cfg.write_text("version = '0.1.0'", encoding="utf-8")
 
-    def fake_clear() -> None:
-        cleared["flag"] = True
+    calls = {"count": 0}
+    from bumpwright.versioning import glob as glob_orig  # noqa: PLC0415
 
-    monkeypatch.setattr(_resolve_files_cached, "cache_clear", fake_clear)
+    def fake_glob(pattern: str, recursive: bool = True) -> list[str]:
+        calls["count"] += 1
+        return glob_orig(pattern, recursive=recursive)
+
+    monkeypatch.setattr("bumpwright.versioning.glob", fake_glob)
     apply_bump("patch", py, paths=["*.cfg"])
-    assert cleared["flag"]
+    apply_bump("patch", py, paths=["*.cfg"])
+    assert calls["count"] == 1
+
+
+def test_find_pyproject(tmp_path: Path) -> None:
+    """Locate the nearest ``pyproject.toml`` when present."""
+
+    root = tmp_path / "proj"
+    root.mkdir()
+    py = root / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
+    sub = root / "pkg"
+    sub.mkdir()
+    assert find_pyproject(sub) == py
+
+
+def test_find_pyproject_missing(tmp_path: Path) -> None:
+    """Return ``None`` when no ``pyproject.toml`` is found."""
+
+    assert find_pyproject(tmp_path / "missing") is None
+
+
+def test_write_project_version(tmp_path: Path) -> None:
+    """Update the project version in ``pyproject.toml``."""
+
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
+    write_project_version("0.2.0", py)
+    assert read_project_version(py) == "0.2.0"
+
+
+def test_write_project_version_missing_project(tmp_path: Path) -> None:
+    """Raise ``KeyError`` when the ``[project]`` table is absent."""
+
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({}))
+    with pytest.raises(KeyError):
+        write_project_version("0.1.0", py)

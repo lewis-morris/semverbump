@@ -8,4 +8,3 @@ Practical guides for using bumpwright in complex scenarios.
 
    advanced/index
    workflows
-   troubleshooting

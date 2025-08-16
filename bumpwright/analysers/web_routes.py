@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from ..compare import Impact
 from ..config import Config
 from . import register
-from .utils import iter_py_files_at_ref
+from .utils import _is_const_str, iter_py_files_at_ref
 
 HTTP_METHODS = {"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"}
 
@@ -21,19 +21,6 @@ class Route:
     path: str
     method: str
     params: dict[str, bool]  # True if required
-
-
-def _is_const_str(node: ast.AST) -> bool:
-    """Return whether ``node`` is a constant string.
-
-    Args:
-        node: AST node to inspect.
-
-    Returns:
-        ``True`` if ``node`` represents a string literal.
-    """
-
-    return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
 
 def _extract_params(args: ast.arguments) -> dict[str, bool]:
@@ -166,11 +153,11 @@ def diff_routes(
 
 
 @register("web_routes", "Track changes in web application routes.")
-class WebRoutesAnalyzer:
-    """Analyzer plugin for web application routes."""
+class WebRoutesAnalyser:
+    """Analyser plugin for web application routes."""
 
     def __init__(self, cfg: Config) -> None:
-        """Initialize the analyzer with configuration."""
+        """Initialize the analyser with configuration."""
         self.cfg = cfg
 
     def collect(self, ref: str) -> dict[tuple[str, str], Route]:
