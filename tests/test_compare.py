@@ -1,6 +1,7 @@
 """Tests for public API comparison helpers."""
 
-from bumpwright.compare import Impact, compare_funcs, decide_bump, diff_public_api
+from bumpwright.compare import (Impact, compare_funcs, decide_bump,
+                                diff_public_api)
 from bumpwright.public_api import FuncSig, Param
 from bumpwright.types import BumpLevel
 

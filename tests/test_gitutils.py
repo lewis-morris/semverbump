@@ -26,9 +26,7 @@ def _legacy_list_py_files_at_ref(
         if not line.endswith(".py"):
             continue
         p = Path(line)
-        if any(
-            str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm
-        ):
+        if any(str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm):
             s = str(p)
             if ignore_globs and any(fnmatch(s, pat) for pat in ignore_globs):
                 continue

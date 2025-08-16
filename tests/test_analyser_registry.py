@@ -3,13 +3,8 @@ from __future__ import annotations
 import pytest
 
 from bumpwright import analysers
-from bumpwright.analysers import (
-    Analyser,
-    available,
-    get_analyser_info,
-    load_enabled,
-    register,
-)
+from bumpwright.analysers import (Analyser, available, get_analyser_info,
+                                  load_enabled, register)
 from bumpwright.compare import Impact
 from bumpwright.config import Config
 
@@ -26,9 +21,7 @@ def test_register_records_metadata(monkeypatch) -> None:
         def collect(self, ref: str) -> object:  # pragma: no cover - trivial
             return {}
 
-        def compare(
-            self, old: object, new: object
-        ) -> list[Impact]:  # pragma: no cover - trivial
+        def compare(self, old: object, new: object) -> list[Impact]:  # pragma: no cover - trivial
             return []
 
     assert "dummy" in available()

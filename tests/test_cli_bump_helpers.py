@@ -6,12 +6,8 @@ from pathlib import Path
 import pytest
 from cli_helpers import run, setup_repo
 
-from bumpwright.cli.bump import (
-    _commit_tag,
-    _display_result,
-    _prepare_version_files,
-    _write_changelog,
-)
+from bumpwright.cli.bump import (_commit_tag, _display_result,
+                                 _prepare_version_files, _write_changelog)
 from bumpwright.compare import Decision
 from bumpwright.config import load_config
 from bumpwright.versioning import VersionChange

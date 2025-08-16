@@ -36,7 +36,6 @@ _DEFAULTS = {
             ".env/**",
             "**/__pycache__/**",
         ],
-
         "scheme": "semver",
     },
 }
@@ -67,9 +66,7 @@ class Project:
 class Ignore:
     """Paths to ignore during scanning."""
 
-    paths: list[str] = field(
-        default_factory=lambda: ["tests/**", "examples/**", "scripts/**"]
-    )
+    paths: list[str] = field(default_factory=lambda: ["tests/**", "examples/**", "scripts/**"])
 
 
 @dataclass
