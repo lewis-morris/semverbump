@@ -7,6 +7,7 @@ import json
 import logging
 import subprocess
 from datetime import date
+from glob import has_magic
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -188,7 +189,7 @@ def _prepare_version_files(
     paths = list(cfg.version.paths)
     if args.version_path:
         paths.extend(args.version_path)
-    version_files = {p for p in paths if not any(ch in p for ch in "*?[")}
+    version_files = {p for p in paths if not has_magic(p)}
     changed = _safe_changed_paths(base, head)
     if changed is not None:
         filtered = {
