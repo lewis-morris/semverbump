@@ -22,6 +22,8 @@ test = [
   "fastapi",
   "alembic",
   "sqlalchemy",
+  "tomlkit",
+  "tomli",
   "click",
 ]
 docs = [

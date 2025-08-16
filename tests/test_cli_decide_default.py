@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from tests.cli_helpers import run, setup_repo
+from cli_helpers import run, setup_repo
 
 
 def test_decide_flag_defaults_to_previous_commit(tmp_path: Path) -> None:

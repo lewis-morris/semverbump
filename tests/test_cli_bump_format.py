@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from tests.cli_helpers import setup_repo
+from cli_helpers import setup_repo
 
 
 def test_bump_command_json_format(tmp_path: Path) -> None:
