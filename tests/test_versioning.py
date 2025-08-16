@@ -60,7 +60,9 @@ def pyproject_malformed(tmp_path: Path) -> Path:
         ("pyproject_malformed", ParseError),
     ],
 )
-def test_read_project_version_errors(path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest) -> None:
+def test_read_project_version_errors(
+    path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest
+) -> None:
     """Validate ``read_project_version`` error handling for bad inputs."""
 
     path = request.getfixturevalue(path_fixture)
@@ -173,7 +175,10 @@ def test_resolve_files_absolute_paths_and_ignore_patterns(tmp_path: Path) -> Non
     expected = [abs_file, keep_rel]
     assert out == expected
 
-def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+
+def test_resolve_files_uses_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Ensure repeated resolution reuses cached results."""
 
     (tmp_path / "a.txt").write_text("1", encoding="utf-8")
@@ -192,16 +197,24 @@ def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     assert calls["count"] == 1
 
 
-def test_apply_bump_clears_resolve_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """Verify custom patterns trigger cache invalidation."""
+def test_apply_bump_reuses_resolve_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Ensure repeated bumps avoid redundant globbing."""
 
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
-    cleared = {"flag": False}
+    cfg = tmp_path / "extra.cfg"
+    cfg.write_text("version = '0.1.0'", encoding="utf-8")
 
-    def fake_clear() -> None:
-        cleared["flag"] = True
+    calls = {"count": 0}
+    from bumpwright.versioning import glob as glob_orig
 
-    monkeypatch.setattr(_resolve_files_cached, "cache_clear", fake_clear)
+    def fake_glob(pattern: str, recursive: bool = True) -> list[str]:
+        calls["count"] += 1
+        return glob_orig(pattern, recursive=recursive)
+
+    monkeypatch.setattr("bumpwright.versioning.glob", fake_glob)
     apply_bump("patch", py, paths=["*.cfg"])
-    assert cleared["flag"]
+    apply_bump("patch", py, paths=["*.cfg"])
+    assert calls["count"] == 1
