@@ -315,7 +315,9 @@ def bump_command(args: argparse.Namespace) -> int:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
 
-    paths = args.version_path or cfg.version.paths
+    paths = list(cfg.version.paths)
+    if args.version_path:
+        paths.extend(args.version_path)
     version_files = {p for p in paths if not any(ch in p for ch in "*?[")}
     changed = _safe_changed_paths(base, head)
     if changed is not None:
@@ -332,7 +334,9 @@ def bump_command(args: argparse.Namespace) -> int:
             print("No version bump needed")
             return 0
 
-    ignore = args.version_ignore or cfg.version.ignore
+    ignore = list(cfg.version.ignore)
+    if args.version_ignore:
+        ignore.extend(args.version_ignore)
     vc = apply_bump(
         level,
         pyproject_path=pyproject,
@@ -348,14 +352,17 @@ def bump_command(args: argparse.Namespace) -> int:
                     "old_version": vc.old,
                     "new_version": vc.new,
                     "level": vc.level,
+                    "files": [str(p) for p in vc.files],
                 },
                 indent=2,
             )
         )
     elif args.format == "md":
         print(f"Bumped version: `{vc.old}` -> `{vc.new}` ({vc.level})")
+        print("Updated files:\n" + "\n".join(f"- `{p}`" for p in vc.files))
     else:
         print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
+        print("Updated files: " + ", ".join(str(p) for p in vc.files))
     if not args.dry_run:
         _commit_tag(str(pyproject), vc.new, args.commit, args.tag)
     if changelog is not None:
@@ -447,13 +454,19 @@ def main(argv: list[str] | None = None) -> int:
         "--version-path",
         action="append",
         dest="version_path",
-        help="Glob pattern for files that contain the project version (repeatable).",
+        help=(
+            "Additional glob pattern for files containing the project version "
+            "(repeatable). Defaults include pyproject.toml, setup.py, setup.cfg, "
+            "and any __init__.py, version.py, or _version.py files."
+        ),
     )
     p_bump.add_argument(
         "--version-ignore",
         action="append",
         dest="version_ignore",
-        help="Glob pattern for paths to exclude from version updates.",
+        help=(
+            "Glob pattern for paths to exclude from version updates " "(repeatable)."
+        ),
     )
     p_bump.add_argument(
         "--commit",

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from fnmatch import fnmatch
 from glob import glob
 from pathlib import Path
@@ -27,11 +27,13 @@ class VersionChange:
         old: Previous version string.
         new: New version string after bump.
         level: Bump level applied (``"major"``, ``"minor"``, or ``"patch"``).
+        files: Files updated with the new version.
     """
 
     old: str
     new: str
     level: str  # "major" | "minor" | "patch"
+    files: List[Path] = field(default_factory=list)
 
 
 def bump_string(v: str, level: str) -> str:
@@ -142,16 +144,20 @@ def apply_bump(
 
     Args:
         level: Bump level to apply (``"major"``, ``"minor"``, or ``"patch"``).
-        pyproject_path: Path to the canonical ``pyproject.toml`` file.
+            pyproject_path: Path to the canonical ``pyproject.toml`` file.
         dry_run: If ``True``, compute the new version without writing to disk.
-        paths: Glob patterns pointing to files that may contain the version.
-            If ``None``, patterns are loaded from configuration.
-            The canonical ``pyproject.toml`` is always updated.
-        ignore: Glob patterns to exclude from ``paths``. Defaults to configured
-            values when ``None``.
+        paths: Glob patterns pointing to files that may contain the version. 
+            Defaults include ``pyproject.toml``, ``setup.py``, ``setup.cfg`` and
+            any ``__init__.py``, ``version.py`` or ``_version.py`` files within
+            the project. Custom patterns extend this list.
+        ignore: Glob patterns to exclude from ``paths``. Defaults to values from
+            ``config_path`` when ``None``.
+        config_path: Path to a ``bumpwright`` configuration file defining
+            default version locations.
 
     Returns:
-        :class:`VersionChange` detailing the old and new versions.
+        :class:`VersionChange` detailing the old and new versions and updated
+        files.
     """
 
     cfg = None
@@ -168,8 +174,13 @@ def apply_bump(
         return VersionChange(old=old, new=new, level=level)
 
     write_project_version(new, pyproject_path)
-    _update_additional_files(new, old, paths, ignore, pyproject_path)
-    return VersionChange(old=old, new=new, level=level)
+    updated = _update_additional_files(new, old, paths, ignore, pyproject_path)
+    return VersionChange(
+        old=old,
+        new=new,
+        level=level,
+        files=[Path(pyproject_path), *updated],
+    )
 
 
 def _update_additional_files(
@@ -178,7 +189,7 @@ def _update_additional_files(
     patterns: Iterable[str],
     ignore: Iterable[str],
     pyproject_path: str | Path,
-) -> None:
+) -> List[Path]:
     """Update version strings in files matching ``patterns``.
 
     Args:
@@ -187,15 +198,21 @@ def _update_additional_files(
         patterns: Glob patterns to search for files.
         ignore: Glob patterns to skip.
         pyproject_path: Canonical ``pyproject.toml`` path to skip (already updated).
+
+    Returns:
+        List of files that were updated.
     """
 
     base = Path(pyproject_path).resolve().parent
     files = _resolve_files(patterns, ignore, base)
     canon = Path(pyproject_path).resolve()
+    changed: List[Path] = []
     for f in files:
         if f.resolve() == canon:
             continue
         _replace_version(f, old, new)
+        changed.append(f)
+    return changed
 
 
 def _resolve_files(
