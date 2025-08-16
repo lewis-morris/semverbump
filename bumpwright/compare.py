@@ -55,16 +55,21 @@ def compare_funcs(
     oldp = _index_params(old)
     newp = _index_params(new)
 
-    # Removed required param -> major
+    # Removed parameters
     for name, op in oldp.items():
-        if (
-            name not in newp
-            and op.kind in ("posonly", "pos", "kwonly")
-            and op.default is None
-        ):
-            impacts.append(
-                Impact("major", old.fullname, f"Removed required param '{name}'")
-            )
+        if name not in newp:
+            if op.kind in ("posonly", "pos", "kwonly") and op.default is None:
+                impacts.append(
+                    Impact("major", old.fullname, f"Removed required param '{name}'")
+                )
+            elif op.default is not None or op.kind in (
+                "kwonly",
+                "vararg",
+                "varkw",
+            ):
+                impacts.append(
+                    Impact("minor", old.fullname, f"Removed optional param '{name}'")
+                )
 
     # Param kind changes are major; added optional params are minor
     for name, np in newp.items():
