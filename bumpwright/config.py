@@ -8,7 +8,6 @@ except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Set
 
 _DEFAULTS = {
     "project": {"package": "", "public_roots": ["."], "index_file": "pyproject.toml"},
@@ -43,7 +42,7 @@ class Project:
     """Project metadata and locations."""
 
     package: str = ""
-    public_roots: List[str] = field(default_factory=lambda: ["."])
+    public_roots: list[str] = field(default_factory=lambda: ["."])
     index_file: str = "pyproject.toml"
 
 
@@ -51,7 +50,7 @@ class Project:
 class Ignore:
     """Paths to ignore during scanning."""
 
-    paths: List[str] = field(
+    paths: list[str] = field(
         default_factory=lambda: ["tests/**", "examples/**", "scripts/**"]
     )
 
@@ -64,14 +63,14 @@ class Analyzers:
         enabled: Names of enabled analyzer plugins.
     """
 
-    enabled: Set[str] = field(default_factory=set)
+    enabled: set[str] = field(default_factory=set)
 
 
 @dataclass
 class Migrations:
     """Settings for the migrations analyzer."""
 
-    paths: List[str] = field(default_factory=lambda: ["migrations"])
+    paths: list[str] = field(default_factory=lambda: ["migrations"])
 
 
 @dataclass
@@ -94,7 +93,7 @@ class VersionFiles:
         ignore: Glob patterns to skip during version replacement.
     """
 
-    paths: List[str] = field(
+    paths: list[str] = field(
         default_factory=lambda: [
             "pyproject.toml",
             "setup.py",
@@ -104,7 +103,7 @@ class VersionFiles:
             "**/_version.py",
         ]
     )
-    ignore: List[str] = field(default_factory=list)
+    ignore: list[str] = field(default_factory=list)
 
 
 @dataclass

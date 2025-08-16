@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import shlex
 import subprocess
+from collections.abc import Iterable
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Iterable, List, Optional, Set
 
 
-def _run(cmd: List[str], cwd: str | None = None) -> str:
+def _run(cmd: list[str], cwd: str | None = None) -> str:
     """Run a subprocess command and return its ``stdout``.
 
     Args:
@@ -41,7 +41,7 @@ def _run(cmd: List[str], cwd: str | None = None) -> str:
     return res.stdout
 
 
-def changed_paths(base: str, head: str, cwd: str | None = None) -> Set[str]:
+def changed_paths(base: str, head: str, cwd: str | None = None) -> set[str]:
     """Return paths changed between two git references.
 
     Args:
@@ -62,7 +62,7 @@ def list_py_files_at_ref(
     roots: Iterable[str],
     ignore_globs: Iterable[str] | None = None,
     cwd: str | None = None,
-) -> Set[str]:
+) -> set[str]:
     """List Python files under given roots at a git ref.
 
     Args:
@@ -76,7 +76,7 @@ def list_py_files_at_ref(
     """
 
     out = _run(["git", "ls-tree", "-r", "--name-only", ref], cwd)
-    paths: Set[str] = set()
+    paths: set[str] = set()
     roots_norm = [str(Path(r)) for r in roots]
     for line in out.splitlines():
         if not line.endswith(".py"):
@@ -92,7 +92,7 @@ def list_py_files_at_ref(
     return paths
 
 
-def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> Optional[str]:
+def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> str | None:
     """Read the contents of ``path`` at ``ref`` if it exists.
 
     Args:
@@ -110,7 +110,7 @@ def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> Optional[st
         return None
 
 
-def last_release_commit(cwd: str | None = None) -> Optional[str]:
+def last_release_commit(cwd: str | None = None) -> str | None:
     """Return the most recent release commit created by bumpwright.
 
     Args:

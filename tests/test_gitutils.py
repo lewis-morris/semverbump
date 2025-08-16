@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from fnmatch import fnmatch
 from pathlib import Path
-from typing import Iterable, List, Set
 
 from bumpwright import gitutils
 
@@ -12,10 +12,10 @@ def _legacy_list_py_files_at_ref(
     roots: Iterable[str],
     ignore_globs: Iterable[str] | None = None,
     cwd: str | None = None,
-) -> Set[str]:
+) -> set[str]:
     """Legacy helper to mirror previous list-based implementation."""
     out = gitutils._run(["git", "ls-tree", "-r", "--name-only", ref], cwd)
-    paths: List[str] = []
+    paths: list[str] = []
     roots_norm = [str(Path(r)) for r in roots]
     for line in out.splitlines():
         if not line.endswith(".py"):

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
 
 from .public_api import FuncSig, Param, PublicAPI
 
@@ -23,7 +22,7 @@ class Impact:
     reason: str
 
 
-def _index_params(sig: FuncSig) -> Dict[str, Param]:
+def _index_params(sig: FuncSig) -> dict[str, Param]:
     """Map parameter names to parameter objects.
 
     Args:
@@ -38,7 +37,7 @@ def _index_params(sig: FuncSig) -> Dict[str, Param]:
 
 def compare_funcs(
     old: FuncSig, new: FuncSig, return_type_change: str = "minor"
-) -> List[Impact]:
+) -> list[Impact]:
     """Compare two function signatures and record API impacts.
 
     Args:
@@ -50,7 +49,7 @@ def compare_funcs(
         List of :class:`Impact` instances describing detected changes.
     """
 
-    impacts: List[Impact] = []
+    impacts: list[Impact] = []
 
     oldp = _index_params(old)
     newp = _index_params(new)
@@ -107,7 +106,7 @@ def compare_funcs(
 
 def diff_public_api(
     old: PublicAPI, new: PublicAPI, return_type_change: str = "minor"
-) -> List[Impact]:
+) -> list[Impact]:
     """Compute impacts between two public API mappings.
 
     Args:
@@ -119,7 +118,7 @@ def diff_public_api(
         List of detected impacts.
     """
 
-    impacts: List[Impact] = []
+    impacts: list[Impact] = []
 
     # Removed symbols
     for k in old.keys() - new.keys():
@@ -138,7 +137,7 @@ def diff_public_api(
     return impacts
 
 
-def decide_bump(impacts: List[Impact]) -> Optional[str]:
+def decide_bump(impacts: list[Impact]) -> str | None:
     """Determine the bump level from a list of impacts.
 
     Args:

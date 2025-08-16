@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Protocol, Type
+from typing import Protocol
 
 from ..compare import Impact
 from ..config import Config
@@ -23,7 +24,7 @@ class Analyzer(Protocol):
     def collect(self, ref: str) -> object:
         """Collect analyzer-specific state at ``ref``."""
 
-    def compare(self, old: object, new: object) -> List[Impact]:
+    def compare(self, old: object, new: object) -> list[Impact]:
         """Compare two states and return impacts."""
 
 
@@ -38,16 +39,16 @@ class AnalyzerInfo:
     """
 
     name: str
-    cls: Type[Analyzer]
+    cls: type[Analyzer]
     description: str
 
 
-REGISTRY: Dict[str, AnalyzerInfo] = {}
+REGISTRY: dict[str, AnalyzerInfo] = {}
 
 
 def register(
     name: str, description: str | None = None
-) -> Callable[[Type[Analyzer]], Type[Analyzer]]:
+) -> Callable[[type[Analyzer]], type[Analyzer]]:
     """Decorator registering an analyzer implementation.
 
     Args:
@@ -59,7 +60,7 @@ def register(
         Decorator that registers the analyzer class.
     """
 
-    def _wrap(cls: Type[Analyzer]) -> Type[Analyzer]:
+    def _wrap(cls: type[Analyzer]) -> type[Analyzer]:
         desc = description or (cls.__doc__ or "").strip()
         REGISTRY[name] = AnalyzerInfo(name=name, cls=cls, description=desc)
         return cls
@@ -67,7 +68,7 @@ def register(
     return _wrap
 
 
-def load_enabled(cfg: Config) -> List[Analyzer]:
+def load_enabled(cfg: Config) -> list[Analyzer]:
     """Instantiate analyzers enabled via configuration.
 
     Args:
@@ -80,7 +81,7 @@ def load_enabled(cfg: Config) -> List[Analyzer]:
         ValueError: If a configured analyzer name is not registered.
     """
 
-    out: List[Analyzer] = []
+    out: list[Analyzer] = []
     for name in cfg.analyzers.enabled:
         info = REGISTRY.get(name)
         if info is None:
@@ -89,7 +90,7 @@ def load_enabled(cfg: Config) -> List[Analyzer]:
     return out
 
 
-def available() -> List[str]:
+def available() -> list[str]:
     """Return names of all registered analyzers."""
     return sorted(REGISTRY.keys())
 

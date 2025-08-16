@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Dict, Iterable, List
 
 from ..compare import Impact
 from ..config import Config
@@ -17,7 +17,7 @@ class Command:
     """Represent a CLI command and its options."""
 
     name: str
-    options: Dict[str, bool]  # True if required
+    options: dict[str, bool]  # True if required
 
 
 def _is_str(node: ast.AST) -> bool:
@@ -45,7 +45,7 @@ def _extract_click(node: ast.FunctionDef) -> Command | None:
     """
 
     cmd_name: str | None = None
-    options: Dict[str, bool] = {}
+    options: dict[str, bool] = {}
     is_click = False
 
     for deco in node.decorator_list:
@@ -95,7 +95,7 @@ def _extract_click(node: ast.FunctionDef) -> Command | None:
     return None
 
 
-def _extract_argparse(tree: ast.AST) -> Dict[str, Command]:
+def _extract_argparse(tree: ast.AST) -> dict[str, Command]:
     """Extract argparse commands from AST.
 
     Args:
@@ -106,8 +106,8 @@ def _extract_argparse(tree: ast.AST) -> Dict[str, Command]:
         ``argparse``.
     """
 
-    commands: Dict[str, Command] = {}
-    parsers: Dict[str, str] = {}
+    commands: dict[str, Command] = {}
+    parsers: dict[str, str] = {}
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
@@ -156,7 +156,7 @@ def _extract_argparse(tree: ast.AST) -> Dict[str, Command]:
     return commands
 
 
-def extract_cli_from_source(code: str) -> Dict[str, Command]:
+def extract_cli_from_source(code: str) -> dict[str, Command]:
     """Extract command definitions from source code.
 
     Args:
@@ -167,7 +167,7 @@ def extract_cli_from_source(code: str) -> Dict[str, Command]:
     """
 
     tree = ast.parse(code)
-    commands: Dict[str, Command] = {}
+    commands: dict[str, Command] = {}
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef):
             cmd = _extract_click(node)
@@ -177,7 +177,7 @@ def extract_cli_from_source(code: str) -> Dict[str, Command]:
     return commands
 
 
-def diff_cli(old: Dict[str, Command], new: Dict[str, Command]) -> List[Impact]:
+def diff_cli(old: dict[str, Command], new: dict[str, Command]) -> list[Impact]:
     """Compare CLI definitions and compute impacts.
 
     Args:
@@ -188,7 +188,7 @@ def diff_cli(old: Dict[str, Command], new: Dict[str, Command]) -> List[Impact]:
         List of detected impacts between the two mappings.
     """
 
-    impacts: List[Impact] = []
+    impacts: list[Impact] = []
     for name in old.keys() - new.keys():
         impacts.append(Impact("major", name, "Removed command"))
     for name in new.keys() - old.keys():
@@ -214,7 +214,7 @@ def diff_cli(old: Dict[str, Command], new: Dict[str, Command]) -> List[Impact]:
 
 def _build_cli_at_ref(
     ref: str, roots: Iterable[str], ignores: Iterable[str]
-) -> Dict[str, Command]:
+) -> dict[str, Command]:
     """Collect commands for all modules at a git ref.
 
     Args:
@@ -226,7 +226,7 @@ def _build_cli_at_ref(
         Mapping of command name to :class:`Command` objects present at ``ref``.
     """
 
-    out: Dict[str, Command] = {}
+    out: dict[str, Command] = {}
     for path in list_py_files_at_ref(ref, roots, ignore_globs=ignores):
         code = read_file_at_ref(ref, path)
         if code is None:
@@ -243,7 +243,7 @@ class CLIAnalyzer:
         """Initialize the analyzer with configuration."""
         self.cfg = cfg
 
-    def collect(self, ref: str) -> Dict[str, Command]:
+    def collect(self, ref: str) -> dict[str, Command]:
         """Collect CLI commands at the given ref.
 
         Args:
@@ -257,7 +257,7 @@ class CLIAnalyzer:
             ref, self.cfg.project.public_roots, self.cfg.ignore.paths
         )
 
-    def compare(self, old: Dict[str, Command], new: Dict[str, Command]) -> List[Impact]:
+    def compare(self, old: dict[str, Command], new: dict[str, Command]) -> list[Impact]:
         """Compare two command mappings and return impacts.
 
         Args:

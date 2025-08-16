@@ -10,9 +10,9 @@ import argparse
 import json
 import subprocess
 import sys
+from collections.abc import Iterable
 from datetime import date
 from pathlib import Path
-from typing import Iterable, List
 
 from .analyzers import available, load_enabled
 from .compare import Impact, decide_bump, diff_public_api
@@ -57,7 +57,7 @@ def _build_api_at_ref(ref: str, roots: list[str], ignores: Iterable[str]) -> Pub
     return api
 
 
-def _format_impacts_text(impacts: List[Impact]) -> str:
+def _format_impacts_text(impacts: list[Impact]) -> str:
     """Render a list of impacts as human-readable text.
 
     Args:
@@ -79,7 +79,7 @@ def _format_impacts_text(impacts: List[Impact]) -> str:
     return "\n".join(lines) if lines else "(no API-impacting changes detected)"
 
 
-def _run_analyzers(base: str, head: str, cfg: Config) -> List[Impact]:
+def _run_analyzers(base: str, head: str, cfg: Config) -> list[Impact]:
     """Run enabled analyzer plugins and collect impacts.
 
     Args:
@@ -96,7 +96,7 @@ def _run_analyzers(base: str, head: str, cfg: Config) -> List[Impact]:
         [Impact(...), ...]
     """
 
-    impacts: List[Impact] = []
+    impacts: list[Impact] = []
     for analyzer in load_enabled(cfg):
         old = analyzer.collect(base)
         new = analyzer.collect(head)

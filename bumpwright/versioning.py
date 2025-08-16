@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from fnmatch import fnmatch
 from glob import glob
 from pathlib import Path
-from typing import Iterable, List, Literal, Optional
+from typing import Literal
 
 try:  # pragma: no cover - needed for linting when dependency missing
     from packaging.version import Version
@@ -33,7 +34,7 @@ class VersionChange:
     old: str
     new: str
     level: Literal["major", "minor", "patch"]
-    files: List[Path] = field(default_factory=list)
+    files: list[Path] = field(default_factory=list)
 
 
 def bump_string(v: str, level: Literal["major", "minor", "patch"]) -> str:
@@ -64,7 +65,7 @@ def bump_string(v: str, level: Literal["major", "minor", "patch"]) -> str:
     return f"{parts[0]}.{parts[1]}.{parts[2]}"
 
 
-def find_pyproject(start: str | Path | None = None) -> Optional[Path]:
+def find_pyproject(start: str | Path | None = None) -> Path | None:
     """Search upward from ``start`` for ``pyproject.toml``.
 
     Args:
@@ -187,7 +188,7 @@ def _update_additional_files(
     patterns: Iterable[str],
     ignore: Iterable[str],
     pyproject_path: str | Path,
-) -> List[Path]:
+) -> list[Path]:
     """Update version strings in files matching ``patterns``.
 
     Args:
@@ -204,7 +205,7 @@ def _update_additional_files(
     base = Path(pyproject_path).resolve().parent
     files = _resolve_files(patterns, ignore, base)
     canon = Path(pyproject_path).resolve()
-    changed: List[Path] = []
+    changed: list[Path] = []
     for f in files:
         if f.resolve() == canon:
             continue
@@ -215,7 +216,7 @@ def _update_additional_files(
 
 def _resolve_files(
     patterns: Iterable[str], ignore: Iterable[str], base_dir: Path
-) -> List[Path]:
+) -> list[Path]:
     """Expand glob patterns while applying ignore rules relative to ``base_dir``.
 
     Args:
@@ -227,7 +228,7 @@ def _resolve_files(
         List of discovered file paths matching ``patterns`` minus ``ignore``.
     """
 
-    out: List[Path] = []
+    out: list[Path] = []
     ignore_list = list(ignore)
     base = Path(base_dir).resolve()
     for pat in patterns:
