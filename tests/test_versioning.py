@@ -64,7 +64,9 @@ def pyproject_malformed(tmp_path: Path) -> Path:
         ("pyproject_malformed", ParseError),
     ],
 )
-def test_read_project_version_errors(path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest) -> None:
+def test_read_project_version_errors(
+    path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest
+) -> None:
     """Validate ``read_project_version`` error handling for bad inputs."""
 
     path = request.getfixturevalue(path_fixture)
@@ -164,6 +166,7 @@ def test_default_version_ignore_patterns(
     assert "__version__ = '1.0.0'" in ignored_file.read_text(encoding="utf-8")
     assert ignored_file not in out.files
 
+
 def test_apply_bump_skips_files_without_version(tmp_path: Path) -> None:
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
@@ -182,6 +185,7 @@ def test_replace_version_returns_false_when_unmodified(tmp_path: Path) -> None:
 
     assert not _replace_version(target, "0.1.0", "0.2.0")
     assert target.read_text(encoding="utf-8") == "print('hello')"
+
 
 def test_apply_bump_respects_scheme(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -260,7 +264,9 @@ def test_resolve_files_absolute_paths_and_ignore_patterns(tmp_path: Path) -> Non
     assert out == expected
 
 
-def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_resolve_files_uses_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Ensure repeated resolution reuses cached results."""
 
     (tmp_path / "a.txt").write_text("1", encoding="utf-8")
@@ -279,7 +285,9 @@ def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     assert calls["count"] == 1
 
 
-def test_apply_bump_clears_resolve_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_apply_bump_clears_resolve_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Verify custom patterns trigger cache invalidation."""
 
     py = tmp_path / "pyproject.toml"

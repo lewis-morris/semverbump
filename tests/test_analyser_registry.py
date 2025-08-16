@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pytest
 
+from bumpwright import analysers
 from bumpwright.analysers import (
     Analyser,
     available,
@@ -15,8 +16,6 @@ from bumpwright.config import Config
 
 def test_register_records_metadata(monkeypatch) -> None:
     """Ensure register stores class and description."""
-    from bumpwright import analysers
-
     monkeypatch.setattr(analysers, "REGISTRY", {})
 
     @register("dummy", "Example analyser")
@@ -39,8 +38,6 @@ def test_register_records_metadata(monkeypatch) -> None:
 
 def test_load_enabled_errors_for_unknown(monkeypatch) -> None:
     """Unknown analysers should raise a clear error."""
-    from bumpwright import analysers
-
     monkeypatch.setattr(analysers, "REGISTRY", {})
     cfg = Config()
     cfg.analysers.enabled.add("missing")
