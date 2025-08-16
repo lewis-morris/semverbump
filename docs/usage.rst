@@ -149,19 +149,6 @@ assignment. These locations can be customised via the ``[version]`` section in
 
 .. code-block:: console
 
-   # Preview the inferred bump without changing files
-   bumpwright bump --dry-run --format json
-
-.. code-block:: json
-
-   {
-     "old_version": "1.2.3",
-     "new_version": "1.2.4",
-     "level": "patch"
-   }
-
-.. code-block:: console
-
    bumpwright bump --level minor --pyproject pyproject.toml --commit --tag
 
 This prints the old and new versions and, when ``--commit`` and ``--tag`` are
