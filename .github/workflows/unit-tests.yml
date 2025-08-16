@@ -16,10 +16,10 @@ jobs:
 
     steps:
       - name: Checkout (full history + tags)
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0           # <-- needed for HEAD^ etc.
-          fetch-tags: true         # <-- tests that inspect tags
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -39,7 +39,12 @@ jobs:
       - name: Run unit tests with coverage
         run: |
           pytest --maxfail=1 --disable-warnings \
-                 --cov=flarchitect --cov-report=term-missing --cov-report=xml
+                 --cov=bumpwright --cov-branch \
+                 --cov-report=term-missing \
+                 --cov-report=xml:coverage.xml
+
+      - name: Verify coverage file exists
+        run: ls -l coverage.xml
 
       - name: Upload coverage.xml (artifact)
         if: always()
