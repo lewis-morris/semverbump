@@ -17,7 +17,14 @@ _DEFAULTS = {
     "analyzers": {"cli": False},
     "migrations": {"paths": ["migrations"]},
     "version": {
-        "paths": ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py"],
+        "paths": [
+            "pyproject.toml",
+            "setup.py",
+            "setup.cfg",
+            "**/__init__.py",
+            "**/version.py",
+            "**/_version.py",
+        ],
         "ignore": [],
     },
 }
@@ -81,6 +88,8 @@ class VersionFiles:
             "setup.py",
             "setup.cfg",
             "**/__init__.py",
+            "**/version.py",
+            "**/_version.py",
         ]
     )
     ignore: List[str] = field(default_factory=list)

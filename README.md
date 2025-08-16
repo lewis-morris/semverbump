@@ -27,6 +27,11 @@ Design goals include:
 - Output in plain text, Markdown or JSON for easy integration.
 - Optional helpers to update version numbers across common files and tag the release.
 
+The bump command updates version strings in ``pyproject.toml``, ``setup.py``,
+``setup.cfg`` and any ``__init__.py``, ``version.py`` or ``_version.py`` files
+by default. Use ``--version-ignore`` or configuration settings to exclude
+locations.
+
 ## Installation
 
 ```bash
