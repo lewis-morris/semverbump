@@ -42,7 +42,7 @@ pip install bumpwright
 | Command | Purpose | Key options |
 |---------|---------|-------------|
 | `bump --decide` | Recommend a bump between two references | `--base`, `--head`, `--format` |
-| `bump` | Apply a specific version bump | `--level`, `--pyproject`, `--format`, `--commit`, `--tag` |
+| `bump` | Apply a specific version bump | `--level`, `--pyproject`, `--format`, `--commit`, `--tag`, `--enable-analyzer`, `--disable-analyzer` |
 
 1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
 
@@ -148,6 +148,10 @@ aspect of bumpwright:
 - **migrations** – directories containing Alembic migration scripts.
 - **changelog** – default changelog file used with ``--changelog``.
 - **version** – files where version strings are read and updated.
+
+Use the command-line flags ``--enable-analyzer NAME`` and
+``--disable-analyzer NAME`` to temporarily override these settings for a
+single run.
 
 See ``docs/configuration.rst`` for in-depth descriptions and additional
 examples. The default file name is ``bumpwright.toml`` but you may specify an

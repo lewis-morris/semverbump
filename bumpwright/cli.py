@@ -10,13 +10,14 @@ import argparse
 import json
 import subprocess
 import sys
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 from typing import Iterable, List
 
 from .analyzers import available, load_enabled
 from .compare import Impact, decide_bump, diff_public_api
-from .config import Config, load_config
+from .config import Analyzers, Config, load_config
 from .gitutils import (
     changed_paths,
     collect_commits,
@@ -79,25 +80,42 @@ def _format_impacts_text(impacts: List[Impact]) -> str:
     return "\n".join(lines) if lines else "(no API-impacting changes detected)"
 
 
-def _run_analyzers(base: str, head: str, cfg: Config) -> List[Impact]:
-    """Run enabled analyzer plugins and collect impacts.
+def _run_analyzers(
+    base: str,
+    head: str,
+    cfg: Config,
+    enable: Iterable[str] | None = None,
+    disable: Iterable[str] | None = None,
+) -> List[Impact]:
+    """Run analyzer plugins and collect impacts.
+
+    Command-line flags can temporarily enable or disable analyzers beyond
+    configuration file settings.
 
     Args:
         base: Base git reference.
         head: Head git reference.
         cfg: Project configuration.
+        enable: Analyzer names to activate.
+        disable: Analyzer names to deactivate.
 
     Returns:
         List of impacts reported by all analyzers.
 
     Examples:
         >>> cfg = load_config("bumpwright.toml")
-        >>> _run_analyzers("HEAD^", "HEAD", cfg)
+        >>> _run_analyzers("HEAD^", "HEAD", cfg, enable=["cli"])
         [Impact(...), ...]
     """
 
+    names = set(cfg.analyzers.enabled)
+    if enable:
+        names.update(enable)
+    if disable:
+        names.difference_update(disable)
+    effective_cfg = replace(cfg, analyzers=Analyzers(enabled=names))
     impacts: List[Impact] = []
-    for analyzer in load_enabled(cfg):
+    for analyzer in load_enabled(effective_cfg):
         old = analyzer.collect(base)
         new = analyzer.collect(head)
         impacts.extend(analyzer.compare(old, new))
@@ -238,7 +256,9 @@ def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
     impacts = diff_public_api(
         old_api, new_api, return_type_change=cfg.rules.return_type_change
     )
-    impacts.extend(_run_analyzers(base, head, cfg))
+    impacts.extend(
+        _run_analyzers(base, head, cfg, args.enable_analyzer, args.disable_analyzer)
+    )
     level = decide_bump(impacts)
     if args.format == "json":
         print(
@@ -293,13 +313,21 @@ def _safe_changed_paths(base: str, head: str) -> set[str] | None:
         return None
 
 
-def _infer_level(base: str, head: str, cfg: Config) -> str | None:
+def _infer_level(
+    base: str,
+    head: str,
+    cfg: Config,
+    enable: Iterable[str] | None = None,
+    disable: Iterable[str] | None = None,
+) -> str | None:
     """Compute bump level from repository differences.
 
     Args:
         base: Base git reference.
         head: Head git reference.
         cfg: Project configuration settings.
+        enable: Analyzer names to activate.
+        disable: Analyzer names to deactivate.
 
     Returns:
         Suggested bump level or ``None`` if no change is required.
@@ -310,7 +338,7 @@ def _infer_level(base: str, head: str, cfg: Config) -> str | None:
     impacts = diff_public_api(
         old_api, new_api, return_type_change=cfg.rules.return_type_change
     )
-    impacts.extend(_run_analyzers(base, head, cfg))
+    impacts.extend(_run_analyzers(base, head, cfg, enable, disable))
     return decide_bump(impacts)
 
 
@@ -379,7 +407,9 @@ def bump_command(args: argparse.Namespace) -> int:
             return 0
 
     if not level:
-        level = _infer_level(base, head, cfg)
+        level = _infer_level(
+            base, head, cfg, args.enable_analyzer, args.disable_analyzer
+        )
         if level is None:
             print("No version bump needed")
             return 0
@@ -479,6 +509,18 @@ def main(argv: list[str] | None = None) -> int:
         "--head",
         default="HEAD",
         help="Head git reference; defaults to the current HEAD.",
+    )
+    p_bump.add_argument(
+        "--enable-analyzer",
+        action="append",
+        dest="enable_analyzer",
+        help=("Enable analyzer NAME, overriding configuration (repeatable)."),
+    )
+    p_bump.add_argument(
+        "--disable-analyzer",
+        action="append",
+        dest="disable_analyzer",
+        help=("Disable analyzer NAME, overriding configuration (repeatable)."),
     )
     p_bump.add_argument(
         "--format",
