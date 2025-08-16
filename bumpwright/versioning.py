@@ -25,7 +25,8 @@ class VersionChange:
     Attributes:
         old: Previous version string.
         new: New version string after bump.
-        level: Bump level applied (``"major"``, ``"minor"``, or ``"patch"``).
+        level: Bump level applied (``"major"``, ``"minor"``, ``"patch"``,
+            ``"pre"``, or ``"build"``).
         files: Files updated with the new version.
         skipped: Files where the old version string was not found.
     """

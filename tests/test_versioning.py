@@ -23,6 +23,27 @@ def test_bump_string():
     assert bump_string("1.2.3", "major") == "2.0.0"
 
 
+def test_bump_string_semver_prerelease_and_build() -> None:
+    """SemVer bumps preserve and increment prerelease and build metadata."""
+
+    assert (
+        bump_string("1.2.3-alpha.1+build.1", "patch", scheme="semver")
+        == "1.2.4-alpha.1+build.1"
+    )
+    assert bump_string("1.2.3-alpha.1", "pre", scheme="semver") == "1.2.3-alpha.2"
+    assert bump_string("1.2.3+build.1", "build", scheme="semver") == "1.2.3+build.2"
+
+
+def test_bump_string_pep440_pre_and_local() -> None:
+    """PEP 440 bumps handle prerelease and local segments."""
+
+    assert (
+        bump_string("1.2.3rc1+local.1", "patch", scheme="pep440") == "1.2.4rc1+local.1"
+    )
+    assert bump_string("1.2.3a1", "pre", scheme="pep440") == "1.2.3a2"
+    assert bump_string("1.2.3+local.1", "build", scheme="pep440") == "1.2.3+local.2"
+
+
 @pytest.mark.parametrize("level", ["", "foo", "majority"])
 def test_bump_string_invalid_level(level: str) -> None:
     """Ensure ``bump_string`` rejects unsupported bump levels."""
@@ -170,6 +191,7 @@ def test_default_version_ignore_patterns(
     assert "__version__ = '1.0.0'" in ignored_file.read_text(encoding="utf-8")
     assert ignored_file not in out.files
     assert out.skipped == []
+
 
 
 

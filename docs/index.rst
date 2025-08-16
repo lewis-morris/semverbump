@@ -10,6 +10,7 @@ Static public-API diff and heuristics to suggest semantic version bumps.
    installation
    quickstart
    usage
+   versioning
    cli_reference
 
 .. toctree::
