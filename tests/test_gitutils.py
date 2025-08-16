@@ -26,7 +26,9 @@ def _legacy_list_py_files_at_ref(
         if not line.endswith(".py"):
             continue
         p = Path(line)
-        if any(str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm):
+        if any(
+            str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm
+        ):
             s = str(p)
             if ignore_globs and any(fnmatch(s, pat) for pat in ignore_globs):
                 continue
@@ -166,6 +168,36 @@ def test_read_file_at_ref(tmp_path: Path) -> None:
     content = gitutils.read_file_at_ref("HEAD", "file.txt", str(repo))
     assert content == "hello\n"
     assert gitutils.read_file_at_ref("HEAD", "missing.txt", str(repo)) is None
+
+
+def test_read_file_at_ref_caches(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Cache file reads at refs to avoid redundant git calls."""
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "file.txt").write_text("hello\n", encoding="utf-8")
+    gitutils._run(["git", "init"], str(repo))
+    gitutils._run(["git", "config", "user.email", "test@example.com"], str(repo))
+    gitutils._run(["git", "config", "user.name", "Test"], str(repo))
+    gitutils._run(["git", "add", "file.txt"], str(repo))
+    gitutils._run(["git", "commit", "-m", "first"], str(repo))
+
+    gitutils.read_file_at_ref.cache_clear()
+    original = gitutils._run
+    calls: list[list[str]] = []
+
+    def spy(cmd: list[str], cwd: str | None = None) -> str:
+        if cmd[:2] == ["git", "show"]:
+            calls.append(cmd)
+        return original(cmd, cwd)
+
+    monkeypatch.setattr(gitutils, "_run", spy)
+    gitutils.read_file_at_ref("HEAD", "file.txt", str(repo))
+    gitutils.read_file_at_ref("HEAD", "file.txt", str(repo))
+    assert len(calls) == 1
+    gitutils.read_file_at_ref.cache_clear()
 
 
 def test_last_release_commit_none(tmp_path: Path) -> None:

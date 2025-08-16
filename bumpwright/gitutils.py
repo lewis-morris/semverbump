@@ -84,7 +84,9 @@ def _list_py_files_at_ref_cached(
         if not line.endswith(".py"):
             continue
         p = Path(line)
-        if any(str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm):
+        if any(
+            str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm
+        ):
             s = str(p)
             if ignore_globs and any(fnmatch(s, pat) for pat in ignore_globs):
                 continue
@@ -121,8 +123,9 @@ def list_py_files_at_ref(
 list_py_files_at_ref.cache_clear = _list_py_files_at_ref_cached.cache_clear  # type: ignore[attr-defined]
 
 
-def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> str | None:
-    """Read the contents of ``path`` at ``ref`` if it exists.
+@lru_cache(maxsize=None)
+def _read_file_at_ref_cached(ref: str, path: str, cwd: str | None) -> str | None:
+    """Return cached file contents for a ref and path.
 
     Args:
         ref: Git reference at which to read the file.
@@ -137,6 +140,27 @@ def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> str | None:
         return _run(["git", "show", f"{ref}:{path}"], cwd)
     except subprocess.CalledProcessError:
         return None
+
+
+def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> str | None:
+    """Read the contents of ``path`` at ``ref`` if it exists.
+
+    Results are cached per ``(ref, path, cwd)`` for improved performance. Use
+    ``read_file_at_ref.cache_clear()`` to invalidate.
+
+    Args:
+        ref: Git reference at which to read the file.
+        path: File path relative to the repository root.
+        cwd: Repository path.
+
+    Returns:
+        File contents, or ``None`` if the file does not exist at ``ref``.
+    """
+
+    return _read_file_at_ref_cached(ref, path, cwd)
+
+
+read_file_at_ref.cache_clear = _read_file_at_ref_cached.cache_clear  # type: ignore[attr-defined]
 
 
 def last_release_commit(cwd: str | None = None) -> str | None:
@@ -159,7 +183,9 @@ def last_release_commit(cwd: str | None = None) -> str | None:
     return out.strip() or None
 
 
-def collect_commits(base: str, head: str, cwd: str | None = None) -> list[tuple[str, str]]:
+def collect_commits(
+    base: str, head: str, cwd: str | None = None
+) -> list[tuple[str, str]]:
     """Collect commit metadata between two references.
 
     Args:
