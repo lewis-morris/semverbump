@@ -14,7 +14,7 @@ from collections.abc import Iterable
 from datetime import date
 from pathlib import Path
 
-from .analyzers import available, load_enabled
+from .analyzers import available, get_analyzer_info
 from .compare import Impact, decide_bump, diff_public_api
 from .config import Config, load_config
 from .gitutils import (
@@ -79,25 +79,47 @@ def _format_impacts_text(impacts: list[Impact]) -> str:
     return "\n".join(lines) if lines else "(no API-impacting changes detected)"
 
 
-def _run_analyzers(base: str, head: str, cfg: Config) -> list[Impact]:
-    """Run enabled analyzer plugins and collect impacts.
+def _run_analyzers(
+    base: str,
+    head: str,
+    cfg: Config,
+    enable: Iterable[str] | None = None,
+    disable: Iterable[str] | None = None,
+) -> list[Impact]:
+    """Run analyzer plugins and collect impacts.
+
+    Command-line flags may enable or disable analyzers beyond those declared in
+    configuration. Any names in ``enable`` are added to the configured set,
+    while names in ``disable`` are removed.
 
     Args:
         base: Base git reference.
         head: Head git reference.
         cfg: Project configuration.
+        enable: Analyzer names to enable in addition to configuration.
+        disable: Analyzer names to disable even if configured.
 
     Returns:
-        List of impacts reported by all analyzers.
+        List of impacts reported by the selected analyzers.
 
     Examples:
         >>> cfg = load_config("bumpwright.toml")
-        >>> _run_analyzers("HEAD^", "HEAD", cfg)
+        >>> _run_analyzers("HEAD^", "HEAD", cfg, enable=["cli"])
         [Impact(...), ...]
     """
 
+    names = set(cfg.analyzers.enabled)
+    if enable:
+        names.update(enable)
+    if disable:
+        names.difference_update(disable)
+
     impacts: list[Impact] = []
-    for analyzer in load_enabled(cfg):
+    for name in names:
+        info = get_analyzer_info(name)
+        if info is None:  # defensive: ignore unknown names
+            raise ValueError(f"Analyzer '{name}' is not registered")
+        analyzer = info.cls(cfg)
         old = analyzer.collect(base)
         new = analyzer.collect(head)
         impacts.extend(analyzer.compare(old, new))
@@ -238,7 +260,9 @@ def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
     impacts = diff_public_api(
         old_api, new_api, return_type_change=cfg.rules.return_type_change
     )
-    impacts.extend(_run_analyzers(base, head, cfg))
+    impacts.extend(
+        _run_analyzers(base, head, cfg, args.enable_analyzer, args.disable_analyzer)
+    )
     level = decide_bump(impacts)
     if args.format == "json":
         print(
@@ -293,13 +317,19 @@ def _safe_changed_paths(base: str, head: str) -> set[str] | None:
         return None
 
 
-def _infer_level(base: str, head: str, cfg: Config) -> str | None:
+def _infer_level(
+    base: str,
+    head: str,
+    cfg: Config,
+    args: argparse.Namespace,
+) -> str | None:
     """Compute bump level from repository differences.
 
     Args:
         base: Base git reference.
         head: Head git reference.
         cfg: Project configuration settings.
+        args: Parsed command-line arguments containing analyzer overrides.
 
     Returns:
         Suggested bump level or ``None`` if no change is required.
@@ -310,7 +340,9 @@ def _infer_level(base: str, head: str, cfg: Config) -> str | None:
     impacts = diff_public_api(
         old_api, new_api, return_type_change=cfg.rules.return_type_change
     )
-    impacts.extend(_run_analyzers(base, head, cfg))
+    impacts.extend(
+        _run_analyzers(base, head, cfg, args.enable_analyzer, args.disable_analyzer)
+    )
     return decide_bump(impacts)
 
 
@@ -379,7 +411,7 @@ def bump_command(args: argparse.Namespace) -> int:
             return 0
 
     if not level:
-        level = _infer_level(base, head, cfg)
+        level = _infer_level(base, head, cfg, args)
         if level is None:
             print("No version bump needed")
             return 0
@@ -494,6 +526,18 @@ def main(argv: list[str] | None = None) -> int:
         "--decide",
         action="store_true",
         help="Only determine the bump level without modifying any files.",
+    )
+    p_bump.add_argument(
+        "--enable-analyzer",
+        action="append",
+        dest="enable_analyzer",
+        help="Enable analyzer NAME (repeatable) in addition to configuration.",
+    )
+    p_bump.add_argument(
+        "--disable-analyzer",
+        action="append",
+        dest="disable_analyzer",
+        help="Disable analyzer NAME (repeatable) even if configured.",
     )
     p_bump.add_argument(
         "--pyproject",
