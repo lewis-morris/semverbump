@@ -16,7 +16,15 @@ from jinja2 import Template
 
 from ..compare import Decision
 from ..config import Config, load_config
-from ..gitutils import changed_paths, collect_commits, last_release_commit
+from ..gitutils import (
+    changed_paths,
+    collect_commits,
+    collect_contributors,
+    commit_iso_datetime,
+    commit_message,
+    last_release_commit,
+    tag_for_commit,
+)
 from ..versioning import VersionChange, apply_bump, find_pyproject
 from .decide import _decide_only, _infer_level
 
@@ -33,7 +41,9 @@ def get_default_template() -> str:
         Default changelog template contents.
     """
 
-    template_path = Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
+    template_path = (
+        Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
+    )
     return template_path.read_text(encoding="utf-8")
 
 
@@ -52,7 +62,9 @@ def _read_template(template_path: str | None) -> str:
     return get_default_template()
 
 
-def _commit_tag(files: Iterable[str | Path], version: str, commit: bool, tag: bool) -> None:
+def _commit_tag(
+    files: Iterable[str | Path], version: str, commit: bool, tag: bool
+) -> None:
     """Optionally commit and tag the updated version.
 
     Args:
@@ -83,7 +95,9 @@ def _commit_tag(files: Iterable[str | Path], version: str, commit: bool, tag: bo
     if commit:
         for file in files:
             subprocess.run(["git", "add", str(file)], check=True)
-        subprocess.run(["git", "commit", "-m", f"chore(release): {version}"], check=True)
+        subprocess.run(
+            ["git", "commit", "-m", f"chore(release): {version}"], check=True
+        )
 
     if tag:
         subprocess.run(["git", "tag", f"v{version}"], check=True)
@@ -148,14 +162,25 @@ def _build_changelog(args: argparse.Namespace, new_version: str) -> str | None:
     ``commits``
         Sequence of mappings with ``sha``, ``subject``, and optional ``link``
         keys representing commits since the previous release.
+    ``release_datetime_iso``
+        ISO-8601 timestamp of the release commit.
+    ``compare_url``
+        GitHub compare link between the previous and current tags.
+    ``contributors``
+        Sequence of contributor mappings with ``name`` and optional ``link``
+        keys derived from ``git shortlog``.
+    ``breaking_changes``
+        List of commit descriptions flagged as breaking changes.
     """
 
     if args.changelog is None:
         return None
     base = last_release_commit() or f"{args.head}^"
+    prev_tag = tag_for_commit(base)
     commits = collect_commits(base, args.head)
     patterns = [re.compile(p) for p in getattr(args, "changelog_exclude", [])]
     entries: list[dict[str, Any]] = []
+    breaking: list[str] = []
     for sha, subject in commits:
         if any(p.search(subject) for p in patterns):
             continue
@@ -164,12 +189,42 @@ def _build_changelog(args: argparse.Namespace, new_version: str) -> str | None:
             base_url = args.repo_url.rstrip("/")
             link = f"{base_url}/commit/{sha}"
         entries.append({"sha": sha, "subject": subject, "link": link})
+        try:
+            message = commit_message(sha)
+        except subprocess.CalledProcessError:
+            message = ""
+        if re.match(r"^[^:!]+(?:\([^)]*\))?!:", subject):
+            breaking.append(subject)
+        else:
+            m = re.search(r"^BREAKING CHANGE:\s*(.+)", message, re.MULTILINE)
+            if m:
+                breaking.append(m.group(1).strip() or subject)
+
+    contributors_raw = collect_contributors(base, args.head)
+    contributors: list[dict[str, str | None]] = []
+    for name, email in contributors_raw:
+        link = None
+        if email.endswith("@users.noreply.github.com"):
+            username = email.split("@", 1)[0].split("+")[-1]
+            link = f"https://github.com/{username}"
+        contributors.append({"name": name, "link": link})
+
+    compare_url = None
+    if args.repo_url and prev_tag:
+        base_url = args.repo_url.rstrip("/")
+        compare_url = f"{base_url}/compare/{prev_tag}...v{new_version}"
+
     tmpl = Template(_read_template(getattr(args, "changelog_template", None)))
     rendered = tmpl.render(
         version=new_version,
         date=date.today().isoformat(),
         commits=entries,
         repo_url=args.repo_url,
+        release_datetime_iso=commit_iso_datetime(args.head),
+        compare_url=compare_url,
+        previous_tag=prev_tag,
+        contributors=contributors,
+        breaking_changes=breaking,
     )
     return rendered.rstrip() + "\n"
 
@@ -200,13 +255,17 @@ def _prepare_version_files(
     version_files = {p for p in paths if not has_magic(p)}
     changed = _safe_changed_paths(base, head)
     if changed is not None:
-        filtered = {p for p in changed if p != pyproject.name and p not in version_files}
+        filtered = {
+            p for p in changed if p != pyproject.name and p not in version_files
+        }
         if not filtered:
             return None
     return paths
 
 
-def _display_result(args: argparse.Namespace, vc: VersionChange, decision: Decision) -> None:
+def _display_result(
+    args: argparse.Namespace, vc: VersionChange, decision: Decision
+) -> None:
     """Show bump outcome using the selected format."""
 
     if args.format == "json":

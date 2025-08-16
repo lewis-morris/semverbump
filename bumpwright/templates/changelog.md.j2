@@ -1,4 +1,13 @@
-## [v{{ version }}] - {{ date }}
-{% for c in commits %}- {% if c.link %}[{{ c.sha }}]({{ c.link }}){% else %}{{ c.sha }}{% endif %} {{ c.subject }}
-{% endfor %}
+## [v{{ version }}] - {{ date }} ({{ release_datetime_iso }})
+{% if compare_url and previous_tag %}[Diff since {{ previous_tag }}]({{ compare_url }})
+{% endif %}{% for c in commits %}- {% if c.link %}[{{ c.sha }}]({{ c.link }}){% else %}{{ c.sha }}{% endif %} {{ c.subject }}
+{% endfor %}{% if breaking_changes %}
+
+### Breaking changes
+{% for bc in breaking_changes %}- {{ bc }}
+{% endfor %}{% endif %}{% if contributors %}
+
+### Contributors
+{% for p in contributors %}- {% if p.link %}[{{ p.name }}]({{ p.link }}){% else %}{{ p.name }}{% endif %}
+{% endfor %}{% endif %}
 

@@ -113,14 +113,33 @@ This prints the old and new versions and, when ``--commit`` and ``--tag`` are se
 Changelog generation
 --------------------
 
-``bumpwright`` can generate Markdown release notes when bumping versions. Use ``--changelog`` to control the destination, ``--repo-url`` to turn commit hashes into hyperlinks, and ``--changelog-template`` to customise the entry format.
+``bumpwright`` can generate Markdown release notes when bumping versions. Use
+``--changelog`` to control the destination, ``--repo-url`` to turn commit hashes
+into hyperlinks, and ``--changelog-template`` to customise the entry format. The
+default template exposes extra context fields:
+
+- ``release_datetime_iso`` – ISO-8601 timestamp of the release commit.
+- ``compare_url`` – GitHub compare link between the previous and new tags.
+- ``contributors`` – author list from ``git shortlog -sne`` with optional profile
+  links.
+- ``breaking_changes`` – commits flagged via ``!`` types or a ``BREAKING
+  CHANGE:`` footer.
 
 .. code-block:: jinja
 
-   ## [v{{ version }}] - {{ date }}
+   ## [v{{ version }}] - {{ date }} ({{ release_datetime_iso }})
+   {% if compare_url and previous_tag %}[Diff since {{ previous_tag }}]({{ compare_url }}){% endif %}
    {% for commit in commits %}
    - [{{ commit.sha[:7] }}]({{ commit.link }}) {{ commit.subject }}
-   {% endfor %}
+   {% endfor %}{% if breaking_changes %}
+
+   ### Breaking changes
+   {% for item in breaking_changes %}- {{ item }}
+   {% endfor %}{% endif %}{% if contributors %}
+
+   ### Contributors
+   {% for c in contributors %}- {% if c.link %}[{{ c.name }}]({{ c.link }}){% else %}{{ c.name }}{% endif %}
+   {% endfor %}{% endif %}
 
 .. code-block:: console
 
@@ -128,18 +147,19 @@ Changelog generation
 
 .. code-block:: markdown
 
-   ## [v1.2.4] - 2024-04-01
-   - [abc123](https://github.com/me/project/commit/abc123) feat: change
+   ## [v1.2.4] - 2024-04-01 (2024-04-01T12:00:00+00:00)
+   [Diff since v1.2.3](https://github.com/me/project/compare/v1.2.3...v1.2.4)
+   - [abc123](https://github.com/me/project/commit/abc123) feat!: change
 
-Entries follow a simple Markdown structure by default:
+   ### Breaking changes
+   - feat!: change
 
-.. code-block:: markdown
+   ### Contributors
+   - [alice](https://github.com/alice)
 
-   ## [v1.2.4] - 2024-09-14
-   - a1b2c3d fix: correct typo
-   - d4e5f6g feat: add new option
-
-Each entry begins with a version heading and date, followed by a list of commit shas and subjects since the previous release.
+Entries follow this Keep a Changelog-style structure: a version heading and
+timestamp, optional diff link, commit list, and sections for breaking changes and
+contributors.
 
 Projects can set a default changelog path and template in ``bumpwright.toml`` so the ``bump`` command writes to that location when ``--changelog`` is omitted:
 

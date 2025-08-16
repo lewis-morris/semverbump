@@ -14,7 +14,9 @@ def test_bump_uses_config_path(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
-    (pkg / "__init__.py").write_text("def foo() -> int:\n    return 2\n", encoding="utf-8")
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
     run(["git", "commit", "-am", "feat: change"], repo)
     sha = run(["git", "rev-parse", "--short", "HEAD"], repo)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
@@ -48,7 +50,9 @@ def test_bump_uses_config_path(tmp_path: Path) -> None:
 def test_bump_writes_changelog(tmp_path: Path) -> None:
     repo, pkg, _ = setup_repo(tmp_path)
     run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
-    (pkg / "__init__.py").write_text("def foo() -> int:\n    return 2\n", encoding="utf-8")
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
     run(["git", "commit", "-am", "feat: change"], repo)
     sha = run(["git", "rev-parse", "--short", "HEAD"], repo)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
@@ -84,7 +88,9 @@ def test_bump_writes_changelog(tmp_path: Path) -> None:
 def test_bump_writes_changelog_stdout(tmp_path: Path) -> None:
     repo, pkg, _ = setup_repo(tmp_path)
     run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
-    (pkg / "__init__.py").write_text("def foo() -> int:\n    return 2\n", encoding="utf-8")
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
     run(["git", "commit", "-am", "feat: change"], repo)
     sha = run(["git", "rev-parse", "--short", "HEAD"], repo)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
@@ -119,7 +125,9 @@ def test_bump_writes_changelog_stdout(tmp_path: Path) -> None:
 def test_changelog_links_repo_url(tmp_path: Path) -> None:
     repo, pkg, _ = setup_repo(tmp_path)
     run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
-    (pkg / "__init__.py").write_text("def foo() -> int:\n    return 2\n", encoding="utf-8")
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
     run(["git", "commit", "-am", "feat: change"], repo)
     sha = run(["git", "rev-parse", "--short", "HEAD"], repo)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
@@ -157,7 +165,9 @@ def test_changelog_custom_template_cli(tmp_path: Path) -> None:
     repo, pkg, _ = setup_repo(tmp_path)
     (repo / "tpl.j2").write_text("VERSION={{ version }}\n", encoding="utf-8")
     run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
-    (pkg / "__init__.py").write_text("def foo() -> int:\n    return 2\n", encoding="utf-8")
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
     run(["git", "commit", "-am", "feat: change"], repo)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
     subprocess.run(
@@ -195,7 +205,9 @@ def test_changelog_custom_template_config(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
-    (pkg / "__init__.py").write_text("def foo() -> int:\n    return 2\n", encoding="utf-8")
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
     run(["git", "commit", "-am", "feat: change"], repo)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
     subprocess.run(
@@ -223,7 +235,9 @@ def test_changelog_custom_template_config(tmp_path: Path) -> None:
 def test_changelog_exclude_cli(tmp_path: Path) -> None:
     repo, pkg, _ = setup_repo(tmp_path)
     run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
-    (pkg / "__init__.py").write_text("def foo() -> int:\n    return 2\n", encoding="utf-8")
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
     run(["git", "commit", "--allow-empty", "-m", "chore: drop"], repo)
     run(["git", "commit", "-am", "feat: keep"], repo)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
@@ -262,7 +276,9 @@ def test_changelog_exclude_config(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
-    (pkg / "__init__.py").write_text("def foo() -> int:\n    return 2\n", encoding="utf-8")
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
     run(["git", "commit", "--allow-empty", "-m", "chore: drop"], repo)
     run(["git", "commit", "-am", "feat: keep"], repo)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
@@ -288,3 +304,90 @@ def test_changelog_exclude_config(tmp_path: Path) -> None:
     content = (repo / "CHANGELOG.md").read_text()
     assert "feat: keep" in content
     assert "chore: drop" not in content
+
+
+def test_changelog_diff_and_contributors(tmp_path: Path) -> None:
+    repo, pkg, _ = setup_repo(tmp_path)
+    run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
+    run(["git", "tag", "v0.1.0"], repo)
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
+    run(
+        [
+            "git",
+            "commit",
+            "-am",
+            "feat: change",
+            "--author",
+            "Alice <alice@users.noreply.github.com>",
+        ],
+        repo,
+    )
+    env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "bumpwright.cli",
+            "bump",
+            "--level",
+            "patch",
+            "--pyproject",
+            "pyproject.toml",
+            "--dry-run",
+            "--changelog",
+            "CHANGELOG.md",
+            "--repo-url",
+            "https://github.com/me/project",
+        ],
+        cwd=repo,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+    content = (repo / "CHANGELOG.md").read_text()
+    compare_line = (
+        "[Diff since v0.1.0](https://github.com/me/project/compare/v0.1.0...v0.1.1)"
+    )
+    assert compare_line in content
+    assert "### Contributors" in content
+    assert "- [Alice](https://github.com/alice)" in content
+    assert "### Breaking changes" not in content
+
+
+def test_changelog_breaking_changes(tmp_path: Path) -> None:
+    repo, pkg, _ = setup_repo(tmp_path)
+    run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
+    run(["git", "tag", "v0.1.0"], repo)
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
+    run(["git", "commit", "-am", "feat!: break"], repo)
+    env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "bumpwright.cli",
+            "bump",
+            "--level",
+            "patch",
+            "--pyproject",
+            "pyproject.toml",
+            "--dry-run",
+            "--changelog",
+            "CHANGELOG.md",
+        ],
+        cwd=repo,
+        check=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+    content = (repo / "CHANGELOG.md").read_text()
+    assert "### Breaking changes" in content
+    assert "feat!: break" in content
