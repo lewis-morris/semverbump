@@ -1,8 +1,9 @@
-"""Extract and represent a package's public API using the stdlib AST.
+"""Extract a package's public surface by statically parsing source code.
 
-This module inspects Python source code to determine the exposed public API.
-It uses :mod:`ast` to avoid heavyweight third‑party dependencies while still
-capturing function and method signatures accurately.
+The module relies solely on the standard library :mod:`ast` package to map
+exported functions and methods and capture their signatures.  Only a narrow
+subset of ``__all__`` expressions is evaluated and no user code is executed,
+so dynamically constructed symbols or runtime side effects may be missed.
 """
 
 from __future__ import annotations
