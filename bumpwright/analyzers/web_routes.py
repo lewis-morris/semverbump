@@ -30,7 +30,15 @@ class Route:
 
 
 def _is_const_str(node: ast.AST) -> bool:
-    """Return ``True`` if ``node`` is a constant string."""
+    """Return whether ``node`` is a constant string.
+
+    Args:
+        node: AST node to inspect.
+
+    Returns:
+        ``True`` if ``node`` represents a string literal.
+    """
+
     return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
 
@@ -100,7 +108,16 @@ def extract_routes_from_source(code: str) -> Dict[Tuple[str, str], Route]:
 def _build_routes_at_ref(
     ref: str, roots: Iterable[str], ignores: Iterable[str]
 ) -> Dict[Tuple[str, str], Route]:
-    """Collect routes for all modules under given roots at a git ref."""
+    """Collect routes for all modules under given roots at a git ref.
+
+    Args:
+        ref: Git reference to inspect.
+        roots: Root directories to search for Python modules.
+        ignores: Glob patterns to exclude from scanning.
+
+    Returns:
+        Mapping of ``(path, method)`` to :class:`Route` objects present at ``ref``.
+    """
 
     out: Dict[Tuple[str, str], Route] = {}
     for path in list_py_files_at_ref(ref, roots, ignore_globs=ignores):
@@ -114,7 +131,15 @@ def _build_routes_at_ref(
 def diff_routes(
     old: Dict[Tuple[str, str], Route], new: Dict[Tuple[str, str], Route]
 ) -> List[Impact]:
-    """Compute impacts between two route mappings."""
+    """Compute impacts between two route mappings.
+
+    Args:
+        old: Mapping of routes for the base reference.
+        new: Mapping of routes for the head reference.
+
+    Returns:
+        List of detected route impacts.
+    """
 
     impacts: List[Impact] = []
 
@@ -158,7 +183,15 @@ class WebRoutesAnalyzer:
         self.cfg = cfg
 
     def collect(self, ref: str) -> Dict[Tuple[str, str], Route]:
-        """Collect route definitions at ``ref``."""
+        """Collect route definitions at ``ref``.
+
+        Args:
+            ref: Git reference to inspect.
+
+        Returns:
+            Mapping of ``(path, method)`` to :class:`Route` objects.
+        """
+
         return _build_routes_at_ref(
             ref, self.cfg.project.public_roots, self.cfg.ignore.paths
         )
@@ -166,5 +199,14 @@ class WebRoutesAnalyzer:
     def compare(
         self, old: Dict[Tuple[str, str], Route], new: Dict[Tuple[str, str], Route]
     ) -> List[Impact]:
-        """Compare two route mappings and return impacts."""
+        """Compare two route mappings and return impacts.
+
+        Args:
+            old: Baseline route mapping.
+            new: Updated route mapping.
+
+        Returns:
+            List of impacts describing route changes.
+        """
+
         return diff_routes(old, new)

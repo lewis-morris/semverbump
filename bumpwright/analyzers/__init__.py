@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Protocol, Type
+from typing import Callable, Dict, List, Protocol, Type
 
 from ..compare import Impact
 from ..config import Config
@@ -45,7 +45,9 @@ class AnalyzerInfo:
 REGISTRY: Dict[str, AnalyzerInfo] = {}
 
 
-def register(name: str, description: str | None = None):
+def register(
+    name: str, description: str | None = None
+) -> Callable[[Type[Analyzer]], Type[Analyzer]]:
     """Decorator registering an analyzer implementation.
 
     Args:

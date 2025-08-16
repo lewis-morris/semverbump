@@ -56,13 +56,27 @@ PublicAPI = Dict[str, FuncSig]  # symbol -> function signature (functions & meth
 
 
 def _render_expr(node: ast.AST | None) -> str | None:
-    """Render arbitrary expressions (defaults, etc.)."""
+    """Render arbitrary expressions such as default values.
+
+    Args:
+        node: AST node to render.
+
+    Returns:
+        String representation of ``node`` or ``None`` if ``node`` is ``None``.
+    """
 
     return ast.unparse(node) if node is not None else None
 
 
 def _render_type(ann: ast.AST | None) -> str | None:
-    """Safely render type annotations (params & returns)."""
+    """Safely render type annotations for parameters and returns.
+
+    Args:
+        ann: Annotation node to render.
+
+    Returns:
+        String form of the annotation or ``None`` if absent.
+    """
 
     return ast.unparse(ann) if ann is not None else None
 
@@ -93,7 +107,14 @@ def _parse_exports(mod: ast.Module) -> Optional[set[str]]:
 
 
 def _param_list(args: ast.arguments) -> List[Param]:
-    """Convert AST parameters to :class:`Param` instances."""
+    """Convert AST parameters to :class:`Param` instances.
+
+    Args:
+        args: Function arguments node from the AST.
+
+    Returns:
+        Ordered list of parameter descriptors.
+    """
 
     out: List[Param] = []
 
@@ -132,7 +153,14 @@ def _param_list(args: ast.arguments) -> List[Param]:
 
 
 def _is_public(name: str) -> bool:
-    """Return ``True`` if ``name`` represents a public symbol."""
+    """Return whether ``name`` represents a public symbol.
+
+    Args:
+        name: Symbol name to evaluate.
+
+    Returns:
+        ``True`` if ``name`` does not begin with an underscore.
+    """
 
     return not name.startswith("_")
 
@@ -143,12 +171,13 @@ def _is_public(name: str) -> bool:
 class _APIVisitor(ast.NodeVisitor):
     """Collect public function and method signatures from a module."""
 
-    def __init__(self, module_name: str, exports: Optional[set[str]]):
+    def __init__(self, module_name: str, exports: set[str] | None) -> None:
         """Initialize the visitor.
 
         Args:
             module_name: Name of the module being inspected.
             exports: Explicitly exported symbols if ``__all__`` is defined.
+                ``None`` indicates that all public symbols are considered.
         """
 
         self.module_name = module_name

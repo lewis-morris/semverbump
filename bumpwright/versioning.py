@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from fnmatch import fnmatch
 from glob import glob
 from pathlib import Path
 from typing import Iterable, List, Optional
-
-from .config import load_config
 
 try:  # pragma: no cover - needed for linting when dependency missing
     from packaging.version import Version
@@ -17,6 +15,8 @@ except ModuleNotFoundError as exc:  # pragma: no cover
     raise RuntimeError("packaging is required for version operations") from exc
 from tomlkit import dumps as toml_dumps
 from tomlkit import parse as toml_parse
+
+from .config import load_config
 
 
 @dataclass
@@ -27,11 +27,13 @@ class VersionChange:
         old: Previous version string.
         new: New version string after bump.
         level: Bump level applied (``"major"``, ``"minor"``, or ``"patch"``).
+        files: Files updated with the new version.
     """
 
     old: str
     new: str
     level: str  # "major" | "minor" | "patch"
+    files: List[Path] = field(default_factory=list)
 
 
 def bump_string(v: str, level: str) -> str:
@@ -137,29 +139,30 @@ def apply_bump(
     dry_run: bool = False,
     paths: Iterable[str] | None = None,
     ignore: Iterable[str] | None = None,
-    config_path: str | Path = "bumpwright.toml",
 ) -> VersionChange:
     """Apply a semantic version bump and update version strings.
 
     Args:
         level: Bump level to apply (``"major"``, ``"minor"``, or ``"patch"``).
-        pyproject_path: Path to the canonical ``pyproject.toml`` file.
+            pyproject_path: Path to the canonical ``pyproject.toml`` file.
         dry_run: If ``True``, compute the new version without writing to disk.
         paths: Glob patterns pointing to files that may contain the version.
-            If ``None``, patterns are loaded from ``config_path``.
-            The canonical ``pyproject.toml`` is always updated.
+            Defaults include ``pyproject.toml``, ``setup.py``, ``setup.cfg`` and
+            any ``__init__.py``, ``version.py`` or ``_version.py`` files within
+            the project. Custom patterns extend this list.
         ignore: Glob patterns to exclude from ``paths``. Defaults to values from
             ``config_path`` when ``None``.
         config_path: Path to a ``bumpwright`` configuration file defining
             default version locations.
 
     Returns:
-        :class:`VersionChange` detailing the old and new versions.
+        :class:`VersionChange` detailing the old and new versions and updated
+        files.
     """
 
     cfg = None
     if paths is None or ignore is None:
-        cfg = load_config(config_path)
+        cfg = load_config()
     if paths is None:
         paths = cfg.version.paths
     if ignore is None:
@@ -171,8 +174,13 @@ def apply_bump(
         return VersionChange(old=old, new=new, level=level)
 
     write_project_version(new, pyproject_path)
-    _update_additional_files(new, old, paths, ignore, pyproject_path)
-    return VersionChange(old=old, new=new, level=level)
+    updated = _update_additional_files(new, old, paths, ignore, pyproject_path)
+    return VersionChange(
+        old=old,
+        new=new,
+        level=level,
+        files=[Path(pyproject_path), *updated],
+    )
 
 
 def _update_additional_files(
@@ -181,7 +189,7 @@ def _update_additional_files(
     patterns: Iterable[str],
     ignore: Iterable[str],
     pyproject_path: str | Path,
-) -> None:
+) -> List[Path]:
     """Update version strings in files matching ``patterns``.
 
     Args:
@@ -190,21 +198,36 @@ def _update_additional_files(
         patterns: Glob patterns to search for files.
         ignore: Glob patterns to skip.
         pyproject_path: Canonical ``pyproject.toml`` path to skip (already updated).
+
+    Returns:
+        List of files that were updated.
     """
 
     base = Path(pyproject_path).resolve().parent
     files = _resolve_files(patterns, ignore, base)
     canon = Path(pyproject_path).resolve()
+    changed: List[Path] = []
     for f in files:
         if f.resolve() == canon:
             continue
         _replace_version(f, old, new)
+        changed.append(f)
+    return changed
 
 
 def _resolve_files(
     patterns: Iterable[str], ignore: Iterable[str], base_dir: Path
 ) -> List[Path]:
-    """Expand glob patterns while applying ignore rules relative to ``base_dir``."""
+    """Expand glob patterns while applying ignore rules relative to ``base_dir``.
+
+    Args:
+        patterns: Glob patterns to search for version files.
+        ignore: Glob patterns to exclude from results.
+        base_dir: Directory relative to which patterns are evaluated.
+
+    Returns:
+        List of discovered file paths matching ``patterns`` minus ``ignore``.
+    """
 
     out: List[Path] = []
     ignore_list = list(ignore)
@@ -228,7 +251,13 @@ def _resolve_files(
 
 
 def _replace_version(path: Path, old: str, new: str) -> None:
-    """Replace occurrences of ``old`` version with ``new`` in ``path``."""
+    """Replace occurrences of ``old`` version with ``new`` in ``path``.
+
+    Args:
+        path: File whose contents should be updated.
+        old: Previous version string.
+        new: New version string.
+    """
 
     text = path.read_text(encoding="utf-8")
     patterns = [

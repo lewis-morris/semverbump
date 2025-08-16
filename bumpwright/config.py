@@ -17,7 +17,14 @@ _DEFAULTS = {
     "analyzers": {"cli": False},
     "migrations": {"paths": ["migrations"]},
     "version": {
-        "paths": ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py"],
+        "paths": [
+            "pyproject.toml",
+            "setup.py",
+            "setup.cfg",
+            "**/__init__.py",
+            "**/version.py",
+            "**/_version.py",
+        ],
         "ignore": [],
     },
 }
@@ -81,6 +88,8 @@ class VersionFiles:
             "setup.py",
             "setup.cfg",
             "**/__init__.py",
+            "**/version.py",
+            "**/_version.py",
         ]
     )
     ignore: List[str] = field(default_factory=list)
@@ -106,8 +115,16 @@ class Config:
     version: VersionFiles = field(default_factory=VersionFiles)
 
 
-def _merge_defaults(data: dict) -> dict:
-    """Merge user data with default configuration."""
+def _merge_defaults(data: dict | None) -> dict:
+    """Merge user configuration with built-in defaults.
+
+    Args:
+        data: Raw configuration mapping or ``None`` for no user overrides.
+
+    Returns:
+        Combined configuration with defaults applied.
+    """
+
     out = {k: dict(v) for k, v in _DEFAULTS.items()}
     for section, content in (data or {}).items():
         out.setdefault(section, {}).update(content or {})

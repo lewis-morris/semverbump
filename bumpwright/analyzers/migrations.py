@@ -20,6 +20,12 @@ class _UpgradeVisitor(ast.NodeVisitor):
     """AST visitor that records schema-changing operations."""
 
     def __init__(self, path: str) -> None:
+        """Create a visitor for a specific migration file.
+
+        Args:
+            path: Path to the migration being inspected.
+        """
+
         self.path = path
         self.impacts: List[Impact] = []
 
@@ -43,7 +49,16 @@ class _UpgradeVisitor(ast.NodeVisitor):
 
 
 def _analyze_add_column(node: ast.Call, path: str) -> Optional[Impact]:
-    """Determine the impact of an ``op.add_column`` call."""
+    """Determine the impact of an ``op.add_column`` call.
+
+    Args:
+        node: AST call node representing ``op.add_column``.
+        path: Path of the migration file being analyzed.
+
+    Returns:
+        Impact describing the column addition, or ``None`` if the operation
+        cannot be assessed.
+    """
 
     column = None
     for arg in node.args:
@@ -68,7 +83,15 @@ def _analyze_add_column(node: ast.Call, path: str) -> Optional[Impact]:
 
 
 def _analyze_content(path: str, content: str) -> List[Impact]:
-    """Parse migration source and collect impacts."""
+    """Parse migration source and collect impacts.
+
+    Args:
+        path: Path of the migration file.
+        content: Source code of the migration.
+
+    Returns:
+        List of detected impacts within the migration.
+    """
 
     try:
         tree = ast.parse(content)

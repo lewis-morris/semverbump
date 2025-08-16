@@ -4,7 +4,7 @@ Roadmap
 The following items outline potential directions for improving
 ``bumpwright``. Contributions and discussion are welcome.
 
-Upcoming analysers
+Upcoming analyzers
 ------------------
 
 * GraphQL schema diffing
@@ -14,7 +14,7 @@ Upcoming analysers
 Ecosystem enhancements
 ----------------------
 
-* Pluggable analyser API so projects can ship custom rules
+* Pluggable analyzer API so projects can ship custom rules
 * User-defined severity mappings and thresholds
 * Machine-readable (JSON) and rich HTML reports
 * Built-in changelog templating and defaults

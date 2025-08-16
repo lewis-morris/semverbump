@@ -142,12 +142,15 @@ Controls where version strings are read and updated.
      - Description
    * - ``paths``
      - list[str]
-     - ``["pyproject.toml", "setup.py", "setup.cfg", "**/*.py"]``
+     - ``["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]``
      - Glob patterns scanned for version declarations.
    * - ``ignore``
      - list[str]
      - ``[]``
      - Glob patterns excluded from version replacement.
+
+Command-line options ``--version-path`` and ``--version-ignore`` extend these
+defaults for one-off runs.
 
 Changelog
 ~~~~~~~~~
