@@ -1,7 +1,7 @@
-Additional Analysers
+Additional Analyzers
 ====================
 
-Enable optional analysers in ``bumpwright.toml``:
+Enable optional analyzers in ``bumpwright.toml``:
 
 .. code-block:: toml
 
@@ -13,7 +13,7 @@ Enable optional analysers in ``bumpwright.toml``:
    [migrations]
    paths = ["migrations"]
 
-CLI Analyser
+CLI Analyzer
 ------------
 
 Tracks ``argparse`` or ``click`` command-line interfaces.
@@ -26,11 +26,11 @@ Dependencies
 Enable or disable
 ~~~~~~~~~~~~~~~~~
 
-Set ``cli`` under ``[analysers]`` to ``true`` or ``false``.
+Set ``cli`` under ``[analyzers]`` to ``true`` or ``false``.
 
 .. code-block:: toml
 
-   [analysers]
+   [analyzers]
    cli = true  # set to false to disable
 
 Severity rules
@@ -66,7 +66,7 @@ Example output
 
    - [MAJOR] greet: Added required option '--force'
 
-Web Route Analyser
+Web Route Analyzer
 ------------------
 
 Detects HTTP route changes in Flask or FastAPI apps.
@@ -79,11 +79,11 @@ Dependencies
 Enable or disable
 ~~~~~~~~~~~~~~~~~
 
-Set ``web_routes`` under ``[analysers]``.
+Set ``web_routes`` under ``[analyzers]``.
 
 .. code-block:: toml
 
-   [analysers]
+   [analyzers]
    web_routes = true  # set to false to disable
 
 Severity rules
@@ -117,7 +117,7 @@ Example output
 
    - [MINOR] GET /users/{user_id}: Added optional param 'verbose'
 
-Migrations Analyser
+Migrations Analyzer
 -------------------
 
 Scans Alembic migrations for schema impacts.
@@ -130,11 +130,11 @@ Dependencies
 Enable or disable
 ~~~~~~~~~~~~~~~~~
 
-Configure ``[migrations]`` paths and enable the analyser:
+Configure ``[migrations]`` paths and enable the analyzer:
 
 .. code-block:: toml
 
-   [analysers]
+   [analyzers]
    migrations = true  # set to false to disable
 
    [migrations]
