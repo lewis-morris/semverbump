@@ -65,7 +65,8 @@ dev = [
 [tool.ruff]
 line-length = 127
 target-version = "py311"
-extend-exclude = ["docs", "tests"]
+extend-exclude = ["docs"]
+
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "PL"]

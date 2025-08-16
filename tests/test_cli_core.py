@@ -71,3 +71,31 @@ def test_main_shows_help_when_no_args(tmp_path: Path) -> None:
         env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
     )
     assert "usage: bumpwright" in res.stdout
+
+
+def test_bump_command_requires_clean_worktree(tmp_path: Path) -> None:
+    """Abort the bump when uncommitted changes exist."""
+
+    repo, _, _ = setup_repo(tmp_path)
+    (repo / "dirty.txt").write_text("stale", encoding="utf-8")
+    env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
+    res = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "bumpwright.cli",
+            "bump",
+            "--level",
+            "patch",
+            "--commit",
+        ],
+        cwd=repo,
+        check=False,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+    assert res.returncode == 1
+    assert "working directory has uncommitted changes" in res.stderr
+    assert read_project_version(repo / "pyproject.toml") == "0.1.0"

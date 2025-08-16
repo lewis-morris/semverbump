@@ -24,10 +24,36 @@ _DEFAULT_TEMPLATE = (
 
 
 def _commit_tag(pyproject: str, version: str, commit: bool, tag: bool) -> None:
-    """Optionally commit and tag the updated version."""
+    """Optionally commit and tag the updated version.
+
+    Args:
+        pyproject: Path to the ``pyproject.toml`` file.
+        version: Version string to commit and tag.
+        commit: Whether to create a commit.
+        tag: Whether to create a git tag.
+
+    Raises:
+        RuntimeError: If the requested tag already exists.
+    """
 
     if not (commit or tag):
         return
+
+    if tag:
+        # Abort early if the tag already exists to avoid accidental reuse.
+        result = subprocess.run(
+            ["git", "rev-parse", "--verify", f"v{version}"],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if result.returncode == 0:
+            msg = (
+                f"Tag v{version} already exists. "
+                "Delete the tag manually or use a different version."
+            )
+            raise RuntimeError(msg)
+
     if commit:
         subprocess.run(["git", "add", pyproject], check=True)
         subprocess.run(
@@ -163,6 +189,7 @@ def _display_result(
                     "confidence": decision.confidence,
                     "reasons": decision.reasons,
                     "files": [str(p) for p in vc.files],
+                    "skipped": [str(p) for p in vc.skipped],
                 },
                 indent=2,
             )
@@ -170,9 +197,13 @@ def _display_result(
     elif args.format == "md":
         print(f"Bumped version: `{vc.old}` -> `{vc.new}` ({vc.level})")
         print("Updated files:\n" + "\n".join(f"- `{p}`" for p in vc.files))
+        if vc.skipped:
+            print("Skipped files:\n" + "\n".join(f"- `{p}`" for p in vc.skipped))
     else:
         print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
         print("Updated files: " + ", ".join(str(p) for p in vc.files))
+        if vc.skipped:
+            print("Skipped files: " + ", ".join(str(p) for p in vc.skipped))
 
 
 def _write_changelog(args: argparse.Namespace, changelog: str | None) -> None:
@@ -279,6 +310,17 @@ def bump_command(args: argparse.Namespace) -> int:
         level = decision.level
     else:
         decision = Decision(level, 1.0, [])
+
+    if (args.commit or args.tag) and not args.dry_run:
+        status: subprocess.CompletedProcess[str] = subprocess.run(
+            ["git", "status", "--porcelain"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        if status.stdout.strip():
+            print("Error: working directory has uncommitted changes", file=sys.stderr)
+            return 1
 
     ignore = list(cfg.version.ignore)
     if args.version_ignore:
