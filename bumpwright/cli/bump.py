@@ -18,7 +18,6 @@ from ..gitutils import changed_paths, collect_commits, last_release_commit
 from ..versioning import VersionChange, apply_bump, find_pyproject
 from .decide import _decide_only, _infer_level
 
-logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
 

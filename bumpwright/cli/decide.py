@@ -20,7 +20,6 @@ from ..public_api import (
 )
 from . import add_analyser_toggles, add_ref_options
 
-logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
 

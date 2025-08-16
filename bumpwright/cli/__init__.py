@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 
 from ..analysers import available
@@ -60,7 +61,9 @@ def get_parser() -> argparse.ArgumentParser:
     avail = ", ".join(available()) or "none"
     parser = argparse.ArgumentParser(
         prog="bumpwright",
-        description=(f"Suggest and apply semantic version bumps. Available analysers: {avail}."),
+        description=(
+            f"Suggest and apply semantic version bumps. Available analysers: {avail}."
+        ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -133,7 +136,9 @@ def get_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Create a git commit for the version change.",
     )
-    p_bump.add_argument("--tag", action="store_true", help="Create a git tag for the new version.")
+    p_bump.add_argument(
+        "--tag", action="store_true", help="Create a git tag for the new version."
+    )
     p_bump.add_argument(
         "--dry-run",
         action="store_true",
@@ -154,7 +159,18 @@ def get_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Entry point for the ``bumpwright`` CLI."""
+    """Entry point for the ``bumpwright`` CLI.
+
+    Args:
+        argv: Optional sequence of command-line arguments. Defaults to
+            ``None`` to use ``sys.argv``.
+
+    Returns:
+        Process exit code; ``0`` indicates success.
+    """
+
+    if not logging.getLogger().hasHandlers():
+        logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     parser = get_parser()
     args = parser.parse_args(argv)
