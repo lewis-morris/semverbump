@@ -14,6 +14,44 @@ those segments independently.
    ``pre`` and ``build`` levels. The command-line interface exposes only the
    ``major``, ``minor``, and ``patch`` options.
 
+.. list-table:: Bump level effects
+   :header-rows: 1
+
+   * - Level
+     - Prerelease segment
+     - Build/local segment
+   * - ``major``
+     - cleared
+     - cleared
+   * - ``minor``
+     - cleared
+     - cleared
+   * - ``patch``
+     - cleared
+     - cleared
+   * - ``pre``
+     - incremented
+     - unchanged
+   * - ``build``
+     - unchanged
+     - incremented
+
+Examples using the default SemVer scheme:
+
+.. code-block:: python
+
+   from bumpwright.versioning import bump_string
+   bump_string("1.0.0-alpha.1", "pre", scheme="semver")    # 1.0.0-alpha.2
+   bump_string("1.0.0+build.1", "build", scheme="semver")  # 1.0.0+build.2
+
+Return type changes are treated as a ``minor`` bump by default. Override this
+behavior via ``rules.return_type_change`` in :doc:`configuration`:
+
+.. code-block:: toml
+
+   [rules]
+   return_type_change = "major"
+
 SemVer
 ------
 

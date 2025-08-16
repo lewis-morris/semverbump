@@ -29,7 +29,7 @@ def test_prepare_version_files_no_relevant_changes(tmp_path: Path) -> None:
     run(["git", "add", "pyproject.toml"], repo)
     run(["git", "commit", "-m", "chore: bump version"], repo)
     cfg = load_config(repo / "bumpwright.toml")
-    args = argparse.Namespace(version_path=None)
+    args = argparse.Namespace(version_path=["pkg*/__init__.py"])
     cwd = os.getcwd()
     os.chdir(repo)
     try:
@@ -37,6 +37,27 @@ def test_prepare_version_files_no_relevant_changes(tmp_path: Path) -> None:
     finally:
         os.chdir(cwd)
     assert paths is None
+
+
+def test_prepare_version_files_wildcard_directory(tmp_path: Path) -> None:
+    repo, _, base = setup_repo(tmp_path)
+    extra_pkg = repo / "pkg_extra"
+    extra_pkg.mkdir()
+    init_file = extra_pkg / "__init__.py"
+    init_file.write_text("value = 1\n", encoding="utf-8")
+    run(["git", "add", "pkg_extra/__init__.py"], repo)
+    run(["git", "commit", "-m", "feat: add extra package"], repo)
+    cfg = load_config(repo / "bumpwright.toml")
+    args = argparse.Namespace(version_path=["pkg*/__init__.py"])
+    pyproj = repo / "pyproject.toml"
+    cwd = os.getcwd()
+    os.chdir(repo)
+    try:
+        paths = _prepare_version_files(cfg, args, pyproj, base, "HEAD")
+    finally:
+        os.chdir(cwd)
+    assert paths is not None
+    assert "pkg*/__init__.py" in paths
 
 
 def test_display_result_json(caplog) -> None:
