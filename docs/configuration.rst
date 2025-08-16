@@ -30,7 +30,7 @@ Example configuration showing all available sections and their default values:
    path = ""
 
    [version]
-   paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/*.py"]
+   paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]
    ignore = []
 
 Set an analyser value to ``true`` to enable it.
