@@ -2,7 +2,9 @@ Configuration
 =============
 
 ``bumpwright`` reads settings from ``bumpwright.toml``. If the file is missing
-or a section is omitted, built-in defaults are used.
+or a section is omitted, built-in defaults are used. To use a different
+location, pass ``--config`` on the command line or supply a ``config_path`` or
+loaded :class:`bumpwright.config.Config` object when calling library APIs.
 
 Example configuration showing all available sections and their default values:
 

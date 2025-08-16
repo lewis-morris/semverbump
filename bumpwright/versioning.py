@@ -13,7 +13,7 @@ from pathlib import Path
 from tomlkit import dumps as toml_dumps
 from tomlkit import parse as toml_parse
 
-from .config import load_config
+from .config import Config, load_config
 from .types import BumpLevel
 from .version_schemes import get_version_scheme
 
@@ -103,7 +103,9 @@ def read_project_version(pyproject_path: str | Path = "pyproject.toml") -> str:
         raise KeyError("project.version not found in pyproject.toml") from e
 
 
-def write_project_version(new_version: str, pyproject_path: str | Path = "pyproject.toml") -> None:
+def write_project_version(
+    new_version: str, pyproject_path: str | Path = "pyproject.toml"
+) -> None:
     """Write ``new_version`` to the ``pyproject.toml`` file.
 
     Args:
@@ -133,6 +135,8 @@ def apply_bump(  # noqa: PLR0913
     paths: Iterable[str] | None = None,
     ignore: Iterable[str] | None = None,
     scheme: str | None = None,
+    cfg: Config | None = None,
+    config_path: str | Path | None = None,
 ) -> VersionChange:
     """Apply a version bump and update version strings.
 
@@ -148,6 +152,10 @@ def apply_bump(  # noqa: PLR0913
             the project configuration when ``None``.
         scheme: Versioning scheme identifier. When ``None``, the scheme from
             configuration is used.
+        cfg: Pre-loaded configuration object. When provided, ``config_path`` is
+            ignored.
+        config_path: Location of the configuration file to load when ``cfg`` is
+            ``None``. Defaults to ``"bumpwright.toml"``.
 
     Returns:
         :class:`VersionChange` detailing the old and new versions, updated files,
@@ -159,7 +167,7 @@ def apply_bump(  # noqa: PLR0913
         and a fresh resolution is required.
     """
 
-    cfg = load_config()
+    cfg = cfg or load_config(config_path or "bumpwright.toml")
     if paths is None:
         paths = cfg.version.paths
     if ignore is None:
@@ -218,7 +226,9 @@ def _update_additional_files(
     return changed, skipped
 
 
-def _resolve_files(patterns: Iterable[str], ignore: Iterable[str], base_dir: Path) -> list[Path]:
+def _resolve_files(
+    patterns: Iterable[str], ignore: Iterable[str], base_dir: Path
+) -> list[Path]:
     """Expand glob patterns while applying ignore rules relative to ``base_dir``.
 
     Args:
@@ -239,7 +249,9 @@ def _resolve_files(patterns: Iterable[str], ignore: Iterable[str], base_dir: Pat
 
 
 @lru_cache(maxsize=None)
-def _resolve_files_cached(patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str) -> tuple[Path, ...]:
+def _resolve_files_cached(
+    patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str
+) -> tuple[Path, ...]:
     """Resolve files for caching.
 
     This function performs the actual glob resolution and is wrapped with

@@ -4,11 +4,17 @@ import pytest
 from tomlkit import dumps as toml_dumps
 from tomlkit.exceptions import ParseError
 
-from bumpwright.config import load_config
-from bumpwright.versioning import (_replace_version, _resolve_files,
-                                   _resolve_files_cached, apply_bump,
-                                   bump_string, find_pyproject,
-                                   read_project_version, write_project_version)
+from bumpwright.config import Config, load_config
+from bumpwright.versioning import (
+    _replace_version,
+    _resolve_files,
+    _resolve_files_cached,
+    apply_bump,
+    bump_string,
+    find_pyproject,
+    read_project_version,
+    write_project_version,
+)
 
 
 def test_bump_string():
@@ -20,7 +26,10 @@ def test_bump_string():
 def test_bump_string_semver_prerelease_and_build() -> None:
     """SemVer bumps preserve and increment prerelease and build metadata."""
 
-    assert bump_string("1.2.3-alpha.1+build.1", "patch", scheme="semver") == "1.2.4-alpha.1+build.1"
+    assert (
+        bump_string("1.2.3-alpha.1+build.1", "patch", scheme="semver")
+        == "1.2.4-alpha.1+build.1"
+    )
     assert bump_string("1.2.3-alpha.1", "pre", scheme="semver") == "1.2.3-alpha.2"
     assert bump_string("1.2.3+build.1", "build", scheme="semver") == "1.2.3+build.2"
 
@@ -28,7 +37,9 @@ def test_bump_string_semver_prerelease_and_build() -> None:
 def test_bump_string_pep440_pre_and_local() -> None:
     """PEP 440 bumps handle prerelease and local segments."""
 
-    assert bump_string("1.2.3rc1+local.1", "patch", scheme="pep440") == "1.2.4rc1+local.1"
+    assert (
+        bump_string("1.2.3rc1+local.1", "patch", scheme="pep440") == "1.2.4rc1+local.1"
+    )
     assert bump_string("1.2.3a1", "pre", scheme="pep440") == "1.2.3a2"
     assert bump_string("1.2.3+local.1", "build", scheme="pep440") == "1.2.3+local.2"
 
@@ -74,7 +85,9 @@ def pyproject_malformed(tmp_path: Path) -> Path:
         ("pyproject_malformed", ParseError),
     ],
 )
-def test_read_project_version_errors(path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest) -> None:
+def test_read_project_version_errors(
+    path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest
+) -> None:
     """Validate ``read_project_version`` error handling for bad inputs."""
 
     path = request.getfixturevalue(path_fixture)
@@ -85,7 +98,8 @@ def test_read_project_version_errors(path_fixture: str, exc: type[Exception], re
 def test_apply_bump(tmp_path: Path):
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
-    out = apply_bump("minor", py)
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump("minor", py, cfg=cfg)
     assert out.old == "0.1.0" and out.new == "0.2.0"
     assert read_project_version(py) == "0.2.0"
     assert py in out.files
@@ -95,7 +109,8 @@ def test_apply_bump(tmp_path: Path):
 def test_apply_bump_dry_run(tmp_path: Path) -> None:
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "1.2.3"}}))
-    out = apply_bump("patch", py, dry_run=True)
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump("patch", py, dry_run=True, cfg=cfg)
     assert out.old == "1.2.3" and out.new == "1.2.4"
     assert read_project_version(py) == "1.2.3"
     assert out.files == []
@@ -116,7 +131,8 @@ def test_apply_bump_updates_extra_files(tmp_path: Path) -> None:
     _ver = pkg / "_version.py"
     _ver.write_text("version = '0.1.0'", encoding="utf-8")
 
-    out = apply_bump("patch", py)
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump("patch", py, cfg=cfg)
     assert out.new == "0.1.1"
     assert "version='0.1.1'" in setup.read_text(encoding="utf-8")
     assert "__version__ = '0.1.1'" in init.read_text(encoding="utf-8")
@@ -135,7 +151,8 @@ def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
     init = pkg / "__init__.py"
     init.write_text("__version__ = '1.0.0'", encoding="utf-8")
 
-    out = apply_bump("minor", py, ignore=[str(init)])
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump("minor", py, ignore=[str(init)], cfg=cfg)
     assert "__version__ = '1.0.0'" in init.read_text(encoding="utf-8")
     assert init not in out.files
     assert out.skipped == []
@@ -154,7 +171,9 @@ def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
         ("pkg/__pycache__", "version.py"),
     ],
 )
-def test_default_version_ignore_patterns(tmp_path: Path, ignore_dir: str, file_name: str) -> None:
+def test_default_version_ignore_patterns(
+    tmp_path: Path, ignore_dir: str, file_name: str
+) -> None:
     """Version files in ignored directories are skipped by default."""
 
     py = tmp_path / "pyproject.toml"
@@ -169,8 +188,14 @@ def test_default_version_ignore_patterns(tmp_path: Path, ignore_dir: str, file_n
     ignored_file = ignore_path / file_name
     ignored_file.write_text("__version__ = '1.0.0'", encoding="utf-8")
 
-    cfg = load_config(tmp_path / "bumpwright.toml")
-    out = apply_bump("minor", py, paths=cfg.version.paths, ignore=cfg.version.ignore)
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump(
+        "minor",
+        py,
+        paths=cfg.version.paths,
+        ignore=cfg.version.ignore,
+        cfg=cfg,
+    )
 
     assert "__version__ = '1.1.0'" in init.read_text(encoding="utf-8")
     assert "__version__ = '1.0.0'" in ignored_file.read_text(encoding="utf-8")
@@ -184,7 +209,13 @@ def test_apply_bump_skips_files_without_version(tmp_path: Path) -> None:
     extra = tmp_path / "extra.py"
     extra.write_text("print('no version here')", encoding="utf-8")
 
-    out = apply_bump("patch", py, paths=[str(extra)], ignore=[])
+    out = apply_bump(
+        "patch",
+        py,
+        paths=[str(extra)],
+        ignore=[],
+        config_path=tmp_path / "bumpwright.toml",
+    )
 
     assert extra not in out.files
     assert extra in out.skipped
@@ -199,27 +230,33 @@ def test_replace_version_returns_false_when_unmodified(tmp_path: Path) -> None:
     assert target.read_text(encoding="utf-8") == "print('hello')"
 
 
-def test_apply_bump_respects_scheme(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_apply_bump_respects_scheme(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Use configured version scheme when bumping."""
 
     (tmp_path / "bumpwright.toml").write_text("[version]\nscheme='pep440'\n")
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "1!1.0.0"}}))
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
     monkeypatch.chdir(tmp_path)
-    out = apply_bump("patch", py)
+    out = apply_bump("patch", py, cfg=cfg)
     assert out.new == "1!1.0.1"
     assert out.skipped == []
 
 
-def test_apply_bump_invalid_scheme(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_apply_bump_invalid_scheme(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Invalid version schemes raise clear errors."""
 
     (tmp_path / "bumpwright.toml").write_text("[version]\nscheme='unknown'\n")
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
     monkeypatch.chdir(tmp_path)
     with pytest.raises(ValueError, match="Unknown version scheme"):
-        apply_bump("patch", py)
+        apply_bump("patch", py, cfg=cfg)
 
 
 def test_resolve_files_nested_dirs_sorted(tmp_path: Path) -> None:
@@ -273,7 +310,9 @@ def test_resolve_files_absolute_paths_and_ignore_patterns(tmp_path: Path) -> Non
     assert out == expected
 
 
-def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_resolve_files_uses_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Ensure repeated resolution reuses cached results."""
 
     (tmp_path / "a.txt").write_text("1", encoding="utf-8")
@@ -292,7 +331,9 @@ def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     assert calls["count"] == 1
 
 
-def test_apply_bump_clears_resolve_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_apply_bump_clears_resolve_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Verify custom patterns trigger cache invalidation."""
 
     py = tmp_path / "pyproject.toml"
@@ -308,8 +349,18 @@ def test_apply_bump_clears_resolve_cache(monkeypatch: pytest.MonkeyPatch, tmp_pa
         return glob_orig(pattern, recursive=recursive)
 
     monkeypatch.setattr("bumpwright.versioning.glob", fake_glob)
-    apply_bump("patch", py, paths=["*.cfg"])
-    apply_bump("patch", py, paths=["*.cfg"])
+    apply_bump(
+        "patch",
+        py,
+        paths=["*.cfg"],
+        config_path=tmp_path / "bumpwright.toml",
+    )
+    apply_bump(
+        "patch",
+        py,
+        paths=["*.cfg"],
+        config_path=tmp_path / "bumpwright.toml",
+    )
     assert calls["count"] == 1
 
 
