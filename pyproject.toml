@@ -3,7 +3,7 @@ name = "bumpwright"
 version = "0.8.0"
 description = "Static public-API diff + heuristics to suggest semantic version bumps."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 authors = [{ name = "Lewis Morris", email = "lewis@arched.dev" }]
 license = { file = "LICENSE" }
 dependencies = [
@@ -21,7 +21,9 @@ classifiers = [
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Software Development :: Version Control",
 ]
 keywords = ["semantic-versioning", "semver", "api", "diff", "release"]
@@ -62,7 +64,7 @@ dev = [
 
 [tool.ruff]
 line-length = 127
-target-version = "py310"
+target-version = "py311"
 extend-exclude = ["docs", "tests"]
 
 [tool.ruff.lint]
