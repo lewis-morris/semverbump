@@ -35,6 +35,8 @@ locations.
 
 ## Installation
 
+Requires Python 3.11 or later.
+
 ```bash
 pip install bumpwright
 ```
