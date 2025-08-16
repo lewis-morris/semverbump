@@ -187,3 +187,37 @@ def upgrade():
     impacts = _analyze(repo, base, head)
     severities = {i.severity for i in impacts}
     assert {"minor", "major"}.issubset(severities)
+
+
+def test_invalid_python_no_impacts(repo: Path) -> None:
+    """An invalid migration script should yield no impacts."""
+
+    base = _baseline(repo)
+    head = _commit_migration(
+        repo,
+        "0007_invalid_py.py",
+        """
+def upgrade():
+    print('oops'
+""",
+    )
+    impacts = _analyze(repo, base, head)
+    assert impacts == []
+
+
+def test_missing_upgrade_no_impacts(repo: Path) -> None:
+    """A migration without an upgrade function should yield no impacts."""
+
+    base = _baseline(repo)
+    head = _commit_migration(
+        repo,
+        "0008_no_upgrade.py",
+        """
+from alembic import op
+
+def downgrade():
+    op.drop_table('t')
+""",
+    )
+    impacts = _analyze(repo, base, head)
+    assert impacts == []
