@@ -15,6 +15,7 @@ from bumpwright.cli.bump import (  # isort:skip
     _commit_tag,
     _display_result,
     _prepare_version_files,
+    _resolve_pyproject,
     _read_template,
     _build_changelog,
     get_default_template,
@@ -58,6 +59,15 @@ def test_prepare_version_files_wildcard_directory(tmp_path: Path) -> None:
         os.chdir(cwd)
     assert paths is not None
     assert "pkg*/__init__.py" in paths
+
+
+def test_resolve_pyproject_missing() -> None:
+    """Ensure resolving a missing pyproject raises an informative error."""
+
+    with pytest.raises(
+        FileNotFoundError, match="pyproject.toml not found at missing.pyproject"
+    ):
+        _resolve_pyproject("missing.pyproject")
 
 
 def test_display_result_json(caplog) -> None:
