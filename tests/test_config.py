@@ -65,3 +65,23 @@ def test_mutating_config_does_not_alter_defaults(tmp_path: Path) -> None:
     fresh = load_config(tmp_path / "missing.toml")
     assert config_module._DEFAULTS["project"]["public_roots"] == ["."]
     assert fresh.project.public_roots == ["."]
+
+
+def test_version_ignore_defaults_extend(tmp_path: Path) -> None:
+    """Custom version ignores extend the built-in defaults."""
+
+    cfg_file = tmp_path / "bumpwright.toml"
+    cfg_file.write_text("[version]\nignore=['custom/**']\n")
+    cfg = load_config(cfg_file)
+    assert "custom/**" in cfg.version.ignore
+    defaults = {
+        "build/**",
+        "dist/**",
+        "*.egg-info/**",
+        ".eggs/**",
+        ".venv/**",
+        "venv/**",
+        ".env/**",
+        "**/__pycache__/**",
+    }
+    assert defaults.issubset(set(cfg.version.ignore))

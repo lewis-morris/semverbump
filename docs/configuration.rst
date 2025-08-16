@@ -143,7 +143,7 @@ Controls where version strings are read and updated.
      - Glob patterns scanned for version declarations.
    * - ``ignore``
      - list[str]
-     - ``[]``
+     - ``["build/**", "dist/**", "*.egg-info/**", ".eggs/**", ".venv/**", "venv/**", ".env/**", "**/__pycache__/**"]``
      - Glob patterns excluded from version replacement.
 
 Command-line options ``--version-path`` and ``--version-ignore`` extend these
