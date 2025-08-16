@@ -156,8 +156,16 @@ To preview changes without touching the filesystem, combine ``--dry-run`` with J
    {
      "old_version": "1.2.3",
      "new_version": "1.2.4",
-     "level": "patch"
-   }
+     "level": "patch",
+     "confidence": 1.0,
+     "reasons": ["added CLI entry 'greet'"],
+     "files": ["pyproject.toml"],
+     "skipped": []
+    }
+
+The ``confidence`` and ``reasons`` fields mirror those shown when running
+``bumpwright bump --decide``. ``files`` lists paths that would be updated
+by the bump, while ``skipped`` records any files ignored by configuration.
 
 Omitting ``--base`` compares against the last release commit or the previous commit (``HEAD^``); leaving out ``--head`` uses the current ``HEAD``.
 
