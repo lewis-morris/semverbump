@@ -26,6 +26,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinxcontrib.autoprogram",
     "sphinx.ext.linkcode",
+    "sphinx_click",
 ]
 
 templates_path = ["_templates"]

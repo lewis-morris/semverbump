@@ -32,7 +32,8 @@ docs = [
   "sphinx-autodoc-typehints>=2.2",
   "sphinx-copybutton>=0.5.2",
   "myst-parser",
-  "sphinxcontrib-autoprogram"
+  "sphinxcontrib-autoprogram",
+  "sphinx-click"
 ]
 dev = [
   "pytest>=8.2",
