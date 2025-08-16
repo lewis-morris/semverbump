@@ -1,4 +1,4 @@
-Web Route Analyzer
+Web Route Analyser
 ==================
 
 Detects HTTP route changes in Flask or FastAPI apps.
@@ -45,6 +45,6 @@ Detectable change
 Example output
 ~~~~~~~~~~~~~~
 
-::
+.. code-block:: text
 
    - [MINOR] GET /users/{user_id}: Added optional param 'verbose'

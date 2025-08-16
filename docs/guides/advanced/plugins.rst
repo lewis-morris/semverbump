@@ -1,4 +1,4 @@
-Custom severity mapping and plugin analyzers
+Custom severity mapping and plugin analysers
 ============================================
 
 1. Create a plugin that reports ``print`` usage:
@@ -21,8 +21,8 @@ Custom severity mapping and plugin analyzers
                return [Impact(self.severity, "example.py", "Added print call")]
            return []
 
-   The optional description makes the plugin discoverable via
-   ``get_analyzer_info("no_prints")`` and the :func:`available` helper.
+The optional description makes the plugin discoverable via
+``get_analyzer_info("no_prints")`` and the :func:`available` helper.
 
 2. Enable the plugin and map its finding to a version bump:
 
@@ -34,7 +34,7 @@ Custom severity mapping and plugin analyzers
    [rules]
    print_call = "patch"
 
-3. Execute the analyzer:
+3. Execute the analyser:
 
 .. code-block:: console
 

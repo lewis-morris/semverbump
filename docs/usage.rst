@@ -15,9 +15,9 @@ Global options
     current working directory.
 
 ``init`` – create a baseline
----------------------------
+-----------------------------
 
-Record an empty ``chore(release): initialize baseline`` commit so future runs
+Record an empty ``chore(release): initialise baseline`` commit so future runs
 of bumpwright have a starting point for comparisons. Run this once when first
 adopting bumpwright or after importing an existing project without prior
 release commits.

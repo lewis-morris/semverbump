@@ -1,7 +1,7 @@
 Advanced Usage
 ==============
 
-Customize bumpwright beyond the basics.
+Customise bumpwright beyond the basics.
 
 Customise rules for version decisions:
 

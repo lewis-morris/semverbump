@@ -1,7 +1,7 @@
-Additional Analyzers
+Additional Analysers
 ====================
 
-Enable optional analyzers in ``bumpwright.toml``:
+Enable optional analysers in ``bumpwright.toml``:
 
 .. code-block:: toml
 

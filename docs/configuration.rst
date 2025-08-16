@@ -33,7 +33,7 @@ Example configuration showing all available sections and their default values:
    paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/*.py"]
    ignore = []
 
-Set an analyzer value to ``true`` to enable it.
+Set an analyser value to ``true`` to enable it.
 
 Sections
 --------
@@ -92,13 +92,13 @@ Rules
      - ``"minor"``
      - Version bump level when a function's return type changes.
 
-Analyzers
+Analysers
 ~~~~~~~~~
 
 Each key under ``[analyzers]`` toggles a plugin. Unknown names raise an error
-at runtime. Built-in analyzers include:
+at run time. Built-in analysers include:
 
-.. list-table:: Available analyzers
+.. list-table:: Available analysers
    :header-rows: 1
 
    * - Name

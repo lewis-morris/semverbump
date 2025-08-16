@@ -1,4 +1,4 @@
-CLI Analyzer
+CLI Analyser
 ============
 
 Tracks ``argparse`` or ``click`` command-line interfaces.
@@ -46,6 +46,6 @@ Detectable change
 Example output
 ~~~~~~~~~~~~~~
 
-::
+.. code-block:: text
 
    - [MAJOR] greet: Added required option '--force'
