@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import subprocess
 from collections.abc import Iterable
 from dataclasses import dataclass
 from fnmatch import fnmatch
@@ -20,7 +19,7 @@ from graphql.language import (
 
 from ..compare import Impact
 from ..config import Config
-from ..gitutils import read_files_at_ref
+from ..gitutils import _run, read_files_at_ref
 from . import register
 
 
@@ -88,18 +87,6 @@ def diff_types(old: dict[str, TypeDef], new: dict[str, TypeDef]) -> list[Impact]
         for field in np - op:
             impacts.append(Impact("minor", f"{name}.{field}", "Added field"))
     return impacts
-
-
-def _run(cmd: list[str], cwd: str | None = None) -> str:
-    res = subprocess.run(
-        cmd,
-        cwd=cwd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        check=True,
-    )
-    return res.stdout
 
 
 def _list_graphql_files_at_ref(
