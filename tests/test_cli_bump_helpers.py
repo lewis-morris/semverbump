@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ from bumpwright.versioning import VersionChange
 from bumpwright.cli.bump import (  # isort:skip
     _commit_tag,
     _display_result,
+    _safe_changed_paths,
     _prepare_version_files,
     _resolve_pyproject,
     _read_template,
@@ -59,6 +61,17 @@ def test_prepare_version_files_wildcard_directory(tmp_path: Path) -> None:
         os.chdir(cwd)
     assert paths is not None
     assert "pkg*/__init__.py" in paths
+
+
+def test_safe_changed_paths_warns(monkeypatch, caplog) -> None:
+    def fail(base: str, head: str) -> set[str]:
+        raise subprocess.CalledProcessError(1, ["git", "diff"])
+
+    monkeypatch.setattr("bumpwright.cli.bump.changed_paths", fail)
+    with caplog.at_level(logging.WARNING):
+        result = _safe_changed_paths("BASE", "HEAD")
+    assert result is None
+    assert "BASE" in caplog.text and "HEAD" in caplog.text
 
 
 def test_resolve_pyproject_missing() -> None:
