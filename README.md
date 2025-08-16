@@ -6,37 +6,7 @@
 ![License](https://lewis-morris.github.io/bumpwright/_static/badges/license.svg)
 
 
-## Introduction
-
-Bumpwright inspects your project's public API to recommend the correct semantic
-version bump. It compares two Git references, reports the impact of their
-differences, and can update version files for you.
-
-### Comparison with similar tools
-
-- **bump2version** – manually increments version strings without analysing code.
-- **python-semantic-release** – infers releases from commit messages rather than
-  the exported API.
-
-Bumpwright focuses on the code itself, making it a good fit for libraries and
-services that expose stable interfaces.
-
-### Benefits
-
-- **Simplicity** – run one command to review API changes.
-- **Flexibility** – pluggable analysers and configuration overrides.
-- **Accuracy** – highlights breaking changes commit messages may miss.
-
-### Trade-offs
-
-- Requires a baseline reference to compare against.
-- Static analysis cannot detect runtime-only behaviour.
-
-### Primary use cases
-
-- Library maintainers checking semantic versioning.
-- CI systems gating releases on API changes.
-- Release managers reviewing change impact.
+Bumpwright inspects your project's public API and suggests the appropriate semantic version increment.
 
 ## Quickstart
 
@@ -46,33 +16,9 @@ Requires Python 3.11 or later.
 pip install bumpwright
 bumpwright init
 bumpwright bump --decide
-bumpwright bump --commit --tag
 ```
 
-Example output from `bumpwright bump --decide`:
-
-```text
-Suggested bump: minor
-- [MINOR] demo:greet: Added public symbol
-```
-
-See the [documentation](docs/index.rst) for detailed guides and advanced
-scenarios.
-
-## Development
-
-This project uses [pre-commit](https://pre-commit.com/) with Ruff, Black, and
-isort to maintain code style and quality.
-
-```bash
-pre-commit install
-pre-commit run --all-files
-```
-
-## Roadmap
-
-Planned enhancements include additional analysers, a plugin architecture, and
-better CI integrations. See the [roadmap](docs/roadmap.rst) for details.
+See the [documentation](docs/index.rst) for full usage, configuration, and development guidelines.
 
 ## License
 
