@@ -18,6 +18,10 @@ Integrating with CI pipelines
          - run: pip install bumpwright
          - run: bumpwright bump --decide --base origin/main --head ${{ github.sha }}
 
+   ``${{ github.sha }}`` resolves to the commit SHA for the workflow run.
+   Workflows that commit or tag must grant ``contents: write`` via
+   ``permissions`` and authenticate with the default ``GITHUB_TOKEN``.
+
 2. Review the workflow logs to see the suggested bump:
 
 .. code-block:: text
