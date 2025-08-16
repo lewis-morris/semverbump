@@ -20,7 +20,7 @@ def test_bump_uses_config_path(tmp_path: Path) -> None:
     run(["git", "commit", "-am", "feat: change"], repo)
     sha = run(["git", "rev-parse", "--short", "HEAD"], repo)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
-    subprocess.run(
+    res = subprocess.run(
         [
             sys.executable,
             "-m",
@@ -38,10 +38,12 @@ def test_bump_uses_config_path(tmp_path: Path) -> None:
         text=True,
         env=env,
     )
+    output = res.stdout
     content = (repo / "CHANGELOG.md").read_text()
     today = date.today().isoformat()
     assert f"## [v0.1.1] - {today}" in content
     assert f"- {sha} feat: change" in content
+    assert "## [v0.1.1]" not in output
 
 
 def test_bump_writes_changelog(tmp_path: Path) -> None:
@@ -53,7 +55,7 @@ def test_bump_writes_changelog(tmp_path: Path) -> None:
     run(["git", "commit", "-am", "feat: change"], repo)
     sha = run(["git", "rev-parse", "--short", "HEAD"], repo)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
-    subprocess.run(
+    res = subprocess.run(
         [
             sys.executable,
             "-m",
@@ -73,10 +75,48 @@ def test_bump_writes_changelog(tmp_path: Path) -> None:
         text=True,
         env=env,
     )
+    output = res.stdout
     content = (repo / "CHANGELOG.md").read_text()
     today = date.today().isoformat()
     assert f"## [v0.1.1] - {today}" in content
     assert f"- {sha} feat: change" in content
+    assert "## [v0.1.1]" not in output
+
+
+def test_bump_writes_changelog_stdout(tmp_path: Path) -> None:
+    repo, pkg, _ = setup_repo(tmp_path)
+    run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
+    run(["git", "commit", "-am", "feat: change"], repo)
+    sha = run(["git", "rev-parse", "--short", "HEAD"], repo)
+    env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
+    res = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "bumpwright.cli",
+            "bump",
+            "--level",
+            "patch",
+            "--pyproject",
+            "pyproject.toml",
+            "--dry-run",
+            "--changelog",
+            "-",
+        ],
+        cwd=repo,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+    output = res.stdout
+    today = date.today().isoformat()
+    assert f"## [v0.1.1] - {today}" in output
+    assert f"- {sha} feat: change" in output
+    assert not (repo / "CHANGELOG.md").exists()
 
 
 def test_changelog_links_repo_url(tmp_path: Path) -> None:
