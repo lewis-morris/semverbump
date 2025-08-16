@@ -83,6 +83,11 @@ def _render_type(ann: ast.AST | None) -> str | None:
 def _parse_exports(mod: ast.Module) -> set[str] | None:
     """Parse ``__all__`` definitions from a module if present.
 
+    The parser understands simple list/tuple literals, ``+`` concatenation,
+    and variable references whose values are string literals. This limited
+    evaluation avoids executing user code while still supporting common ways of
+    constructing ``__all__``.
+
     Args:
         mod: Parsed module.
 
@@ -90,18 +95,45 @@ def _parse_exports(mod: ast.Module) -> set[str] | None:
         Set of exported symbol names or ``None`` if ``__all__`` is undefined.
     """
 
+    def _eval(node: ast.AST, env: dict[str, list[str]]) -> list[str] | None:
+        """Evaluate simple expressions to a list of strings.
+
+        This supports:
+
+        * List or tuple literals containing only string constants.
+        * ``+`` concatenation of supported expressions.
+        * References to previously assigned names stored in ``env``.
+        """
+
+        if isinstance(node, (ast.List, ast.Tuple)):
+            out: list[str] = []
+            for el in node.elts:
+                if isinstance(el, ast.Constant) and isinstance(el.value, str):
+                    out.append(el.value)
+                else:
+                    return None
+            return out
+        if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
+            left = _eval(node.left, env)
+            right = _eval(node.right, env)
+            if left is not None and right is not None:
+                return left + right
+            return None
+        if isinstance(node, ast.Name):
+            return env.get(node.id)
+        return None
+
+    env: dict[str, list[str]] = {}
     for stmt in mod.body:
-        if isinstance(stmt, ast.Assign):
-            if len(stmt.targets) != 1:
-                continue
+        if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1:
             tgt = stmt.targets[0]
-            if isinstance(tgt, ast.Name) and tgt.id == "__all__":
-                if isinstance(stmt.value, (ast.List, ast.Tuple)):
-                    vals: list[str] = []
-                    for el in stmt.value.elts:
-                        if isinstance(el, ast.Constant) and isinstance(el.value, str):
-                            vals.append(el.value)
-                    return set(vals)
+            if not isinstance(tgt, ast.Name):
+                continue
+            evaluated = _eval(stmt.value, env)
+            if tgt.id == "__all__":
+                return set(evaluated) if evaluated is not None else None
+            if evaluated is not None:
+                env[tgt.id] = evaluated
     return None
 
 
@@ -134,7 +166,9 @@ def _vararg_param(args: ast.arguments) -> list[Param]:
     """Return variable positional parameter if present."""
 
     if args.vararg:
-        return [Param(args.vararg.arg, "vararg", None, _render_type(args.vararg.annotation))]
+        return [
+            Param(args.vararg.arg, "vararg", None, _render_type(args.vararg.annotation))
+        ]
     return []
 
 
@@ -158,7 +192,9 @@ def _varkw_param(args: ast.arguments) -> list[Param]:
     """Return variable keyword parameter if present."""
 
     if args.kwarg:
-        return [Param(args.kwarg.arg, "varkw", None, _render_type(args.kwarg.annotation))]
+        return [
+            Param(args.kwarg.arg, "varkw", None, _render_type(args.kwarg.annotation))
+        ]
     return []
 
 
@@ -252,7 +288,9 @@ class _APIVisitor(ast.NodeVisitor):
                     continue
                 params = tuple(_param_list(elt.args))
                 ret = _render_type(elt.returns)
-                self.sigs.append(FuncSig(f"{self.module_name}:{cname}.{mname}", params, ret))
+                self.sigs.append(
+                    FuncSig(f"{self.module_name}:{cname}.{mname}", params, ret)
+                )
 
 
 def module_name_from_path(root: str, path: str) -> str:
