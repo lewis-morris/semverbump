@@ -183,6 +183,37 @@ def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
     assert out.skipped == []
 
 
+def test_apply_bump_mixed_ignore_patterns(tmp_path: Path) -> None:
+    """Ignore files using absolute and relative patterns."""
+
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "1.0.0"}}))
+    pkg = tmp_path / "pkg"
+    pkg.mkdir()
+    keep = pkg / "keep.py"
+    keep.write_text("__version__ = '1.0.0'", encoding="utf-8")
+    ignore_rel = pkg / "ignore_rel.py"
+    ignore_rel.write_text("__version__ = '1.0.0'", encoding="utf-8")
+    ignore_abs = tmp_path / "ignore_abs.py"
+    ignore_abs.write_text("__version__ = '1.0.0'", encoding="utf-8")
+
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump(
+        "patch",
+        py,
+        paths=["pkg/*.py", str(ignore_abs)],
+        ignore=[str(ignore_abs), "pkg/ignore_rel.py"],
+        cfg=cfg,
+    )
+
+    assert "__version__ = '1.0.1'" in keep.read_text(encoding="utf-8")
+    assert "__version__ = '1.0.0'" in ignore_rel.read_text(encoding="utf-8")
+    assert "__version__ = '1.0.0'" in ignore_abs.read_text(encoding="utf-8")
+    assert py in out.files and keep in out.files
+    assert ignore_rel not in out.files and ignore_abs not in out.files
+    assert out.skipped == []
+
+
 @pytest.mark.parametrize(
     "ignore_dir,file_name",
     [
@@ -253,6 +284,20 @@ def test_replace_version_returns_false_when_unmodified(tmp_path: Path) -> None:
 
     assert not _replace_version(target, "0.1.0", "0.2.0")
     assert target.read_text(encoding="utf-8") == "print('hello')"
+
+
+def test_replace_version_multiple_matches(tmp_path: Path) -> None:
+    """Only the expected version occurrence is updated."""
+
+    target = tmp_path / "module.py"
+    target.write_text(
+        "__version__ = '0.1.0'\n__version__ = '0.2.0'\n", encoding="utf-8"
+    )
+
+    assert _replace_version(target, "0.1.0", "0.1.1")
+    assert target.read_text(encoding="utf-8") == (
+        "__version__ = '0.1.1'\n__version__ = '0.2.0'\n"
+    )
 
 
 def test_replace_version_uses_module_patterns(
