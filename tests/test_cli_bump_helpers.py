@@ -15,6 +15,9 @@ from bumpwright.cli.bump import (  # isort:skip
     _commit_tag,
     _display_result,
     _prepare_version_files,
+    _read_template,
+    _build_changelog,
+    get_default_template,
     _write_changelog,
 )
 
@@ -68,6 +71,50 @@ def test_write_changelog_to_file(tmp_path: Path) -> None:
     content = "entry\n"
     _write_changelog(args, content)
     assert (tmp_path / "CHANGELOG.md").read_text(encoding="utf-8") == content
+
+
+def test_read_template_custom(tmp_path: Path) -> None:
+    tpl = tmp_path / "tpl.j2"
+    tpl.write_text("Hello", encoding="utf-8")
+    assert _read_template(str(tpl)) == "Hello"
+
+
+def test_read_template_default(monkeypatch) -> None:
+    def fake_default() -> str:
+        return "Hi"
+
+    monkeypatch.setattr("bumpwright.cli.bump.get_default_template", fake_default)
+    assert _read_template(None) == "Hi"
+
+
+def test_get_default_template_reads_file() -> None:
+    expected = (
+        Path(__file__).resolve().parents[1]
+        / "bumpwright"
+        / "templates"
+        / "changelog.md.j2"
+    ).read_text(encoding="utf-8")
+    assert get_default_template() == expected
+
+
+def test_build_changelog_uses_read_template(monkeypatch) -> None:
+    args = argparse.Namespace(
+        changelog="CHANGELOG.md", head="HEAD", repo_url=None, changelog_template=None
+    )
+    monkeypatch.setattr("bumpwright.cli.bump.collect_commits", lambda base, head: [])
+    monkeypatch.setattr("bumpwright.cli.bump.last_release_commit", lambda: None)
+    called = False
+
+    def fake_read(path: str | None) -> str:
+        nonlocal called
+        called = True
+        assert path is None
+        return "Version={{ version }}"
+
+    monkeypatch.setattr("bumpwright.cli.bump._read_template", fake_read)
+    result = _build_changelog(args, "0.2.0")
+    assert called is True
+    assert result == "Version=0.2.0\n"
 
 
 def test_commit_tag_existing_tag(tmp_path: Path) -> None:

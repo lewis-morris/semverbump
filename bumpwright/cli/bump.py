@@ -21,9 +21,36 @@ from .decide import _decide_only, _infer_level
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
-_DEFAULT_TEMPLATE = (
-    Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
-).read_text(encoding="utf-8")
+
+def get_default_template() -> str:
+    """Return the built-in changelog template text.
+
+    The template is loaded lazily to avoid unnecessary disk reads when
+    changelog generation is not requested.
+
+    Returns:
+        Default changelog template contents.
+    """
+
+    template_path = (
+        Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
+    )
+    return template_path.read_text(encoding="utf-8")
+
+
+def _read_template(template_path: str | None) -> str:
+    """Load a changelog template from ``template_path`` or return the default.
+
+    Args:
+        template_path: Optional filesystem path to a custom template.
+
+    Returns:
+        Template contents as a string.
+    """
+
+    if template_path:
+        return Path(template_path).read_text(encoding="utf-8")
+    return get_default_template()
 
 
 def _commit_tag(
@@ -128,13 +155,7 @@ def _build_changelog(args: argparse.Namespace, new_version: str) -> str | None:
             base_url = args.repo_url.rstrip("/")
             link = f"{base_url}/commit/{sha}"
         entries.append({"sha": sha, "subject": subject, "link": link})
-    template_path = getattr(args, "changelog_template", None)
-    template_txt = (
-        Path(template_path).read_text(encoding="utf-8")
-        if template_path
-        else _DEFAULT_TEMPLATE
-    )
-    tmpl = Template(template_txt)
+    tmpl = Template(_read_template(getattr(args, "changelog_template", None)))
     rendered = tmpl.render(
         version=new_version,
         date=date.today().isoformat(),
