@@ -188,7 +188,66 @@ def _write_changelog(args: argparse.Namespace, changelog: str | None) -> None:
 
 
 def bump_command(args: argparse.Namespace) -> int:
-    """Apply a version bump based on repository changes."""
+    """Apply a version bump based on repository changes.
+
+    Args:
+        args: Parsed command-line arguments with fields corresponding to CLI
+            options. Important attributes include:
+
+            config (str): Path to configuration file. Defaults to
+                ``bumpwright.toml``.
+
+            level (str | None): Desired bump level (``major``, ``minor``, or
+                ``patch``) or ``None`` to infer the level automatically.
+
+            base (str | None): Git reference used as the comparison base when
+                inferring the bump level. Defaults to the last release commit or
+                ``HEAD^``.
+
+            head (str): Git reference representing the working tree. Defaults to
+                ``HEAD``.
+
+            format (str): Output format, one of ``text`` (default), ``md``, or
+                ``json``.
+
+            repo_url (str | None): Base repository URL for generating commit
+                links in Markdown output.
+
+            decide (bool): When ``True``, only report the bump level without
+                modifying any files.
+
+            enable_analyser (list[str]): Names of analysers to enable in
+                addition to configuration.
+
+            disable_analyser (list[str]): Names of analysers to disable even if
+                configured.
+
+            pyproject (str): Path to ``pyproject.toml``. Defaults to
+                ``pyproject.toml``.
+
+            version_path (list[str]): Extra glob patterns for files whose
+                version fields should be updated. Defaults include
+                ``pyproject.toml``, ``setup.py``, ``setup.cfg``, and any
+                ``__init__.py``, ``version.py``, or ``_version.py`` files.
+
+            version_ignore (list[str]): Glob patterns for paths to exclude from
+                version updates.
+
+            commit (bool): Create a git commit containing the version change.
+
+            tag (bool): Create a git tag for the new version.
+
+            dry_run (bool): Show the new version without modifying files.
+
+            changelog (str | None): Write release notes to the given file or
+                stdout when ``-`` is provided.
+
+            changelog_template (str | None): Path to a Jinja2 template used to
+                render changelog entries. Defaults to the built-in template.
+
+    Returns:
+        Exit status code. ``0`` indicates success; ``1`` indicates an error.
+    """
 
     cfg: Config = load_config(args.config)
     if args.changelog is None and cfg.changelog.path:

@@ -41,6 +41,11 @@ Example:
    Bumped version: 0.1.0 -> 0.1.1 (patch)
    Updated files: pyproject.toml
 
+By default the command searches for version strings in ``pyproject.toml``,
+``setup.py``, ``setup.cfg``, and any ``__init__.py``, ``version.py``, or
+``_version.py`` files. Extra paths may be supplied with ``--version-path`` and
+individual files can be omitted with ``--version-ignore``.
+
 The ``--config`` option reads from :doc:`configuration`, while
 ``--enable-analyser`` and ``--disable-analyser`` control optional analysers
 as described in :doc:`analysers/index`.
