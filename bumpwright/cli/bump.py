@@ -221,6 +221,17 @@ def bump_command(args: argparse.Namespace) -> int:
     else:
         decision = Decision(level, 1.0, [])
 
+    if (args.commit or args.tag) and not args.dry_run:
+        status: subprocess.CompletedProcess[str] = subprocess.run(
+            ["git", "status", "--porcelain"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        if status.stdout.strip():
+            print("Error: working directory has uncommitted changes", file=sys.stderr)
+            return 1
+
     ignore = list(cfg.version.ignore)
     if args.version_ignore:
         ignore.extend(args.version_ignore)

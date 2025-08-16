@@ -64,6 +64,9 @@ See [docs/quickstart.rst](docs/quickstart.rst) for a step-by-step example.
 - `--enable-analyser` or `--disable-analyser`: toggle analysers
 - See [CLI reference](docs/cli_reference.rst) for details.
 
+Using ``--commit`` or ``--tag`` requires a clean working tree; the command
+aborts if uncommitted changes are detected.
+
 1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
 
    ```toml
