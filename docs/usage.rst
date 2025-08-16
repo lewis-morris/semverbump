@@ -52,25 +52,7 @@ require.
 ``--repo-url URL``
     Base repository URL for linking commit hashes in Markdown output.
 
-**Examples**
-
-.. code-block:: console
-
-   # Omitting --head defaults to the current HEAD
-   bumpwright bump --decide --base origin/main --format json
-
-.. code-block:: json
-
-   {
-     "level": "minor",
-     "impacts": [
-       {"severity": "minor", "symbol": "cli.new_command", "reason": "added CLI entry 'greet'"}
-     ]
-   }
-
-Running ``bumpwright bump --decide`` without ``--base`` compares the current
-commit against the last release commit or, if none exists, its parent (``HEAD^``).
-Because this mode only inspects commits, there is no effect on the filesystem.
+**Example**
 
 .. code-block:: console
 
@@ -85,11 +67,10 @@ Because this mode only inspects commits, there is no effect on the filesystem.
      ]
    }
 
-Omitting ``--head`` uses the current ``HEAD``:
-
-.. code-block:: console
-
-   bumpwright bump --decide --base origin/main --format json
+Running ``bumpwright bump --decide`` as above compares the current commit
+against the last release commit or, if none exists, its parent (``HEAD^``), and
+uses the current ``HEAD`` when ``--head`` is omitted. Supply ``--base`` and
+``--head`` to target other references, for example ``--base origin/main``.
 
 ``bump`` – apply a bump
 -----------------------
