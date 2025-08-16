@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import tomli
 
-from bumpwright.config import Config, load_config
+from bumpwright.config import Config, Rules, load_config
 
 
 def test_load_config_parses_analysers(tmp_path: Path) -> None:
@@ -115,3 +115,19 @@ def test_unknown_key_in_section(tmp_path: Path) -> None:
         load_config(cfg_file)
     message = str(exc.value)
     assert "project" in message and "unknown" in message
+
+
+def test_rules_invalid_return_type_change() -> None:
+    """Reject unsupported return type change levels."""
+
+    with pytest.raises(ValueError):
+        Rules(return_type_change="patch")
+
+
+def test_load_config_invalid_return_type_change(tmp_path: Path) -> None:
+    """Raise an error when config specifies an invalid return type change."""
+
+    cfg_file = tmp_path / "bumpwright.toml"
+    cfg_file.write_text("[rules]\nreturn_type_change='patch'\n")
+    with pytest.raises(ValueError):
+        load_config(cfg_file)
