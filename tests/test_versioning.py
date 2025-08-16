@@ -172,6 +172,7 @@ def test_default_version_ignore_patterns(
     assert out.skipped == []
 
 
+
 def test_apply_bump_skips_files_without_version(tmp_path: Path) -> None:
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
