@@ -17,9 +17,6 @@ from .config import Config, load_config
 from .types import BumpLevel
 from .version_schemes import get_version_scheme
 
-
-_DEFAULT_CFG: Config | None = None
-
 # Precompiled regex patterns for locating version assignments. The second
 # capture group extracts the existing version string for comparison.
 _VERSION_RE_PATTERNS: list[re.Pattern[str]] = [
