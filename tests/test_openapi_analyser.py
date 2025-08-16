@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from bumpwright.analysers.openapi import Spec, _parse_spec, diff_specs
 
 
@@ -254,3 +256,12 @@ paths:
         i.severity == "major" and i.reason == "Changed response 200 schema"
         for i in impacts
     )
+
+
+def test_invalid_yaml_returns_empty_spec(caplog) -> None:
+    """Invalid YAML logs a warning and yields an empty spec."""
+
+    with caplog.at_level(logging.WARNING):
+        spec = _parse_spec("openapi: 3.0.0: bad")
+    assert spec == Spec(endpoints=set(), schemas={}, operations={})
+    assert any("Failed to parse OpenAPI spec" in r.message for r in caplog.records)
