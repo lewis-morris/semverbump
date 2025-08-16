@@ -1,10 +1,6 @@
-"""Analyzer for detecting changes in web application routes.
-
-This module scans Python source files for framework-specific route decorators
-(such as Flask or FastAPI) and records the exposed HTTP endpoints. It can
-compare routes between two git references to determine whether breaking or
-backwards-compatible changes have occurred.
-"""
+"""Scan Python sources for framework-specific route decorators and compare
+HTTP endpoints across git references to identify breaking or compatible route
+changes."""
 
 from __future__ import annotations
 
