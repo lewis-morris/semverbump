@@ -56,6 +56,33 @@ def test_list_py_files_at_ref_matches_legacy(tmp_path):
     assert result == expected
 
 
+def test_list_py_files_at_ref_caches(tmp_path, monkeypatch):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "pkg").mkdir()
+    (repo / "pkg" / "__init__.py").write_text("\n")
+    gitutils._run(["git", "init"], str(repo))
+    gitutils._run(["git", "config", "user.email", "test@example.com"], str(repo))
+    gitutils._run(["git", "config", "user.name", "Test"], str(repo))
+    gitutils._run(["git", "add", "."], str(repo))
+    gitutils._run(["git", "commit", "-m", "init"], str(repo))
+
+    gitutils.list_py_files_at_ref.cache_clear()
+    original = gitutils._run
+    calls: list[list[str]] = []
+
+    def spy(cmd: list[str], cwd: str | None = None) -> str:
+        if cmd[:3] == ["git", "ls-tree", "-r"]:
+            calls.append(cmd)
+        return original(cmd, cwd)
+
+    monkeypatch.setattr(gitutils, "_run", spy)
+    gitutils.list_py_files_at_ref("HEAD", ["."], cwd=str(repo))
+    gitutils.list_py_files_at_ref("HEAD", ["."], cwd=str(repo))
+    assert len(calls) == 1
+    gitutils.list_py_files_at_ref.cache_clear()
+
+
 def test_collect_commits(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
