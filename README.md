@@ -238,7 +238,7 @@ Severity rules:
 
 #### CLI (``cli``)
 
-Tracks command-line interfaces defined with ``argparse`` or ``click``.
+Tracks ``argparse`` or ``click`` command-line interfaces through static analysis.
 
 Severity rules:
 
@@ -259,7 +259,8 @@ cli = true  # enable
 # cli = false  # disable
 ```
 
-Dependencies: analysis of Click applications requires the ``click`` package.
+Dependencies: none. The analyser inspects source code statically and only
+requires ``click`` if your project depends on it.
 
 #### Web routes (``web_routes``)
 
@@ -318,6 +319,7 @@ Ensure project dependencies for analysers are installed:
  - ``PyYAML`` for the OpenAPI analyser
  - ``graphql-core`` for the GraphQL analyser
  - Other plugins may require additional libraries such as ``jsonschema``
+
 
 ## Development
 
