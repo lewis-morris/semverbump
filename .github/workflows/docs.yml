@@ -20,12 +20,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: "3.x"
           cache: 'pip'
 
       - name: Install project (docs + dev extras)
@@ -34,31 +34,33 @@ jobs:
           python -m pip install -e .
           python -m pip install -e ".[docs,dev]"
 
+      - name: Generate badges into Sphinx _static
+        run: |
+          mkdir -p docs/_static/badges
+          python .github/scripts/generate_badges.py docs/_static/badges
+
       - name: Build HTML
         working-directory: docs
         run: |
-          # Common Sphinx layouts: docs/source -> _build/html OR docs/ -> _build/html
+          # Common Sphinx layouts: docs/source -> build/html OR docs/ -> build
           if [ -d "source" ]; then
-            sphinx-build -b html source _build/html
+            sphinx-build -b html source build/html
           else
-            sphinx-build -b html . _build/html
+            sphinx-build -b html . build
           fi
-          touch _build/html/.nojekyll
 
-      - name: Upload Pages artifact
+      - name: Upload artifact (for Pages)
         uses: actions/upload-pages-artifact@v3
         with:
-          # Match the build path above
-          path: docs/_build/html
+          path: docs/build/html
 
   deploy:
-    name: Deploy to GitHub Pages
-    runs-on: ubuntu-latest
     needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

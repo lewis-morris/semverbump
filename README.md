@@ -1,9 +1,10 @@
 # bumpwright
 
-![Coverage](docs/_static/badges/coverage.svg)
-![Version](docs/_static/badges/version.svg)
-![Python Versions](docs/_static/badges/python.svg)
-![License](docs/_static/badges/license.svg)
+![Coverage](https://lewis-morris.github.io/bumpwright/_static/badges/coverage.svg)
+![Version](https://lewis-morris.github.io/bumpwright/_static/badges/version.svg)
+![Python Versions](https://lewis-morris.github.io/bumpwright/_static/badges/python.svg)
+![License](https://lewis-morris.github.io/bumpwright/_static/badges/license.svg)
+
 
 ## Introduction
 
