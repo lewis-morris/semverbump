@@ -74,3 +74,33 @@ def test_confidence_ratio():
     assert decision.level == MAJOR
     assert decision.confidence == CONFIDENCE_HALF
     assert decision.reasons == ["Added required param 'y'"]
+
+
+def test_compare_funcs_no_changes():
+    sig = _sig("m:f", [_p("x")], None)
+    assert compare_funcs(sig, sig) == []
+
+
+def test_compare_funcs_return_type_change_major():
+    old = _sig("m:f", [_p("x")], "int")
+    new = _sig("m:f", [_p("x")], "str")
+    impacts = compare_funcs(old, new, return_type_change=MAJOR)
+    assert impacts == [Impact(MAJOR, "m:f", "Return annotation changed")]
+
+
+def test_diff_public_api_added_symbol():
+    new = {"m:f": _sig("m:f", [_p("x")], None)}
+    impacts = diff_public_api({}, new)
+    assert impacts == [Impact(MINOR, "m:f", "Added public symbol")]
+
+
+def test_diff_public_api_no_changes():
+    sig = _sig("m:f", [_p("x")], None)
+    assert diff_public_api({"m:f": sig}, {"m:f": sig}) == []
+
+
+def test_decide_bump_no_impacts():
+    decision = decide_bump([])
+    assert decision.level is None
+    assert decision.confidence == 0.0
+    assert decision.reasons == []

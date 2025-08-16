@@ -121,3 +121,64 @@ def test_infer_base_ref_without_upstream(
     monkeypatch.setattr(subprocess, "run", Mock(side_effect=_raise))
 
     assert _infer_base_ref() == "origin/HEAD"
+
+
+def test_run_success_and_failure() -> None:
+    """Ensure ``_run`` returns output and raises on errors."""
+
+    out = gitutils._run(["git", "--version"])
+    assert "git version" in out
+
+    with pytest.raises(subprocess.CalledProcessError):
+        gitutils._run(["git", "definitely-not-a-command"])
+
+
+def test_changed_paths(tmp_path: Path) -> None:
+    """Detect changed files between two commits and invalid refs."""
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    file = repo / "file.txt"
+    file.write_text("one\n", encoding="utf-8")
+    gitutils._run(["git", "init"], str(repo))
+    gitutils._run(["git", "config", "user.email", "test@example.com"], str(repo))
+    gitutils._run(["git", "config", "user.name", "Test"], str(repo))
+    gitutils._run(["git", "add", "file.txt"], str(repo))
+    gitutils._run(["git", "commit", "-m", "first"], str(repo))
+    file.write_text("two\n", encoding="utf-8")
+    gitutils._run(["git", "commit", "-am", "second"], str(repo))
+    changed = gitutils.changed_paths("HEAD^", "HEAD", str(repo))
+    assert changed == {"file.txt"}
+
+    with pytest.raises(subprocess.CalledProcessError):
+        gitutils.changed_paths("BAD", "HEAD", str(repo))
+
+
+def test_read_file_at_ref(tmp_path: Path) -> None:
+    """Read file contents at a ref and handle missing paths."""
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "file.txt").write_text("hello\n", encoding="utf-8")
+    gitutils._run(["git", "init"], str(repo))
+    gitutils._run(["git", "config", "user.email", "test@example.com"], str(repo))
+    gitutils._run(["git", "config", "user.name", "Test"], str(repo))
+    gitutils._run(["git", "add", "file.txt"], str(repo))
+    gitutils._run(["git", "commit", "-m", "first"], str(repo))
+    content = gitutils.read_file_at_ref("HEAD", "file.txt", str(repo))
+    assert content == "hello\n"
+    assert gitutils.read_file_at_ref("HEAD", "missing.txt", str(repo)) is None
+
+
+def test_last_release_commit_none(tmp_path: Path) -> None:
+    """Return ``None`` when no release commit exists."""
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "file.txt").write_text("hi\n", encoding="utf-8")
+    gitutils._run(["git", "init"], str(repo))
+    gitutils._run(["git", "config", "user.email", "test@example.com"], str(repo))
+    gitutils._run(["git", "config", "user.name", "Test"], str(repo))
+    gitutils._run(["git", "add", "file.txt"], str(repo))
+    gitutils._run(["git", "commit", "-m", "feat: initial"], str(repo))
+    assert gitutils.last_release_commit(str(repo)) is None
