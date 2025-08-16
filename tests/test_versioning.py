@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 from tomlkit import dumps as toml_dumps
+from tomlkit import parse as toml_parse
 from tomlkit.exceptions import ParseError
 
 from bumpwright import versioning
@@ -485,7 +486,8 @@ def test_write_project_version(tmp_path: Path) -> None:
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
     write_project_version("0.2.0", py)
-    assert read_project_version(py) == "0.2.0"
+    data = toml_parse(py.read_text())
+    assert data["project"]["version"] == "0.2.0"
 
 
 def test_write_project_version_missing_project(tmp_path: Path) -> None:
@@ -495,3 +497,11 @@ def test_write_project_version_missing_project(tmp_path: Path) -> None:
     py.write_text(toml_dumps({}))
     with pytest.raises(KeyError):
         write_project_version("0.1.0", py)
+
+
+def test_write_project_version_missing_file(tmp_path: Path) -> None:
+    """Raise ``FileNotFoundError`` when ``pyproject.toml`` cannot be located."""
+
+    missing = tmp_path / "missing" / "pyproject.toml"
+    with pytest.raises(FileNotFoundError):
+        write_project_version("0.1.0", missing)

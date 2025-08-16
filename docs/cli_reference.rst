@@ -2,7 +2,7 @@ CLI reference
 =============
 
 The ``bumpwright`` command-line interface helps manage project version bumps.
-For an introduction see :doc:`usage` and :doc:`configuration`.
+For an introduction see :doc:`usage/index` and :doc:`configuration`.
 
 Top-level command
 -----------------
