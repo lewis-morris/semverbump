@@ -92,7 +92,7 @@ pygments_dark_style = "monokai"
 
 # Static assets (optional; create docs/_static if you need custom CSS/JS)
 html_static_path = ["_static"]
-html_logo = "_static/logo.png"
+html_logo = "logo_bg.png"
 html_favicon = "_static/favicon.ico"
 
 html_css_files = [
