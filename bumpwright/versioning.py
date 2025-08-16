@@ -18,6 +18,17 @@ from .types import BumpLevel
 from .version_schemes import get_version_scheme
 
 
+_DEFAULT_CFG: Config | None = None
+
+# Precompiled regex patterns for locating version assignments. The second
+# capture group extracts the existing version string for comparison.
+_VERSION_RE_PATTERNS: list[re.Pattern[str]] = [
+    re.compile(r"(__version__\s*=\s*['\"])([^'\"]+)(['\"])"),
+    re.compile(r"(VERSION\s*=\s*['\"])([^'\"]+)(['\"])"),
+    re.compile(r"(version\s*=\s*['\"])([^'\"]+)(['\"])"),
+]
+
+
 @cache
 def _get_default_config() -> Config:
     """Return cached configuration loading from disk on first use.
@@ -312,15 +323,17 @@ def _replace_version(path: Path, old: str, new: str) -> bool:
     """
 
     text = path.read_text(encoding="utf-8")
-    patterns = [
-        rf"(__version__\s*=\s*['\"])({re.escape(old)})(['\"])",
-        rf"(VERSION\s*=\s*['\"])({re.escape(old)})(['\"])",
-        rf"(version\s*=\s*['\"])({re.escape(old)})(['\"])",
-    ]
     replaced = 0
-    for pat in patterns:
-        text, count = re.subn(pat, rf"\g<1>{new}\g<3>", text)
-        replaced += count
+
+    def _sub(match: re.Match[str]) -> str:
+        nonlocal replaced
+        if match.group(2) != old:
+            return match.group(0)
+        replaced += 1
+        return f"{match.group(1)}{new}{match.group(3)}"
+
+    for pattern in _VERSION_RE_PATTERNS:
+        text = pattern.sub(_sub, text)
     if replaced:
         path.write_text(text, encoding="utf-8")
         return True

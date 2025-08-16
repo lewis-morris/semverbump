@@ -262,6 +262,19 @@ def test_replace_version_returns_false_when_unmodified(tmp_path: Path) -> None:
     assert target.read_text(encoding="utf-8") == "print('hello')"
 
 
+def test_replace_version_uses_module_patterns(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Ensure module-level regex patterns drive version replacement."""
+
+    target = tmp_path / "module.py"
+    target.write_text("__version__ = '0.1.0'", encoding="utf-8")
+    monkeypatch.setattr(versioning, "_VERSION_RE_PATTERNS", [])
+
+    assert not _replace_version(target, "0.1.0", "0.2.0")
+    assert target.read_text(encoding="utf-8") == "__version__ = '0.1.0'"
+
+
 def test_apply_bump_respects_scheme(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
