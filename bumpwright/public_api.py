@@ -229,15 +229,16 @@ def module_name_from_path(root: str, path: str) -> str:
 
     Returns:
         Dotted module path corresponding to ``path``.
+
+    Raises:
+        ValueError: If ``path`` is not located within ``root``.
     """
 
-    rp = Path(path).with_suffix("")
-    parts = list(rp.parts)
-    root_parts = list(Path(root).parts)
-    while root_parts and parts and parts[0] == root_parts[0]:
-        parts.pop(0)
-        root_parts.pop(0)
-    return ".".join(parts)
+    try:
+        rel = Path(path).with_suffix("").relative_to(Path(root))
+    except ValueError as exc:
+        raise ValueError(f"{path!r} is not relative to {root!r}") from exc
+    return ".".join(rel.parts)
 
 
 def extract_public_api_from_source(module_name: str, code: str) -> PublicAPI:

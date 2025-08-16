@@ -1,4 +1,6 @@
-from bumpwright.public_api import extract_public_api_from_source
+import pytest
+
+from bumpwright.public_api import extract_public_api_from_source, module_name_from_path
 
 
 def test_extracts_functions_and_methods():
@@ -38,3 +40,16 @@ class Hidden:
     keys = set(api.keys())
     assert "pkg.mod:Visible.ping" in keys
     assert "pkg.mod:Hidden.ping" not in keys
+
+
+def test_module_name_from_path_nested(tmp_path):
+    root = tmp_path / "pkg"
+    path = root / "a" / "b" / "mod.py"
+    assert module_name_from_path(str(root), str(path)) == "a.b.mod"
+
+
+def test_module_name_from_path_outside_root(tmp_path):
+    root = tmp_path / "pkg"
+    path = tmp_path / "other" / "mod.py"
+    with pytest.raises(ValueError):
+        module_name_from_path(str(root), str(path))
