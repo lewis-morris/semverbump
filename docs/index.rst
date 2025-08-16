@@ -5,14 +5,29 @@ Static public-API diff and heuristics to suggest semantic version bumps.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: Getting Started
 
    installation
    usage
-   changelog
-   analyzers
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Configuration
+
+   configuration
+   analyzers/index
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Guides
+
    advanced
    workflows
-   configuration
    troubleshooting
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Project
+
+   changelog
    roadmap
