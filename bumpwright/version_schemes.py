@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -14,6 +15,33 @@ except ModuleNotFoundError as exc:  # pragma: no cover
 
 
 MIN_RELEASE_PARTS = 3
+
+_SEMVER_RE = re.compile(
+    r"^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-.]+))?(?:\+([0-9A-Za-z-.]+))?$"
+)
+
+
+def _bump_segment(segment: str | None, default: str) -> str:
+    """Increment the last numeric component of ``segment``.
+
+    Args:
+        segment: Existing dot-separated identifier string.
+        default: Prefix used when ``segment`` is ``None``.
+
+    Returns:
+        Updated identifier string with the last numeric part incremented. When
+        no numeric part is present, ``.1`` is appended.
+    """
+
+    if not segment:
+        return f"{default}.1"
+    parts = segment.split(".")
+    for i in range(len(parts) - 1, -1, -1):
+        if parts[i].isdigit():
+            parts[i] = str(int(parts[i]) + 1)
+            return ".".join(parts)
+    parts.append("1")
+    return ".".join(parts)
 
 
 class VersionScheme(Protocol):
@@ -39,27 +67,41 @@ class SemverScheme:
         """Bump a semantic version string.
 
         Args:
-            version: Version string in ``X.Y.Z`` form.
+            version: Version string in ``MAJOR.MINOR.PATCH`` form with optional
+                prerelease or build metadata.
             level: Bump level to apply.
 
         Returns:
-            The bumped semantic version.
+            The bumped semantic version string.
 
         Raises:
-            ValueError: If ``level`` is unknown.
+            ValueError: If ``level`` is unknown or ``version`` is invalid.
         """
 
-        pv = Version(version)
-        parts = [pv.major, pv.minor, pv.micro]
+        match = _SEMVER_RE.match(version)
+        if not match:
+            raise ValueError(f"Invalid semantic version: {version}")
+        major, minor, patch, pre, build = match.groups()
+        parts = [int(major), int(minor), int(patch)]
         if level == "major":
             parts = [parts[0] + 1, 0, 0]
         elif level == "minor":
             parts = [parts[0], parts[1] + 1, 0]
         elif level == "patch":
             parts = [parts[0], parts[1], parts[2] + 1]
+        elif level == "pre":
+            pre = _bump_segment(pre, "rc")
+        elif level == "build":
+            build = _bump_segment(build, "build")
         else:  # pragma: no cover - defensive
             raise ValueError(f"Unknown level {level}")
-        return f"{parts[0]}.{parts[1]}.{parts[2]}"
+
+        out = f"{parts[0]}.{parts[1]}.{parts[2]}"
+        if pre:
+            out += f"-{pre}"
+        if build:
+            out += f"+{build}"
+        return out
 
 
 @dataclass
@@ -83,6 +125,8 @@ class Pep440Scheme:
         pv = Version(version)
         epoch = f"{pv.epoch}!" if pv.epoch else ""
         release = list(pv.release)
+        pre = pv.pre
+        local = pv.local
         while len(release) < MIN_RELEASE_PARTS:
             release.append(0)
         if level == "major":
@@ -91,9 +135,20 @@ class Pep440Scheme:
             release = [release[0], release[1] + 1, 0]
         elif level == "patch":
             release = [release[0], release[1], release[2] + 1]
+        elif level == "pre":
+            if pre:
+                pre = (pre[0], pre[1] + 1)
+            else:
+                pre = ("rc", 1)
+        elif level == "build":
+            local = _bump_segment(local, "local")
         else:  # pragma: no cover - defensive
             raise ValueError(f"Unknown level {level}")
-        return f"{epoch}{release[0]}.{release[1]}.{release[2]}"
+
+        release_str = f"{release[0]}.{release[1]}.{release[2]}"
+        pre_str = f"{pre[0]}{pre[1]}" if pre else ""
+        local_str = f"+{local}" if local else ""
+        return f"{epoch}{release_str}{pre_str}{local_str}"
 
 
 _SCHEMES: dict[str, VersionScheme] = {

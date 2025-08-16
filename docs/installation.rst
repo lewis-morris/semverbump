@@ -1,6 +1,8 @@
 Installation
 ============
 
+Requires Python 3.11 or later.
+
 Install ``bumpwright`` from PyPI:
 
 .. code-block:: console

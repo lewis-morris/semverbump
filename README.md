@@ -21,8 +21,9 @@ Design goals include:
 ## Features
 
 - Static diff of the public API to highlight breaking changes.
-- Pluggable analysers for command-line tools, web routes and database
-  migrations.
+ - Pluggable analysers for command-line tools, web routes and database
+   migrations. These analysers are **opt-in** and disabled by default; enable
+   them explicitly in configuration.
 - Dry-run mode to preview version bumps without touching any files.
 - Output in plain text, Markdown or JSON for easy integration.
 - Optional helpers to update version numbers across common files and tag the release.
@@ -33,6 +34,8 @@ by default. Use ``--version-ignore`` or configuration settings to exclude
 locations.
 
 ## Installation
+
+Requires Python 3.11 or later.
 
 ```bash
 pip install bumpwright
@@ -64,12 +67,22 @@ See [docs/quickstart.rst](docs/quickstart.rst) for a step-by-step example.
 - `--enable-analyser` or `--disable-analyser`: toggle analysers
 - See [CLI reference](docs/cli_reference.rst) for details.
 
-1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
+
+Using ``--commit`` or ``--tag`` requires a clean working tree; the command
+aborts if uncommitted changes are detected.
+
+1. **Create a configuration file** (``bumpwright.toml``). Analysers are
+   opt-in, so enable the ones you need:
 
    ```toml
+   # bumpwright.toml
    [analysers]
-   cli = true      # enable CLI analysis
-   web_routes = false  # disable route analysis
+   cli = true        # enable CLI analysis
+   web_routes = true # enable web route analysis
+   migrations = true # enable migrations analysis
+
+   [migrations]
+   paths = ["migrations"]
    ```
 
    Command-line flags ``--enable-analyser`` and ``--disable-analyser`` can
@@ -287,14 +300,20 @@ Ensure project dependencies for analysers are installed:
 
 ## Development
 
-This project uses [Ruff](https://docs.astral.sh/ruff/) for linting. Run
+This project uses [pre-commit](https://pre-commit.com/) to maintain code
+style and quality with tools like Ruff, Black, and isort.
+
+Install the pre-commit hooks:
 
 ```bash
-ruff check .
+pre-commit install
 ```
 
-before opening a pull request to ensure code style and static analysis
-requirements are met.
+Run all checks locally before opening a pull request:
+
+```bash
+pre-commit run --all-files
+```
 
 ## Roadmap
 

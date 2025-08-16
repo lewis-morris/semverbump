@@ -24,10 +24,36 @@ _DEFAULT_TEMPLATE = (
 
 
 def _commit_tag(pyproject: str, version: str, commit: bool, tag: bool) -> None:
-    """Optionally commit and tag the updated version."""
+    """Optionally commit and tag the updated version.
+
+    Args:
+        pyproject: Path to the ``pyproject.toml`` file.
+        version: Version string to commit and tag.
+        commit: Whether to create a commit.
+        tag: Whether to create a git tag.
+
+    Raises:
+        RuntimeError: If the requested tag already exists.
+    """
 
     if not (commit or tag):
         return
+
+    if tag:
+        # Abort early if the tag already exists to avoid accidental reuse.
+        result = subprocess.run(
+            ["git", "rev-parse", "--verify", f"v{version}"],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if result.returncode == 0:
+            msg = (
+                f"Tag v{version} already exists. "
+                "Delete the tag manually or use a different version."
+            )
+            raise RuntimeError(msg)
+
     if commit:
         subprocess.run(["git", "add", pyproject], check=True)
         subprocess.run(
@@ -163,6 +189,7 @@ def _display_result(
                     "confidence": decision.confidence,
                     "reasons": decision.reasons,
                     "files": [str(p) for p in vc.files],
+                    "skipped": [str(p) for p in vc.skipped],
                 },
                 indent=2,
             )
@@ -170,9 +197,13 @@ def _display_result(
     elif args.format == "md":
         print(f"Bumped version: `{vc.old}` -> `{vc.new}` ({vc.level})")
         print("Updated files:\n" + "\n".join(f"- `{p}`" for p in vc.files))
+        if vc.skipped:
+            print("Skipped files:\n" + "\n".join(f"- `{p}`" for p in vc.skipped))
     else:
         print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
         print("Updated files: " + ", ".join(str(p) for p in vc.files))
+        if vc.skipped:
+            print("Skipped files: " + ", ".join(str(p) for p in vc.skipped))
 
 
 def _write_changelog(args: argparse.Namespace, changelog: str | None) -> None:
@@ -188,7 +219,66 @@ def _write_changelog(args: argparse.Namespace, changelog: str | None) -> None:
 
 
 def bump_command(args: argparse.Namespace) -> int:
-    """Apply a version bump based on repository changes."""
+    """Apply a version bump based on repository changes.
+
+    Args:
+        args: Parsed command-line arguments with fields corresponding to CLI
+            options. Important attributes include:
+
+            config (str): Path to configuration file. Defaults to
+                ``bumpwright.toml``.
+
+            level (str | None): Desired bump level (``major``, ``minor``, or
+                ``patch``) or ``None`` to infer the level automatically.
+
+            base (str | None): Git reference used as the comparison base when
+                inferring the bump level. Defaults to the last release commit or
+                ``HEAD^``.
+
+            head (str): Git reference representing the working tree. Defaults to
+                ``HEAD``.
+
+            format (str): Output format, one of ``text`` (default), ``md``, or
+                ``json``.
+
+            repo_url (str | None): Base repository URL for generating commit
+                links in Markdown output.
+
+            decide (bool): When ``True``, only report the bump level without
+                modifying any files.
+
+            enable_analyser (list[str]): Names of analysers to enable in
+                addition to configuration.
+
+            disable_analyser (list[str]): Names of analysers to disable even if
+                configured.
+
+            pyproject (str): Path to ``pyproject.toml``. Defaults to
+                ``pyproject.toml``.
+
+            version_path (list[str]): Extra glob patterns for files whose
+                version fields should be updated. Defaults include
+                ``pyproject.toml``, ``setup.py``, ``setup.cfg``, and any
+                ``__init__.py``, ``version.py``, or ``_version.py`` files.
+
+            version_ignore (list[str]): Glob patterns for paths to exclude from
+                version updates.
+
+            commit (bool): Create a git commit containing the version change.
+
+            tag (bool): Create a git tag for the new version.
+
+            dry_run (bool): Show the new version without modifying files.
+
+            changelog (str | None): Write release notes to the given file or
+                stdout when ``-`` is provided.
+
+            changelog_template (str | None): Path to a Jinja2 template used to
+                render changelog entries. Defaults to the built-in template.
+
+    Returns:
+        Exit status code. ``0`` indicates success; ``1`` indicates an error.
+    """
 
     cfg: Config = load_config(args.config)
     if args.changelog is None and cfg.changelog.path:
@@ -220,6 +310,17 @@ def bump_command(args: argparse.Namespace) -> int:
         level = decision.level
     else:
         decision = Decision(level, 1.0, [])
+
+    if (args.commit or args.tag) and not args.dry_run:
+        status: subprocess.CompletedProcess[str] = subprocess.run(
+            ["git", "status", "--porcelain"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        if status.stdout.strip():
+            print("Error: working directory has uncommitted changes", file=sys.stderr)
+            return 1
 
     ignore = list(cfg.version.ignore)
     if args.version_ignore:

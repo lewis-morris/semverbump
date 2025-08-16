@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import argparse
+
 import click
+
 from bumpwright.cli.bump import bump_command
 from bumpwright.cli.init import init_command
 
@@ -17,7 +19,13 @@ from bumpwright.cli.init import init_command
 )
 @click.pass_context
 def cli(ctx: click.Context, config: str) -> None:
-    """Suggest and apply semantic version bumps."""
+    """Suggest and apply semantic version bumps.
+
+    Args:
+        ctx: Click execution context.
+        config: Path to the configuration file used for the run. Defaults to
+            ``bumpwright.toml``.
+    """
 
     ctx.obj = argparse.Namespace(config=config)
 
@@ -25,7 +33,14 @@ def cli(ctx: click.Context, config: str) -> None:
 @cli.command()
 @click.pass_obj
 def init(args: argparse.Namespace) -> int:
-    """Create baseline release commit."""
+    """Create a baseline release commit.
+
+    Args:
+        args: Parsed command-line arguments from :func:`cli`.
+
+    Returns:
+        Exit status code, where ``0`` indicates success and ``1`` an error.
+    """
 
     return init_command(args)
 
@@ -80,7 +95,12 @@ def init(args: argparse.Namespace) -> int:
 @click.option(
     "--version-path",
     multiple=True,
-    help="Additional glob pattern for files containing the project version (repeatable).",
+    help=(
+        "Additional glob pattern for files containing the project version "
+        "(repeatable). Defaults include ``pyproject.toml``, ``setup.py``, "
+        "``setup.cfg``, and any ``__init__.py``, ``version.py``, or "
+        "``_version.py`` files."
+    ),
 )
 @click.option(
     "--version-ignore",
@@ -108,7 +128,64 @@ def init(args: argparse.Namespace) -> int:
 )
 @click.pass_obj
 def bump(args: argparse.Namespace, **kwargs: object) -> int:
-    """Update project version metadata and optionally commit and tag the change."""
+    """Update version metadata and optionally commit and tag the change.
+
+    Args:
+        args: Parsed command-line arguments from :func:`cli`.
+        **kwargs: Command-specific options. Notable parameters include:
+
+            level (str | None): Desired bump level, one of ``major``, ``minor``,
+            or ``patch``. If omitted the level is inferred from repository
+            history.
+
+            base (str | None): Git reference used as the comparison base when
+            inferring the bump level. Defaults to the latest release commit or
+            ``HEAD^``.
+
+            head (str): Git reference representing the working tree. Defaults
+            to ``HEAD``.
+
+            format_ (str): Output format: ``text`` (default), ``md`` for
+            Markdown, or ``json`` for machine-readable output.
+
+            repo_url (str | None): Base repository URL used to build commit
+            links in Markdown output.
+
+            decide (bool): When ``True``, only report the bump level without
+            modifying any files.
+
+            enable_analyser (tuple[str, ...]): Names of analysers to enable in
+            addition to those configured.
+
+            disable_analyser (tuple[str, ...]): Names of analysers to disable
+            even if configured.
+
+            pyproject (str): Path to ``pyproject.toml``. Defaults to
+            ``pyproject.toml``.
+
+            version_path (tuple[str, ...]): Extra glob patterns for files whose
+            version fields should be updated. Defaults include
+            ``pyproject.toml``, ``setup.py``, ``setup.cfg``, and any
+            ``__init__.py``, ``version.py``, or ``_version.py`` files.
+
+            version_ignore (tuple[str, ...]): Glob patterns for paths to exclude
+            from version updates.
+
+            commit (bool): Create a git commit containing the version change.
+
+            tag (bool): Create a git tag for the new version.
+
+            dry_run (bool): Show the new version without modifying files.
+
+            changelog (str | None): Write release notes to the given file or
+            stdout when ``-`` is provided.
+
+            changelog_template (str | None): Path to a Jinja2 template used to
+            render changelog entries. Defaults to the built-in template.
+
+    Returns:
+        Exit status code, where ``0`` indicates success and ``1`` an error.
+    """
 
     params = vars(args).copy()
     params.update(kwargs)
