@@ -36,3 +36,4 @@ Static public-API diff and heuristics to suggest semantic version bumps.
    :caption: Project
 
    roadmap
+   performance

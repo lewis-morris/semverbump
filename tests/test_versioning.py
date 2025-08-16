@@ -197,18 +197,26 @@ def test_resolve_files_uses_cache(
     assert calls["count"] == 1
 
 
+
 def test_apply_bump_clears_resolve_cache(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """Verify custom patterns trigger cache invalidation."""
 
+
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
-    cleared = {"flag": False}
+    cfg = tmp_path / "extra.cfg"
+    cfg.write_text("version = '0.1.0'", encoding="utf-8")
 
-    def fake_clear() -> None:
-        cleared["flag"] = True
+    calls = {"count": 0}
+    from bumpwright.versioning import glob as glob_orig
 
-    monkeypatch.setattr(_resolve_files_cached, "cache_clear", fake_clear)
+    def fake_glob(pattern: str, recursive: bool = True) -> list[str]:
+        calls["count"] += 1
+        return glob_orig(pattern, recursive=recursive)
+
+    monkeypatch.setattr("bumpwright.versioning.glob", fake_glob)
     apply_bump("patch", py, paths=["*.cfg"])
-    assert cleared["flag"]
+    apply_bump("patch", py, paths=["*.cfg"])
+    assert calls["count"] == 1

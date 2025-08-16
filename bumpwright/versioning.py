@@ -158,6 +158,11 @@ def apply_bump(
     Returns:
         :class:`VersionChange` detailing the old and new versions and updated
         files.
+
+    Notes:
+        Resolved file paths are cached across invocations for performance.
+        Call ``_resolve_files_cached.cache_clear()`` if the filesystem changes
+        and a fresh resolution is required.
     """
 
     cfg = None
@@ -165,8 +170,6 @@ def apply_bump(
         cfg = load_config()
     if paths is None:
         paths = cfg.version.paths
-    else:
-        _resolve_files_cached.cache_clear()
     if ignore is None:
         ignore = cfg.version.ignore
 
