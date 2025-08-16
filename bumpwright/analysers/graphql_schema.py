@@ -101,9 +101,7 @@ def _list_graphql_files_at_ref(
         if not line.endswith(".graphql"):
             continue
         p = Path(line)
-        if any(
-            str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm
-        ):
+        if any(str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm):
             s = str(p)
             if ignore_globs and any(fnmatch(s, pat) for pat in ignore_globs):
                 continue
@@ -111,9 +109,7 @@ def _list_graphql_files_at_ref(
     return paths
 
 
-def _build_schema_at_ref(
-    ref: str, roots: Iterable[str], ignores: Iterable[str], cwd: str | None = None
-) -> dict[str, TypeDef]:
+def _build_schema_at_ref(ref: str, roots: Iterable[str], ignores: Iterable[str], cwd: str | None = None) -> dict[str, TypeDef]:
     """Collect type definitions from ``.graphql`` files at a git ref."""
 
     paths = _list_graphql_files_at_ref(ref, roots, ignores, cwd)
@@ -138,9 +134,7 @@ class GraphQLAnalyser:
     def collect(self, ref: str) -> dict[str, TypeDef]:
         """Collect GraphQL types at the given ref."""
 
-        return _build_schema_at_ref(
-            ref, self.cfg.project.public_roots, self.cfg.ignore.paths
-        )
+        return _build_schema_at_ref(ref, self.cfg.project.public_roots, self.cfg.ignore.paths)
 
     def compare(self, old: dict[str, TypeDef], new: dict[str, TypeDef]) -> list[Impact]:
         """Compare two schema states and return impacts."""

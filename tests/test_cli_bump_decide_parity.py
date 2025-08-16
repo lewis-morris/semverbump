@@ -13,9 +13,7 @@ def test_decide_flag_detects_no_api_changes(tmp_path: Path) -> None:
 
     # Modify implementation without changing the public API.
     init_file = pkg / "__init__.py"
-    init_file.write_text(
-        "def foo() -> int:\n    # no-op change\n    return 1\n", encoding="utf-8"
-    )
+    init_file.write_text("def foo() -> int:\n    # no-op change\n    return 1\n", encoding="utf-8")
     run(["git", "add", "pkg/__init__.py"], repo)
     run(["git", "commit", "-m", "chore: comment"], repo)
 

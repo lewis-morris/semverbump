@@ -35,9 +35,7 @@ class Bar:
     assert "pkg.mod:Bar._private" not in keys
 
     foo = api["pkg.mod:foo"]
-    assert foo.returns == "-> int" or foo.returns.endswith(
-        "int"
-    )  # libcst emits "-> int" style string
+    assert foo.returns == "-> int" or foo.returns.endswith("int")  # libcst emits "-> int" style string
     assert any(p.name == "y" and p.default is not None for p in foo.params)
 
 

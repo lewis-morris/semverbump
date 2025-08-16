@@ -7,9 +7,7 @@ from pathlib import Path
 from cli_helpers import run, setup_repo
 
 
-def _setup_cli_repo(
-    tmp_path: Path, enable_in_config: bool = False
-) -> tuple[Path, str, str]:
+def _setup_cli_repo(tmp_path: Path, enable_in_config: bool = False) -> tuple[Path, str, str]:
     """Create a repository with a CLI command that is later removed."""
     repo, pkg, _ = setup_repo(tmp_path)
     if enable_in_config:

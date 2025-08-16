@@ -125,9 +125,7 @@ def read_project_version(pyproject_path: str | Path = "pyproject.toml") -> str:
         raise KeyError("project.version not found in pyproject.toml") from e
 
 
-def write_project_version(
-    new_version: str, pyproject_path: str | Path = "pyproject.toml"
-) -> None:
+def write_project_version(new_version: str, pyproject_path: str | Path = "pyproject.toml") -> None:
     """Write ``new_version`` to the ``pyproject.toml`` file.
 
     Args:
@@ -220,9 +218,7 @@ def apply_bump(  # noqa: PLR0913
         return VersionChange(old=old, new=new, level=level)
 
     write_project_version(new, pyproject_path)
-    updated, skipped = _update_additional_files(
-        new, old, paths_t, ignore_t, pyproject_path
-    )
+    updated, skipped = _update_additional_files(new, old, paths_t, ignore_t, pyproject_path)
     return VersionChange(
         old=old,
         new=new,
@@ -267,9 +263,7 @@ def _update_additional_files(
     return changed, skipped
 
 
-def _resolve_files(
-    patterns: Iterable[str], ignore: Iterable[str], base_dir: Path
-) -> list[Path]:
+def _resolve_files(patterns: Iterable[str], ignore: Iterable[str], base_dir: Path) -> list[Path]:
     """Expand glob patterns while applying ignore rules relative to ``base_dir``.
 
     Args:
@@ -290,9 +284,7 @@ def _resolve_files(
 
 
 @lru_cache(maxsize=None)
-def _resolve_files_cached(
-    patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str
-) -> tuple[Path, ...]:
+def _resolve_files_cached(patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str) -> tuple[Path, ...]:
     """Resolve files for caching.
 
     This function performs the actual glob resolution and is wrapped with

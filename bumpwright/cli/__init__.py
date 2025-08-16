@@ -61,9 +61,7 @@ def get_parser() -> argparse.ArgumentParser:
     avail = ", ".join(available()) or "none"
     parser = argparse.ArgumentParser(
         prog="bumpwright",
-        description=(
-            f"Suggest and apply semantic version bumps. Available analysers: {avail}."
-        ),
+        description=(f"Suggest and apply semantic version bumps. Available analysers: {avail}."),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -136,9 +134,7 @@ def get_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Create a git commit for the version change.",
     )
-    p_bump.add_argument(
-        "--tag", action="store_true", help="Create a git tag for the new version."
-    )
+    p_bump.add_argument("--tag", action="store_true", help="Create a git tag for the new version.")
     p_bump.add_argument(
         "--dry-run",
         action="store_true",
@@ -157,10 +153,7 @@ def get_parser() -> argparse.ArgumentParser:
     p_bump.add_argument(
         "--changelog-exclude",
         action="append",
-        help=(
-            "Regex pattern for commit subjects to exclude from changelog "
-            "(repeatable)."
-        ),
+        help=("Regex pattern for commit subjects to exclude from changelog (repeatable)."),
     )
     p_bump.set_defaults(func=bump_command)
     return parser

@@ -40,20 +40,12 @@ def _extract_click(node: ast.FunctionDef | ast.AsyncFunctionDef) -> Command | No
     for deco in node.decorator_list:
         if isinstance(deco, ast.Call) and isinstance(deco.func, ast.Attribute):
             attr = deco.func
-            if (
-                isinstance(attr.value, ast.Name)
-                and attr.value.id == "click"
-                and attr.attr in {"command", "group"}
-            ):
+            if isinstance(attr.value, ast.Name) and attr.value.id == "click" and attr.attr in {"command", "group"}:
                 is_click = True
                 for kw in deco.keywords:
                     if kw.arg == "name" and _is_const_str(kw.value):
                         cmd_name = kw.value.value  # type: ignore[assignment]
-            elif (
-                isinstance(attr.value, ast.Name)
-                and attr.value.id == "click"
-                and attr.attr == "option"
-            ):
+            elif isinstance(attr.value, ast.Name) and attr.value.id == "click" and attr.attr == "option":
                 name: str | None = None
                 required = False
                 for arg in deco.args:
@@ -65,11 +57,7 @@ def _extract_click(node: ast.FunctionDef | ast.AsyncFunctionDef) -> Command | No
                         required = bool(kw.value.value)
                 if name:
                     options[name] = required
-            elif (
-                isinstance(attr.value, ast.Name)
-                and attr.value.id == "click"
-                and attr.attr == "argument"
-            ):
+            elif isinstance(attr.value, ast.Name) and attr.value.id == "click" and attr.attr == "argument":
                 if deco.args and _is_const_str(deco.args[0]):
                     name = deco.args[0].value  # type: ignore[assignment]
                     required = True
@@ -100,26 +88,16 @@ def _extract_argparse(tree: ast.AST) -> dict[str, Command]:
 
     for node in ast.walk(tree):
         if isinstance(node, ast.Assign):
-            if isinstance(node.value, ast.Call) and isinstance(
-                node.value.func, ast.Attribute
-            ):
+            if isinstance(node.value, ast.Call) and isinstance(node.value.func, ast.Attribute):
                 attr = node.value.func
-                if (
-                    attr.attr == "add_parser"
-                    and node.value.args
-                    and _is_const_str(node.value.args[0])
-                ):
+                if attr.attr == "add_parser" and node.value.args and _is_const_str(node.value.args[0]):
                     cmd_name = node.value.args[0].value  # type: ignore[assignment]
                     for target in node.targets:
                         if isinstance(target, ast.Name):
                             parsers[target.id] = cmd_name
                             commands[cmd_name] = Command(cmd_name, {})
         elif isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
-            if (
-                node.func.attr == "add_argument"
-                and isinstance(node.func.value, ast.Name)
-                and node.func.value.id in parsers
-            ):
+            if node.func.attr == "add_argument" and isinstance(node.func.value, ast.Name) and node.func.value.id in parsers:
                 parser_name = parsers[node.func.value.id]
                 cmd = commands[parser_name]
                 name: str | None = None
@@ -203,9 +181,7 @@ def diff_cli(old: dict[str, Command], new: dict[str, Command]) -> list[Impact]:
     return impacts
 
 
-def _build_cli_at_ref(
-    ref: str, roots: Iterable[str], ignores: Iterable[str]
-) -> dict[str, Command]:
+def _build_cli_at_ref(ref: str, roots: Iterable[str], ignores: Iterable[str]) -> dict[str, Command]:
     """Collect commands for all modules at a git ref.
 
     Args:
@@ -243,9 +219,7 @@ class CLIAnalyser:
             Mapping of command name to :class:`Command` objects.
         """
 
-        return _build_cli_at_ref(
-            ref, self.cfg.project.public_roots, self.cfg.ignore.paths
-        )
+        return _build_cli_at_ref(ref, self.cfg.project.public_roots, self.cfg.ignore.paths)
 
     def compare(self, old: dict[str, Command], new: dict[str, Command]) -> list[Impact]:
         """Compare two command mappings and return impacts.

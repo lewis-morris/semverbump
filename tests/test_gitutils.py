@@ -26,9 +26,7 @@ def _legacy_list_py_files_at_ref(
         if not line.endswith(".py"):
             continue
         p = Path(line)
-        if any(
-            str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm
-        ):
+        if any(str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm):
             s = str(p)
             if ignore_globs and any(fnmatch(s, pat) for pat in ignore_globs):
                 continue
@@ -170,9 +168,7 @@ def test_read_file_at_ref(tmp_path: Path) -> None:
     assert gitutils.read_file_at_ref("HEAD", "missing.txt", str(repo)) is None
 
 
-def test_read_file_at_ref_caches(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_read_file_at_ref_caches(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Cache file reads at refs to avoid redundant git calls."""
 
     repo = tmp_path / "repo"
@@ -215,6 +211,7 @@ def test_last_release_commit_found(tmp_path: Path) -> None:
     head = gitutils._run(["git", "rev-parse", "HEAD"], str(repo)).strip()
     assert gitutils.last_release_commit(str(repo)) == head
 
+
 def test_read_files_at_ref(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Read multiple file contents and handle missing paths."""
 
@@ -231,9 +228,7 @@ def test_read_files_at_ref(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> N
     contents = gitutils.read_files_at_ref("HEAD", ["file1.txt", "file2.txt"], str(repo))
     assert contents == {"file1.txt": "one\n", "file2.txt": "two\n"}
 
-    missing = gitutils.read_files_at_ref(
-        "HEAD", ["file1.txt", "missing.txt"], str(repo)
-    )
+    missing = gitutils.read_files_at_ref("HEAD", ["file1.txt", "missing.txt"], str(repo))
     assert missing["file1.txt"] == "one\n"
     assert missing["missing.txt"] is None
 
@@ -247,9 +242,7 @@ def test_read_files_at_ref(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> N
         gitutils.read_files_at_ref("BAD", ["file1.txt"], str(repo))
 
 
-def test_read_files_at_ref_caches(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_read_files_at_ref_caches(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Cache multiple file reads to avoid redundant git calls."""
 
     repo = tmp_path / "repo"

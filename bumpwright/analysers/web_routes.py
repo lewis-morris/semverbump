@@ -75,14 +75,8 @@ def extract_routes_from_source(code: str | ast.AST) -> dict[tuple[str, str], Rou
                     if deco.args and _is_const_str(deco.args[0]):
                         path = deco.args[0].value  # type: ignore[assignment]
                     for kw in deco.keywords:
-                        if kw.arg == "methods" and isinstance(
-                            kw.value, (ast.List, ast.Tuple)
-                        ):
-                            methods = [
-                                elt.value.upper()
-                                for elt in kw.value.elts
-                                if _is_const_str(elt)
-                            ]
+                        if kw.arg == "methods" and isinstance(kw.value, (ast.List, ast.Tuple)):
+                            methods = [elt.value.upper() for elt in kw.value.elts if _is_const_str(elt)]
                     if methods is None:
                         methods = ["GET"]
                 elif name.upper() in HTTP_METHODS:  # FastAPI style
@@ -96,9 +90,7 @@ def extract_routes_from_source(code: str | ast.AST) -> dict[tuple[str, str], Rou
     return routes
 
 
-def _build_routes_at_ref(
-    ref: str, roots: Iterable[str], ignores: Iterable[str]
-) -> dict[tuple[str, str], Route]:
+def _build_routes_at_ref(ref: str, roots: Iterable[str], ignores: Iterable[str]) -> dict[tuple[str, str], Route]:
     """Collect routes for all modules under given roots at a git ref.
 
     Args:
@@ -118,9 +110,7 @@ def _build_routes_at_ref(
     return out
 
 
-def diff_routes(
-    old: dict[tuple[str, str], Route], new: dict[tuple[str, str], Route]
-) -> list[Impact]:
+def diff_routes(old: dict[tuple[str, str], Route], new: dict[tuple[str, str], Route]) -> list[Impact]:
     """Compute impacts between two route mappings.
 
     Args:
@@ -182,13 +172,9 @@ class WebRoutesAnalyser:
             Mapping of ``(path, method)`` to :class:`Route` objects.
         """
 
-        return _build_routes_at_ref(
-            ref, self.cfg.project.public_roots, self.cfg.ignore.paths
-        )
+        return _build_routes_at_ref(ref, self.cfg.project.public_roots, self.cfg.ignore.paths)
 
-    def compare(
-        self, old: dict[tuple[str, str], Route], new: dict[tuple[str, str], Route]
-    ) -> list[Impact]:
+    def compare(self, old: dict[tuple[str, str], Route], new: dict[tuple[str, str], Route]) -> list[Impact]:
         """Compare two route mappings and return impacts.
 
         Args:

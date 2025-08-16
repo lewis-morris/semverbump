@@ -38,9 +38,7 @@ def test_load_config_private_prefixes_default(tmp_path: Path) -> None:
 
 def test_load_config_changelog(tmp_path: Path) -> None:
     cfg_file = tmp_path / "bumpwright.toml"
-    cfg_file.write_text(
-        "[changelog]\npath='NEWS.md'\ntemplate='tmpl.j2'\nexclude=['^chore']\n"
-    )
+    cfg_file.write_text("[changelog]\npath='NEWS.md'\ntemplate='tmpl.j2'\nexclude=['^chore']\n")
     cfg = load_config(cfg_file)
     assert cfg.changelog.path == "NEWS.md"
     assert cfg.changelog.template == "tmpl.j2"

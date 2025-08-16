@@ -66,10 +66,7 @@ def _parse_spec(content: str) -> Spec:
     endpoints: set[tuple[str, str]] = set()
     operations: dict[tuple[str, str], Operation] = {}
     for path, path_item in paths.items():
-        path_params = {
-            (p.get("name", ""), p.get("in", "")): p.get("required", False)
-            for p in path_item.get("parameters", [])
-        }
+        path_params = {(p.get("name", ""), p.get("in", "")): p.get("required", False) for p in path_item.get("parameters", [])}
         for method, op in path_item.items():
             if method == "parameters":
                 continue
@@ -81,14 +78,10 @@ def _parse_spec(content: str) -> Spec:
                 op_params[key] = param.get("required", False)
             responses = {}
             for status, resp in op.get("responses", {}).items():
-                schema = (
-                    resp.get("content", {}).get("application/json", {}).get("schema")
-                )
+                schema = resp.get("content", {}).get("application/json", {}).get("schema")
                 if schema is not None:
                     responses[status] = schema
-            operations[(path, meth)] = Operation(
-                parameters=op_params, responses=responses
-            )
+            operations[(path, meth)] = Operation(parameters=op_params, responses=responses)
     schemas = data.get("components", {}).get("schemas", {})
     return Spec(endpoints=endpoints, schemas=schemas, operations=operations)
 
@@ -122,13 +115,9 @@ def diff_specs(old: Spec, new: Spec) -> list[Impact]:
         new_op = new.operations[ep]
 
         for param in old_op.parameters.keys() - new_op.parameters.keys():
-            impacts.append(
-                Impact("major", f"{ep[1]} {ep[0]}", f"Removed parameter {param[0]}")
-            )
+            impacts.append(Impact("major", f"{ep[1]} {ep[0]}", f"Removed parameter {param[0]}"))
         for param in new_op.parameters.keys() - old_op.parameters.keys():
-            impacts.append(
-                Impact("minor", f"{ep[1]} {ep[0]}", f"Added parameter {param[0]}")
-            )
+            impacts.append(Impact("minor", f"{ep[1]} {ep[0]}", f"Added parameter {param[0]}"))
         for param in old_op.parameters.keys() & new_op.parameters.keys():
             old_req = old_op.parameters[param]
             new_req = new_op.parameters[param]
@@ -144,13 +133,9 @@ def diff_specs(old: Spec, new: Spec) -> list[Impact]:
                 )
 
         for status in old_op.responses.keys() - new_op.responses.keys():
-            impacts.append(
-                Impact("major", f"{ep[1]} {ep[0]}", f"Removed response {status}")
-            )
+            impacts.append(Impact("major", f"{ep[1]} {ep[0]}", f"Removed response {status}"))
         for status in new_op.responses.keys() - old_op.responses.keys():
-            impacts.append(
-                Impact("minor", f"{ep[1]} {ep[0]}", f"Added response {status}")
-            )
+            impacts.append(Impact("minor", f"{ep[1]} {ep[0]}", f"Added response {status}"))
         for status in old_op.responses.keys() & new_op.responses.keys():
             if old_op.responses[status] != new_op.responses[status]:
                 impacts.append(

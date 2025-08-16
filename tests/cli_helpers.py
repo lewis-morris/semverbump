@@ -39,12 +39,8 @@ def setup_repo(tmp_path: Path) -> tuple[Path, Path, str]:
     )
     pkg = repo / "pkg"
     pkg.mkdir()
-    (pkg / "__init__.py").write_text(
-        "def foo() -> int:\n    return 1\n", encoding="utf-8"
-    )
-    (repo / "bumpwright.toml").write_text(
-        "[project]\npublic_roots=['pkg']\n", encoding="utf-8"
-    )
+    (pkg / "__init__.py").write_text("def foo() -> int:\n    return 1\n", encoding="utf-8")
+    (repo / "bumpwright.toml").write_text("[project]\npublic_roots=['pkg']\n", encoding="utf-8")
     run(["git", "add", "."], repo)
     run(["git", "commit", "-m", "base"], repo)
     base = run(["git", "rev-parse", "HEAD"], repo)

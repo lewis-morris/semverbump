@@ -135,9 +135,7 @@ def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
         return_type_change=cfg.rules.return_type_change,
         param_annotation_change=cfg.rules.param_annotation_change,
     )
-    impacts.extend(
-        _run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser)
-    )
+    impacts.extend(_run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser))
     decision = decide_bump(impacts)
     if args.format == "json":
         logger.info(
@@ -186,7 +184,5 @@ def _infer_level(
         return_type_change=cfg.rules.return_type_change,
         param_annotation_change=cfg.rules.param_annotation_change,
     )
-    impacts.extend(
-        _run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser)
-    )
+    impacts.extend(_run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser))
     return decide_bump(impacts)

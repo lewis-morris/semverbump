@@ -39,9 +39,7 @@ class Rules:
         if self.return_type_change not in {"major", "minor"}:
             raise ValueError("return_type_change must be 'major' or 'minor'")
         if self.param_annotation_change not in {"major", "minor", "patch"}:
-            raise ValueError(
-                "param_annotation_change must be 'major', 'minor', or 'patch'"
-            )
+            raise ValueError("param_annotation_change must be 'major', 'minor', or 'patch'")
 
 
 @dataclass
@@ -64,9 +62,7 @@ class Project:
 class Ignore:
     """Paths to ignore during scanning."""
 
-    paths: list[str] = field(
-        default_factory=lambda: ["tests/**", "examples/**", "scripts/**"]
-    )
+    paths: list[str] = field(default_factory=lambda: ["tests/**", "examples/**", "scripts/**"])
 
 
 @dataclass

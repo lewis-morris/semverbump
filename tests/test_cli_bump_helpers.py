@@ -64,9 +64,7 @@ def test_prepare_version_files_wildcard_directory(tmp_path: Path) -> None:
 def test_resolve_pyproject_missing() -> None:
     """Ensure resolving a missing pyproject raises an informative error."""
 
-    with pytest.raises(
-        FileNotFoundError, match="pyproject.toml not found at missing.pyproject"
-    ):
+    with pytest.raises(FileNotFoundError, match="pyproject.toml not found at missing.pyproject"):
         _resolve_pyproject("missing.pyproject")
 
 
@@ -119,19 +117,14 @@ def test_read_template_default(monkeypatch) -> None:
 
 
 def test_get_default_template_reads_file() -> None:
-    expected = (
-        Path(__file__).resolve().parents[1]
-        / "bumpwright"
-        / "templates"
-        / "changelog.md.j2"
-    ).read_text(encoding="utf-8")
+    expected = (Path(__file__).resolve().parents[1] / "bumpwright" / "templates" / "changelog.md.j2").read_text(
+        encoding="utf-8"
+    )
     assert get_default_template() == expected
 
 
 def test_build_changelog_uses_read_template(monkeypatch) -> None:
-    args = argparse.Namespace(
-        changelog="CHANGELOG.md", head="HEAD", repo_url=None, changelog_template=None
-    )
+    args = argparse.Namespace(changelog="CHANGELOG.md", head="HEAD", repo_url=None, changelog_template=None)
     monkeypatch.setattr("bumpwright.cli.bump.collect_commits", lambda base, head: [])
     monkeypatch.setattr("bumpwright.cli.bump.last_release_commit", lambda: None)
     called = False
@@ -157,9 +150,7 @@ def test_build_changelog_excludes_patterns(monkeypatch) -> None:
         changelog_exclude=["^chore"],
     )
     commits = [("1", "feat: add"), ("2", "chore: skip")]
-    monkeypatch.setattr(
-        "bumpwright.cli.bump.collect_commits", lambda base, head: commits
-    )
+    monkeypatch.setattr("bumpwright.cli.bump.collect_commits", lambda base, head: commits)
     monkeypatch.setattr("bumpwright.cli.bump.last_release_commit", lambda: None)
     result = _build_changelog(args, "0.2.0")
     assert "feat: add" in result
@@ -195,9 +186,7 @@ def test_commit_tag_stages_all_files(tmp_path: Path) -> None:
         _commit_tag([pyproj, init_file], "0.1.1", commit=True, tag=False)
     finally:
         os.chdir(cwd)
-    files = run(
-        ["git", "show", "--pretty=format:", "--name-only", "HEAD"], repo
-    ).splitlines()
+    files = run(["git", "show", "--pretty=format:", "--name-only", "HEAD"], repo).splitlines()
     assert "pyproject.toml" in files
     assert "pkg/__init__.py" in files
     msg = run(["git", "log", "-1", "--pretty=%s"], repo)

@@ -81,9 +81,7 @@ def _list_proto_files_at_ref_cached(
         if not line.endswith(".proto"):
             continue
         p = Path(line)
-        if any(
-            str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm
-        ):
+        if any(str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm):
             s = str(p)
             if ignore_globs and any(fnmatch(s, pat) for pat in ignore_globs):
                 continue
@@ -106,9 +104,7 @@ def list_proto_files_at_ref(
 list_proto_files_at_ref.cache_clear = _list_proto_files_at_ref_cached.cache_clear  # type: ignore[attr-defined]
 
 
-def _build_services_at_ref(
-    ref: str, roots: Iterable[str], ignores: Iterable[str]
-) -> dict[str, Service]:
+def _build_services_at_ref(ref: str, roots: Iterable[str], ignores: Iterable[str]) -> dict[str, Service]:
     """Collect gRPC services from `.proto` files at ``ref``.
 
     Args:
@@ -172,9 +168,7 @@ class GrpcAnalyser:
         Returns:
             Mapping of service name to :class:`Service` objects.
         """
-        return _build_services_at_ref(
-            ref, self.cfg.project.public_roots, self.cfg.ignore.paths
-        )
+        return _build_services_at_ref(ref, self.cfg.project.public_roots, self.cfg.ignore.paths)
 
     def compare(self, old: dict[str, Service], new: dict[str, Service]) -> list[Impact]:
         """Compare two gRPC service mappings and return impacts.

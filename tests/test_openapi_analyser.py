@@ -114,9 +114,7 @@ paths:
 """,
     )
     impacts = diff_specs(old, new)
-    assert any(
-        i.severity == "minor" and i.reason == "Added parameter type" for i in impacts
-    )
+    assert any(i.severity == "minor" and i.reason == "Added parameter type" for i in impacts)
 
 
 def test_parameter_removal_is_major() -> None:
@@ -149,9 +147,7 @@ paths:
 """,
     )
     impacts = diff_specs(old, new)
-    assert any(
-        i.severity == "major" and i.reason == "Removed parameter type" for i in impacts
-    )
+    assert any(i.severity == "major" and i.reason == "Removed parameter type" for i in impacts)
 
 
 def test_parameter_required_toggle_is_major() -> None:
@@ -181,10 +177,7 @@ paths:
 """,
     )
     impacts = diff_specs(old, new)
-    assert any(
-        i.severity == "major" and i.reason == "Parameter id now required"
-        for i in impacts
-    )
+    assert any(i.severity == "major" and i.reason == "Parameter id now required" for i in impacts)
 
 
 def test_parameter_required_toggle_to_optional_is_minor() -> None:
@@ -214,10 +207,7 @@ paths:
 """,
     )
     impacts = diff_specs(old, new)
-    assert any(
-        i.severity == "minor" and i.reason == "Parameter id no longer required"
-        for i in impacts
-    )
+    assert any(i.severity == "minor" and i.reason == "Parameter id no longer required" for i in impacts)
 
 
 def test_response_schema_change_is_major() -> None:
@@ -252,10 +242,7 @@ paths:
 """,
     )
     impacts = diff_specs(old, new)
-    assert any(
-        i.severity == "major" and i.reason == "Changed response 200 schema"
-        for i in impacts
-    )
+    assert any(i.severity == "major" and i.reason == "Changed response 200 schema" for i in impacts)
 
 
 def test_invalid_yaml_returns_empty_spec(caplog) -> None:

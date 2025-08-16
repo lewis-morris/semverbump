@@ -57,9 +57,7 @@ def _index_params(sig: FuncSig) -> dict[str, Param]:
     return {p.name: p for p in sig.params}
 
 
-def _removed_params(
-    oldp: dict[str, Param], newp: dict[str, Param], fullname: str
-) -> list[Impact]:
+def _removed_params(oldp: dict[str, Param], newp: dict[str, Param], fullname: str) -> list[Impact]:
     """Detect removed parameters between two parameter mappings.
 
     Args:
@@ -75,19 +73,13 @@ def _removed_params(
     for name, op in oldp.items():
         if name not in newp:
             if op.kind in ("posonly", "pos", "kwonly") and op.default is None:
-                impacts.append(
-                    Impact("major", fullname, f"Removed required param '{name}'")
-                )
+                impacts.append(Impact("major", fullname, f"Removed required param '{name}'"))
             elif op.default is not None or op.kind in ("kwonly", "vararg", "varkw"):
-                impacts.append(
-                    Impact("minor", fullname, f"Removed optional param '{name}'")
-                )
+                impacts.append(Impact("minor", fullname, f"Removed optional param '{name}'"))
     return impacts
 
 
-def _added_params(
-    oldp: dict[str, Param], newp: dict[str, Param], fullname: str
-) -> list[Impact]:
+def _added_params(oldp: dict[str, Param], newp: dict[str, Param], fullname: str) -> list[Impact]:
     """Detect added parameters between two parameter mappings.
 
     Args:
@@ -103,19 +95,13 @@ def _added_params(
     for name, np in newp.items():
         if name not in oldp:
             if np.default is None and np.kind in ("posonly", "pos", "kwonly"):
-                impacts.append(
-                    Impact("major", fullname, f"Added required param '{name}'")
-                )
+                impacts.append(Impact("major", fullname, f"Added required param '{name}'"))
             else:
-                impacts.append(
-                    Impact("minor", fullname, f"Added optional param '{name}'")
-                )
+                impacts.append(Impact("minor", fullname, f"Added optional param '{name}'"))
     return impacts
 
 
-def _param_kind_changes(
-    oldp: dict[str, Param], newp: dict[str, Param], fullname: str
-) -> list[Impact]:
+def _param_kind_changes(oldp: dict[str, Param], newp: dict[str, Param], fullname: str) -> list[Impact]:
     """Detect changes in parameter kind between two parameter mappings.
 
     Args:
@@ -131,10 +117,7 @@ def _param_kind_changes(
     for name, np in newp.items():
         if name in oldp:
             op = oldp[name]
-            if op.kind != np.kind and (
-                op.kind in ("posonly", "pos", "kwonly")
-                or np.kind in ("posonly", "pos", "kwonly")
-            ):
+            if op.kind != np.kind and (op.kind in ("posonly", "pos", "kwonly") or np.kind in ("posonly", "pos", "kwonly")):
                 impacts.append(
                     Impact(
                         "major",
@@ -145,9 +128,7 @@ def _param_kind_changes(
     return impacts
 
 
-def _param_default_changes(
-    oldp: dict[str, Param], newp: dict[str, Param], fullname: str
-) -> list[Impact]:
+def _param_default_changes(oldp: dict[str, Param], newp: dict[str, Param], fullname: str) -> list[Impact]:
     """Detect parameter default value changes between two mappings.
 
     Args:
@@ -165,13 +146,9 @@ def _param_default_changes(
             op = oldp[name]
             if op.default != np.default:
                 if op.default is None and np.default is not None:
-                    impacts.append(
-                        Impact("minor", fullname, f"Param '{name}' default added")
-                    )
+                    impacts.append(Impact("minor", fullname, f"Param '{name}' default added"))
                 elif op.default is not None and np.default is None:
-                    impacts.append(
-                        Impact("major", fullname, f"Param '{name}' default removed")
-                    )
+                    impacts.append(Impact("major", fullname, f"Param '{name}' default removed"))
                 else:
                     impacts.append(
                         Impact(
@@ -216,9 +193,7 @@ def _param_annotation_changes(
     return impacts
 
 
-def _return_annotation_change(
-    old: FuncSig, new: FuncSig, severity: Severity
-) -> list[Impact]:
+def _return_annotation_change(old: FuncSig, new: FuncSig, severity: Severity) -> list[Impact]:
     """Detect return annotation change between two signatures.
 
     Args:

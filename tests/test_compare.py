@@ -35,9 +35,7 @@ def test_removed_params_classify_optional_and_required():
         "-> int",
     )
     new = _sig("m:f", [], "-> int")
-    impacts = _removed_params(
-        {p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f"
-    )
+    impacts = _removed_params({p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f")
     assert Impact(MAJOR, "m:f", "Removed required param 'x'") in impacts
     assert Impact(MINOR, "m:f", "Removed optional param 'timeout'") in impacts
 
@@ -49,9 +47,7 @@ def test_added_params_classify_optional_and_required():
         [_p("x"), _p("y"), _p("timeout", kind="kwonly", default="None")],
         "-> int",
     )
-    impacts = _added_params(
-        {p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f"
-    )
+    impacts = _added_params({p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f")
     assert Impact(MAJOR, "m:f", "Added required param 'y'") in impacts
     assert Impact(MINOR, "m:f", "Added optional param 'timeout'") in impacts
 
@@ -59,9 +55,7 @@ def test_added_params_classify_optional_and_required():
 def test_param_kind_changes_detected():
     old = _sig("m:f", [_p("x"), _p("y")], "-> int")
     new = _sig("m:f", [_p("x", kind="kwonly"), _p("y", kind="posonly")], "-> int")
-    impacts = _param_kind_changes(
-        {p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f"
-    )
+    impacts = _param_kind_changes({p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f")
     assert Impact(MAJOR, "m:f", "Param 'x' kind changed pos→kwonly") in impacts
     assert Impact(MAJOR, "m:f", "Param 'y' kind changed pos→posonly") in impacts
 
@@ -77,9 +71,7 @@ def test_param_default_changes_detected():
         [_p("x"), _p("y", default="2"), _p("z", default="2")],
         "-> int",
     )
-    impacts = _param_default_changes(
-        {p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f"
-    )
+    impacts = _param_default_changes({p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f")
     assert Impact(MAJOR, "m:f", "Param 'x' default removed") in impacts
     assert Impact(MINOR, "m:f", "Param 'y' default added") in impacts
     assert Impact(MINOR, "m:f", "Param 'z' default changed 1→2") in impacts

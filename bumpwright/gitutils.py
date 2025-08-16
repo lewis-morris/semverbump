@@ -77,9 +77,7 @@ def _list_py_files_at_ref_cached(
         if not line.endswith(".py"):
             continue
         p = Path(line)
-        if any(
-            str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm
-        ):
+        if any(str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm):
             s = str(p)
             if ignore_globs and any(fnmatch(s, pat) for pat in ignore_globs):
                 continue
@@ -136,9 +134,7 @@ def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> str | None:
 
 
 @lru_cache(maxsize=None)
-def _read_files_at_ref_cached(
-    ref: str, paths: tuple[str, ...], cwd: str | None
-) -> dict[str, str | None]:
+def _read_files_at_ref_cached(ref: str, paths: tuple[str, ...], cwd: str | None) -> dict[str, str | None]:
     """Return cached contents for multiple paths at a git reference.
 
     Args:
@@ -188,9 +184,7 @@ def _read_files_at_ref_cached(
     return results
 
 
-def read_files_at_ref(
-    ref: str, paths: Iterable[str], cwd: str | None = None
-) -> dict[str, str | None]:
+def read_files_at_ref(ref: str, paths: Iterable[str], cwd: str | None = None) -> dict[str, str | None]:
     """Read multiple file contents at ``ref`` in a single subprocess call.
 
     Results are cached per ``(ref, tuple(paths), cwd)`` for improved
@@ -236,9 +230,7 @@ def last_release_commit(cwd: str | None = None) -> str | None:
     return out.strip() or None
 
 
-def collect_commits(
-    base: str, head: str, cwd: str | None = None
-) -> list[tuple[str, str]]:
+def collect_commits(base: str, head: str, cwd: str | None = None) -> list[tuple[str, str]]:
     """Collect commit metadata between two references.
 
     Args:

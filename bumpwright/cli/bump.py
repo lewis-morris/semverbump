@@ -33,9 +33,7 @@ def get_default_template() -> str:
         Default changelog template contents.
     """
 
-    template_path = (
-        Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
-    )
+    template_path = Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
     return template_path.read_text(encoding="utf-8")
 
 
@@ -54,9 +52,7 @@ def _read_template(template_path: str | None) -> str:
     return get_default_template()
 
 
-def _commit_tag(
-    files: Iterable[str | Path], version: str, commit: bool, tag: bool
-) -> None:
+def _commit_tag(files: Iterable[str | Path], version: str, commit: bool, tag: bool) -> None:
     """Optionally commit and tag the updated version.
 
     Args:
@@ -87,9 +83,7 @@ def _commit_tag(
     if commit:
         for file in files:
             subprocess.run(["git", "add", str(file)], check=True)
-        subprocess.run(
-            ["git", "commit", "-m", f"chore(release): {version}"], check=True
-        )
+        subprocess.run(["git", "commit", "-m", f"chore(release): {version}"], check=True)
 
     if tag:
         subprocess.run(["git", "tag", f"v{version}"], check=True)
@@ -197,17 +191,13 @@ def _prepare_version_files(
     version_files = {p for p in paths if not has_magic(p)}
     changed = _safe_changed_paths(base, head)
     if changed is not None:
-        filtered = {
-            p for p in changed if p != pyproject.name and p not in version_files
-        }
+        filtered = {p for p in changed if p != pyproject.name and p not in version_files}
         if not filtered:
             return None
     return paths
 
 
-def _display_result(
-    args: argparse.Namespace, vc: VersionChange, decision: Decision
-) -> None:
+def _display_result(args: argparse.Namespace, vc: VersionChange, decision: Decision) -> None:
     """Show bump outcome using the selected format."""
 
     if args.format == "json":
