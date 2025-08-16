@@ -5,6 +5,9 @@ import os
 import sys
 from datetime import datetime
 
+# Ensure project root on path so bumpwright can be imported when building docs
+sys.path.insert(0, os.path.abspath(".."))
+
 import bumpwright
 
 project = "bumpwright"
