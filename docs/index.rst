@@ -3,38 +3,46 @@ bumpwright documentation
 
 Static public-API diff and heuristics to suggest semantic version bumps.
 
+Bumpwright inspects a project's public API to highlight breaking changes and
+recommend the appropriate semantic version increment. It is designed for
+library maintainers, continuous integration systems, and release managers who
+need a reliable view of how code changes affect downstream consumers.
+
+Getting Started
+---------------
+
 .. toctree::
    :maxdepth: 2
-   :caption: Getting Started
 
    installation
    quickstart
    usage
-   versioning
-   cli_reference
+
+User Guide
+----------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Configuration
 
    configuration
-   analysers/index
+   guides/index
+   versioning
+
+Reference
+---------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Guides
 
-   guides/index
+   cli_reference
+   analysers/index
+
+Project Resources
+-----------------
 
 .. toctree::
    :maxdepth: 1
-   :caption: Support
 
    troubleshooting
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Project
-
-   roadmap
    performance
+   roadmap
