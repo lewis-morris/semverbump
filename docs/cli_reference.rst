@@ -1,7 +1,5 @@
 CLI reference
 =============
 
-.. argparse::
-   :module: bumpwright.cli
-   :func: get_parser
+.. autoprogram:: bumpwright.cli:get_parser
    :prog: bumpwright
