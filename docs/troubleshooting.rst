@@ -1,7 +1,7 @@
-Troubleshooting
-===============
+Troubleshooting & FAQ
+=====================
 
-Common Issues
+Common issues
 -------------
 
 No analysers run
