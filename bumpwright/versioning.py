@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from fnmatch import fnmatch
 from glob import glob
 from pathlib import Path
-from typing import Iterable, List, Optional
+from typing import Iterable, List, Literal, Optional
 
 try:  # pragma: no cover - needed for linting when dependency missing
     from packaging.version import Version
@@ -32,11 +32,11 @@ class VersionChange:
 
     old: str
     new: str
-    level: str  # "major" | "minor" | "patch"
+    level: Literal["major", "minor", "patch"]
     files: List[Path] = field(default_factory=list)
 
 
-def bump_string(v: str, level: str) -> str:
+def bump_string(v: str, level: Literal["major", "minor", "patch"]) -> str:
     """Increment a semantic version string by ``level``.
 
     Args:
@@ -134,7 +134,7 @@ def write_project_version(
 
 
 def apply_bump(
-    level: str,
+    level: Literal["major", "minor", "patch"],
     pyproject_path: str | Path = "pyproject.toml",
     dry_run: bool = False,
     paths: Iterable[str] | None = None,
@@ -143,17 +143,15 @@ def apply_bump(
     """Apply a semantic version bump and update version strings.
 
     Args:
-        level: Bump level to apply (``"major"``, ``"minor"``, or ``"patch"``).
-            pyproject_path: Path to the canonical ``pyproject.toml`` file.
+        level: Bump level to apply.
+        pyproject_path: Path to the canonical ``pyproject.toml`` file.
         dry_run: If ``True``, compute the new version without writing to disk.
         paths: Glob patterns pointing to files that may contain the version.
             Defaults include ``pyproject.toml``, ``setup.py``, ``setup.cfg`` and
             any ``__init__.py``, ``version.py`` or ``_version.py`` files within
             the project. Custom patterns extend this list.
         ignore: Glob patterns to exclude from ``paths``. Defaults to values from
-            ``config_path`` when ``None``.
-        config_path: Path to a ``bumpwright`` configuration file defining
-            default version locations.
+            the project configuration when ``None``.
 
     Returns:
         :class:`VersionChange` detailing the old and new versions and updated
