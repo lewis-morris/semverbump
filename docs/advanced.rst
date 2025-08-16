@@ -79,7 +79,7 @@ Handling multi-package repositories
 
       Updated packages/pkg_a/pyproject.toml from 0.4.1 to 0.5.0
 
-Custom severity mapping and plugin analysers
+Custom severity mapping and plugin analyzers
 --------------------------------------------
 
 1. Create a plugin that reports ``print`` usage:
@@ -115,7 +115,7 @@ Custom severity mapping and plugin analysers
       [rules]
       print_call = "patch"
 
-3. Execute the analyser:
+3. Execute the analyzer:
 
    .. code-block:: console
 
