@@ -10,7 +10,6 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 # --------- Data model ---------
 
@@ -29,8 +28,8 @@ class Param:
 
     name: str
     kind: str  # "posonly" | "pos" | "vararg" | "kwonly" | "varkw"
-    default: Optional[str]
-    annotation: Optional[str]
+    default: str | None
+    annotation: str | None
 
 
 @dataclass(frozen=True)
@@ -45,11 +44,11 @@ class FuncSig:
     """
 
     fullname: str  # e.g. pkg.mod:func  or pkg.mod:Class.method
-    params: Tuple[Param, ...]
-    returns: Optional[str]
+    params: tuple[Param, ...]
+    returns: str | None
 
 
-PublicAPI = Dict[str, FuncSig]  # symbol -> function signature (functions & methods)
+PublicAPI = dict[str, FuncSig]  # symbol -> function signature (functions & methods)
 
 
 # --------- Helpers ---------
@@ -81,7 +80,7 @@ def _render_type(ann: ast.AST | None) -> str | None:
     return ast.unparse(ann) if ann is not None else None
 
 
-def _parse_exports(mod: ast.Module) -> Optional[set[str]]:
+def _parse_exports(mod: ast.Module) -> set[str] | None:
     """Parse ``__all__`` definitions from a module if present.
 
     Args:
@@ -106,7 +105,7 @@ def _parse_exports(mod: ast.Module) -> Optional[set[str]]:
     return None
 
 
-def _param_list(args: ast.arguments) -> List[Param]:
+def _param_list(args: ast.arguments) -> list[Param]:
     """Convert AST parameters to :class:`Param` instances.
 
     Args:
@@ -116,9 +115,9 @@ def _param_list(args: ast.arguments) -> List[Param]:
         Ordered list of parameter descriptors.
     """
 
-    out: List[Param] = []
+    out: list[Param] = []
 
-    def _ann(node: ast.expr | None) -> Optional[str]:
+    def _ann(node: ast.expr | None) -> str | None:
         return _render_type(node) if node is not None else None
 
     # Positional-only and positional params share defaults
@@ -182,7 +181,7 @@ class _APIVisitor(ast.NodeVisitor):
 
         self.module_name = module_name
         self.exports = exports
-        self.sigs: List[FuncSig] = []
+        self.sigs: list[FuncSig] = []
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:  # noqa: D401
         """Collect function definitions."""

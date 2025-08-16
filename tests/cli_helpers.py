@@ -1,9 +1,8 @@
 import subprocess
 from pathlib import Path
-from typing import List, Tuple
 
 
-def run(cmd: List[str], cwd: Path) -> str:
+def run(cmd: list[str], cwd: Path) -> str:
     """Execute a command and return its stdout.
 
     Args:
@@ -18,7 +17,7 @@ def run(cmd: List[str], cwd: Path) -> str:
     return res.stdout.strip()
 
 
-def setup_repo(tmp_path: Path) -> Tuple[Path, Path, str]:
+def setup_repo(tmp_path: Path) -> tuple[Path, Path, str]:
     """Create a git repository with a minimal Python project.
 
     Args:

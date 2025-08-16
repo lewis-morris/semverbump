@@ -3,7 +3,6 @@
 import os
 import subprocess
 from pathlib import Path
-from typing import List, Set
 
 try:  # pragma: no cover - handled when pytest not installed
     import pytest
@@ -15,7 +14,7 @@ from bumpwright.compare import Impact
 from bumpwright.config import Config, Project
 
 
-def _run(cmd: List[str], cwd: Path) -> str:
+def _run(cmd: list[str], cwd: Path) -> str:
     """Run ``cmd`` in ``cwd`` and return stdout."""
     res = subprocess.run(cmd, cwd=cwd, check=True, stdout=subprocess.PIPE, text=True)
     return res.stdout.strip()
@@ -89,7 +88,7 @@ app = Flask(__name__)
     ],
 )
 def test_combined_analyzers(
-    tmp_path: Path, enabled: Set[str], expected: List[Impact]
+    tmp_path: Path, enabled: set[str], expected: list[Impact]
 ) -> None:
     """Ensure multiple analyzers produce combined impacts."""
     repo, base, head = _setup_repo(tmp_path)
@@ -98,7 +97,7 @@ def test_combined_analyzers(
     cfg.analyzers.enabled.update(enabled)
     analyzers = load_enabled(cfg)
 
-    impacts: List[Impact] = []
+    impacts: list[Impact] = []
     old_cwd = os.getcwd()
     os.chdir(repo)
     try:

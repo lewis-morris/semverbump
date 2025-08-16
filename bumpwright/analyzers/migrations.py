@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
-from typing import List, Optional
 
 from ..compare import Impact
 from ..config import Migrations
@@ -27,7 +26,7 @@ class _UpgradeVisitor(ast.NodeVisitor):
         """
 
         self.path = path
-        self.impacts: List[Impact] = []
+        self.impacts: list[Impact] = []
 
     def visit_Call(self, node: ast.Call) -> None:  # noqa: D401
         """Record relevant Alembic operations."""
@@ -48,7 +47,7 @@ class _UpgradeVisitor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-def _analyze_add_column(node: ast.Call, path: str) -> Optional[Impact]:
+def _analyze_add_column(node: ast.Call, path: str) -> Impact | None:
     """Determine the impact of an ``op.add_column`` call.
 
     Args:
@@ -82,7 +81,7 @@ def _analyze_add_column(node: ast.Call, path: str) -> Optional[Impact]:
     return Impact("minor", path, "Added column")
 
 
-def _analyze_content(path: str, content: str) -> List[Impact]:
+def _analyze_content(path: str, content: str) -> list[Impact]:
     """Parse migration source and collect impacts.
 
     Args:
@@ -98,7 +97,7 @@ def _analyze_content(path: str, content: str) -> List[Impact]:
     except SyntaxError:
         return []
 
-    impacts: List[Impact] = []
+    impacts: list[Impact] = []
     for node in tree.body:
         if isinstance(node, ast.FunctionDef) and node.name == "upgrade":
             visitor = _UpgradeVisitor(path)
@@ -110,7 +109,7 @@ def _analyze_content(path: str, content: str) -> List[Impact]:
 
 def analyze_migrations(
     base: str, head: str, config: Migrations, cwd: str | Path | None = None
-) -> List[Impact]:
+) -> list[Impact]:
     """Analyze Alembic migrations between two git references.
 
     Args:
@@ -124,7 +123,7 @@ def analyze_migrations(
     """
 
     dirs = [str(Path(p)) for p in config.paths]
-    impacts: List[Impact] = []
+    impacts: list[Impact] = []
     for path in changed_paths(base, head, cwd=cwd):
         if not path.endswith(".py"):
             continue

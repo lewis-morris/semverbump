@@ -5,8 +5,8 @@ changes."""
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Tuple
 
 from ..compare import Impact
 from ..config import Config
@@ -22,7 +22,7 @@ class Route:
 
     path: str
     method: str
-    params: Dict[str, bool]  # True if required
+    params: dict[str, bool]  # True if required
 
 
 def _is_const_str(node: ast.AST) -> bool:
@@ -38,7 +38,7 @@ def _is_const_str(node: ast.AST) -> bool:
     return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
 
-def _extract_params(args: ast.arguments) -> Dict[str, bool]:
+def _extract_params(args: ast.arguments) -> dict[str, bool]:
     """Extract function parameters and whether they are required.
 
     Args:
@@ -55,7 +55,7 @@ def _extract_params(args: ast.arguments) -> Dict[str, bool]:
     return params
 
 
-def extract_routes_from_source(code: str) -> Dict[Tuple[str, str], Route]:
+def extract_routes_from_source(code: str) -> dict[tuple[str, str], Route]:
     """Extract routes from source code.
 
     Args:
@@ -66,7 +66,7 @@ def extract_routes_from_source(code: str) -> Dict[Tuple[str, str], Route]:
     """
 
     tree = ast.parse(code)
-    routes: Dict[Tuple[str, str], Route] = {}
+    routes: dict[tuple[str, str], Route] = {}
 
     for node in ast.walk(tree):
         if not isinstance(node, ast.FunctionDef):
@@ -103,7 +103,7 @@ def extract_routes_from_source(code: str) -> Dict[Tuple[str, str], Route]:
 
 def _build_routes_at_ref(
     ref: str, roots: Iterable[str], ignores: Iterable[str]
-) -> Dict[Tuple[str, str], Route]:
+) -> dict[tuple[str, str], Route]:
     """Collect routes for all modules under given roots at a git ref.
 
     Args:
@@ -115,7 +115,7 @@ def _build_routes_at_ref(
         Mapping of ``(path, method)`` to :class:`Route` objects present at ``ref``.
     """
 
-    out: Dict[Tuple[str, str], Route] = {}
+    out: dict[tuple[str, str], Route] = {}
     for path in list_py_files_at_ref(ref, roots, ignore_globs=ignores):
         code = read_file_at_ref(ref, path)
         if code is None:
@@ -125,8 +125,8 @@ def _build_routes_at_ref(
 
 
 def diff_routes(
-    old: Dict[Tuple[str, str], Route], new: Dict[Tuple[str, str], Route]
-) -> List[Impact]:
+    old: dict[tuple[str, str], Route], new: dict[tuple[str, str], Route]
+) -> list[Impact]:
     """Compute impacts between two route mappings.
 
     Args:
@@ -137,7 +137,7 @@ def diff_routes(
         List of detected route impacts.
     """
 
-    impacts: List[Impact] = []
+    impacts: list[Impact] = []
 
     for key in old.keys() - new.keys():
         path, method = key
@@ -178,7 +178,7 @@ class WebRoutesAnalyzer:
         """Initialize the analyzer with configuration."""
         self.cfg = cfg
 
-    def collect(self, ref: str) -> Dict[Tuple[str, str], Route]:
+    def collect(self, ref: str) -> dict[tuple[str, str], Route]:
         """Collect route definitions at ``ref``.
 
         Args:
@@ -193,8 +193,8 @@ class WebRoutesAnalyzer:
         )
 
     def compare(
-        self, old: Dict[Tuple[str, str], Route], new: Dict[Tuple[str, str], Route]
-    ) -> List[Impact]:
+        self, old: dict[tuple[str, str], Route], new: dict[tuple[str, str], Route]
+    ) -> list[Impact]:
         """Compare two route mappings and return impacts.
 
         Args:
