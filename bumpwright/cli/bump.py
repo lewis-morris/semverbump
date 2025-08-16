@@ -21,9 +21,7 @@ from .decide import _decide_only, _infer_level
 _DEFAULT_TEMPLATE = (Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2").read_text(encoding="utf-8")
 
 
-def _commit_tag(
-    files: Iterable[str | Path], version: str, commit: bool, tag: bool
-) -> None:
+def _commit_tag(files: Iterable[str | Path], version: str, commit: bool, tag: bool) -> None:
     """Optionally commit and tag the updated version.
 
     Args:
@@ -54,9 +52,7 @@ def _commit_tag(
     if commit:
         for file in files:
             subprocess.run(["git", "add", str(file)], check=True)
-        subprocess.run(
-            ["git", "commit", "-m", f"chore(release): {version}"], check=True
-        )
+        subprocess.run(["git", "commit", "-m", f"chore(release): {version}"], check=True)
 
     if tag:
         subprocess.run(["git", "tag", f"v{version}"], check=True)

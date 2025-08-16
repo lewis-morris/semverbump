@@ -272,10 +272,10 @@ def _resolve_files_cached(
         base_dir: Directory relative to which patterns are evaluated.
 
     Returns:
-        Tuple of discovered file paths matching ``patterns`` minus ``ignore``.
+        Tuple of unique file paths matching ``patterns`` minus ``ignore``.
     """
 
-    out: list[Path] = []
+    out: set[Path] = set()
     ignore_list = list(ignore)
     base = Path(base_dir)
     for pat in patterns:
@@ -292,10 +292,9 @@ def _resolve_files_cached(
                 rel_str = path_str
             if any(fnmatch(path_str, ig) or fnmatch(rel_str, ig) for ig in ignore_list):
                 continue
-            out.append(p)
+            out.add(p)
     # Ensure deterministic ordering for predictable downstream operations.
-    out.sort()
-    return tuple(out)
+    return tuple(sorted(out))
 
 
 def _replace_version(path: Path, old: str, new: str) -> bool:

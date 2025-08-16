@@ -18,7 +18,6 @@ from bumpwright.cli.bump import (  # isort:skip
 )
 
 
-
 def test_prepare_version_files_no_relevant_changes(tmp_path):
     repo, _, base = setup_repo(tmp_path)
     pyproj = repo / "pyproject.toml"
@@ -97,9 +96,7 @@ def test_commit_tag_stages_all_files(tmp_path):
         _commit_tag([pyproj, init_file], "0.1.1", commit=True, tag=False)
     finally:
         os.chdir(cwd)
-    files = run(
-        ["git", "show", "--pretty=format:", "--name-only", "HEAD"], repo
-    ).splitlines()
+    files = run(["git", "show", "--pretty=format:", "--name-only", "HEAD"], repo).splitlines()
     assert "pyproject.toml" in files
     assert "pkg/__init__.py" in files
     msg = run(["git", "log", "-1", "--pretty=%s"], repo)

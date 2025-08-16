@@ -16,7 +16,11 @@ except ModuleNotFoundError as exc:  # pragma: no cover
 
 MIN_RELEASE_PARTS = 3
 
-_SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z-.]+))?(?:\+([0-9A-Za-z-.]+))?$")
+
+# SemVer segments disallow leading zeros per specification.
+_SEMVER_RE = re.compile(
+    r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-.]+))?(?:\+([0-9A-Za-z-.]+))?$"
+
 
 
 def _bump_segment(segment: str | None, default: str) -> str:
@@ -70,7 +74,8 @@ class SemverScheme:
             level: Bump level to apply.
 
         Returns:
-            The bumped semantic version string.
+            The bumped semantic version string. ``major``, ``minor``, and
+            ``patch`` bumps reset any prerelease or build information.
 
         Raises:
             ValueError: If ``level`` is unknown or ``version`` is invalid.
@@ -83,10 +88,16 @@ class SemverScheme:
         parts = [int(major), int(minor), int(patch)]
         if level == "major":
             parts = [parts[0] + 1, 0, 0]
+            pre = None
+            build = None
         elif level == "minor":
             parts = [parts[0], parts[1] + 1, 0]
+            pre = None
+            build = None
         elif level == "patch":
             parts = [parts[0], parts[1], parts[2] + 1]
+            pre = None
+            build = None
         elif level == "pre":
             pre = _bump_segment(pre, "rc")
         elif level == "build":
@@ -114,7 +125,9 @@ class Pep440Scheme:
             level: Bump level to apply.
 
         Returns:
-            The bumped version string with any epoch preserved.
+            The bumped version string with any epoch preserved. ``major``,
+            ``minor``, and ``patch`` bumps drop prerelease and local
+            components.
 
         Raises:
             ValueError: If ``level`` is unsupported.
@@ -129,10 +142,16 @@ class Pep440Scheme:
             release.append(0)
         if level == "major":
             release = [release[0] + 1, 0, 0]
+            pre = None
+            local = None
         elif level == "minor":
             release = [release[0], release[1] + 1, 0]
+            pre = None
+            local = None
         elif level == "patch":
             release = [release[0], release[1], release[2] + 1]
+            pre = None
+            local = None
         elif level == "pre":
             if pre:
                 pre = (pre[0], pre[1] + 1)

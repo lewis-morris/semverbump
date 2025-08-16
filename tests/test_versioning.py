@@ -44,6 +44,10 @@ def test_bump_string_uses_cached_config(monkeypatch: pytest.MonkeyPatch) -> None
 def test_bump_string_semver_prerelease_and_build() -> None:
     """SemVer bumps preserve and increment prerelease and build metadata."""
 
+
+    assert bump_string("1.2.3-alpha.1+build.1", "patch", scheme="semver") == "1.2.4"
+    assert bump_string("1.2.3-alpha.1+build.1", "minor", scheme="semver") == "1.3.0"
+    assert bump_string("1.2.3-alpha.1+build.1", "major", scheme="semver") == "2.0.0"
     assert (
         bump_string("1.2.3-alpha.1+build.1", "patch", scheme="semver")
         == "1.2.4-alpha.1+build.1"
@@ -52,9 +56,21 @@ def test_bump_string_semver_prerelease_and_build() -> None:
     assert bump_string("1.2.3+build.1", "build", scheme="semver") == "1.2.3+build.2"
 
 
-def test_bump_string_pep440_pre_and_local() -> None:
-    """PEP 440 bumps handle prerelease and local segments."""
+@pytest.mark.parametrize("version", ["01.2.3", "1.02.3", "1.2.03"])
+def test_bump_string_semver_rejects_leading_zeros(version: str) -> None:
+    """SemVer parsing rejects numeric components with leading zeros."""
 
+
+    with pytest.raises(ValueError):
+        bump_string(version, "patch", scheme="semver")
+
+
+def test_bump_string_pep440_pre_and_local() -> None:
+    """PEP 440 release bumps remove prerelease and local identifiers."""
+
+    assert bump_string("1.2.3rc1+local.1", "patch", scheme="pep440") == "1.2.4"
+    assert bump_string("1.2.3rc1+local.1", "minor", scheme="pep440") == "1.3.0"
+    assert bump_string("1.2.3rc1+local.1", "major", scheme="pep440") == "2.0.0"
     assert (
         bump_string("1.2.3rc1+local.1", "patch", scheme="pep440") == "1.2.4rc1+local.1"
     )
@@ -308,6 +324,21 @@ def test_resolve_files_absolute_paths_and_ignore_patterns(tmp_path: Path) -> Non
     out = _resolve_files(patterns, ignore, base)
     expected = [abs_file, keep_rel]
     assert out == expected
+
+
+def test_resolve_files_overlapping_patterns_deduped(tmp_path: Path) -> None:
+    """Overlapping glob patterns yield unique, sorted results."""
+
+    a = tmp_path / "a.txt"
+    b = tmp_path / "b.txt"
+    a.write_text("", encoding="utf-8")
+    b.write_text("", encoding="utf-8")
+
+    patterns = ["*.txt", "a.*", "b.*"]
+    out = _resolve_files(patterns, [], tmp_path)
+
+    assert out == [a, b]
+
 
 
 def test_resolve_files_uses_cache(

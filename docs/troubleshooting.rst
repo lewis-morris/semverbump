@@ -45,8 +45,9 @@ Why do I get version conflicts when bumping?
     See :doc:`configuration` for controlling version sources.
 
 How do I check which analysers ran?
-    Use the ``--verbose`` flag to see enabled analysers during execution. The
-    :doc:`cli_reference` describes all available command-line options.
+    Run with ``--format json`` to inspect analyser impacts or review your
+    configuration to see which analysers are enabled. The :doc:`cli_reference`
+    describes all available command-line options.
 
 Can I simulate a bump without writing to disk?
     Yes. Run with ``--dry-run`` to preview changes without modifying files.
