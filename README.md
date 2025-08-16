@@ -49,6 +49,9 @@ bumpwright bump --decide
 bumpwright bump --commit --tag
 ```
 
+> **Note**
+> Omitting `--base` compares against the last release commit or the previous commit (`HEAD^`). Using `--commit` or `--tag` requires a clean working tree.
+
 Example output from `bumpwright bump --decide`:
 
 ```text
