@@ -64,7 +64,9 @@ def pyproject_malformed(tmp_path: Path) -> Path:
         ("pyproject_malformed", ParseError),
     ],
 )
-def test_read_project_version_errors(path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest) -> None:
+def test_read_project_version_errors(
+    path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest
+) -> None:
     """Validate ``read_project_version`` error handling for bad inputs."""
 
     path = request.getfixturevalue(path_fixture)
@@ -79,6 +81,7 @@ def test_apply_bump(tmp_path: Path):
     assert out.old == "0.1.0" and out.new == "0.2.0"
     assert read_project_version(py) == "0.2.0"
     assert py in out.files
+    assert out.skipped == []
 
 
 def test_apply_bump_dry_run(tmp_path: Path) -> None:
@@ -88,6 +91,7 @@ def test_apply_bump_dry_run(tmp_path: Path) -> None:
     assert out.old == "1.2.3" and out.new == "1.2.4"
     assert read_project_version(py) == "1.2.3"
     assert out.files == []
+    assert out.skipped == []
 
 
 def test_apply_bump_updates_extra_files(tmp_path: Path) -> None:
@@ -112,6 +116,7 @@ def test_apply_bump_updates_extra_files(tmp_path: Path) -> None:
     assert "version = '0.1.1'" in _ver.read_text(encoding="utf-8")
     # Out files are sorted for deterministic order.
     assert out.files == [py, init, _ver, ver, setup]
+    assert out.skipped == []
 
 
 def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
@@ -125,6 +130,7 @@ def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
     out = apply_bump("minor", py, ignore=[str(init)])
     assert "__version__ = '1.0.0'" in init.read_text(encoding="utf-8")
     assert init not in out.files
+    assert out.skipped == []
 
 
 @pytest.mark.parametrize(
@@ -163,6 +169,8 @@ def test_default_version_ignore_patterns(
     assert "__version__ = '1.1.0'" in init.read_text(encoding="utf-8")
     assert "__version__ = '1.0.0'" in ignored_file.read_text(encoding="utf-8")
     assert ignored_file not in out.files
+    assert out.skipped == []
+
 
 def test_apply_bump_skips_files_without_version(tmp_path: Path) -> None:
     py = tmp_path / "pyproject.toml"
@@ -173,6 +181,7 @@ def test_apply_bump_skips_files_without_version(tmp_path: Path) -> None:
     out = apply_bump("patch", py, paths=[str(extra)], ignore=[])
 
     assert extra not in out.files
+    assert extra in out.skipped
     assert extra.read_text(encoding="utf-8") == "print('no version here')"
 
 
@@ -182,6 +191,7 @@ def test_replace_version_returns_false_when_unmodified(tmp_path: Path) -> None:
 
     assert not _replace_version(target, "0.1.0", "0.2.0")
     assert target.read_text(encoding="utf-8") == "print('hello')"
+
 
 def test_apply_bump_respects_scheme(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -194,6 +204,7 @@ def test_apply_bump_respects_scheme(
     monkeypatch.chdir(tmp_path)
     out = apply_bump("patch", py)
     assert out.new == "1!1.0.1"
+    assert out.skipped == []
 
 
 def test_apply_bump_invalid_scheme(
@@ -260,7 +271,9 @@ def test_resolve_files_absolute_paths_and_ignore_patterns(tmp_path: Path) -> Non
     assert out == expected
 
 
-def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_resolve_files_uses_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Ensure repeated resolution reuses cached results."""
 
     (tmp_path / "a.txt").write_text("1", encoding="utf-8")
@@ -279,7 +292,9 @@ def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Pat
     assert calls["count"] == 1
 
 
-def test_apply_bump_clears_resolve_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_apply_bump_clears_resolve_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     """Verify custom patterns trigger cache invalidation."""
 
     py = tmp_path / "pyproject.toml"

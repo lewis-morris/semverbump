@@ -163,6 +163,7 @@ def _display_result(
                     "confidence": decision.confidence,
                     "reasons": decision.reasons,
                     "files": [str(p) for p in vc.files],
+                    "skipped": [str(p) for p in vc.skipped],
                 },
                 indent=2,
             )
@@ -170,9 +171,13 @@ def _display_result(
     elif args.format == "md":
         print(f"Bumped version: `{vc.old}` -> `{vc.new}` ({vc.level})")
         print("Updated files:\n" + "\n".join(f"- `{p}`" for p in vc.files))
+        if vc.skipped:
+            print("Skipped files:\n" + "\n".join(f"- `{p}`" for p in vc.skipped))
     else:
         print(f"Bumped version: {vc.old} -> {vc.new} ({vc.level})")
         print("Updated files: " + ", ".join(str(p) for p in vc.files))
+        if vc.skipped:
+            print("Skipped files: " + ", ".join(str(p) for p in vc.skipped))
 
 
 def _write_changelog(args: argparse.Namespace, changelog: str | None) -> None:

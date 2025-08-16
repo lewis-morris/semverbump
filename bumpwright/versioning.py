@@ -27,12 +27,14 @@ class VersionChange:
         new: New version string after bump.
         level: Bump level applied (``"major"``, ``"minor"``, or ``"patch"``).
         files: Files updated with the new version.
+        skipped: Files where the old version string was not found.
     """
 
     old: str
     new: str
     level: BumpLevel
     files: list[Path] = field(default_factory=list)
+    skipped: list[Path] = field(default_factory=list)
 
 
 def bump_string(v: str, level: BumpLevel, scheme: str | None = None) -> str:
@@ -100,7 +102,9 @@ def read_project_version(pyproject_path: str | Path = "pyproject.toml") -> str:
         raise KeyError("project.version not found in pyproject.toml") from e
 
 
-def write_project_version(new_version: str, pyproject_path: str | Path = "pyproject.toml") -> None:
+def write_project_version(
+    new_version: str, pyproject_path: str | Path = "pyproject.toml"
+) -> None:
     """Write ``new_version`` to the ``pyproject.toml`` file.
 
     Args:
@@ -147,8 +151,8 @@ def apply_bump(  # noqa: PLR0913
             configuration is used.
 
     Returns:
-        :class:`VersionChange` detailing the old and new versions and updated
-        files.
+        :class:`VersionChange` detailing the old and new versions, updated files,
+        and any files skipped due to mismatched versions.
 
     Notes:
         Resolved file paths are cached across invocations for performance.
@@ -170,12 +174,13 @@ def apply_bump(  # noqa: PLR0913
         return VersionChange(old=old, new=new, level=level)
 
     write_project_version(new, pyproject_path)
-    updated = _update_additional_files(new, old, paths, ignore, pyproject_path)
+    updated, skipped = _update_additional_files(new, old, paths, ignore, pyproject_path)
     return VersionChange(
         old=old,
         new=new,
         level=level,
         files=[Path(pyproject_path), *updated],
+        skipped=skipped,
     )
 
 
@@ -185,7 +190,7 @@ def _update_additional_files(
     patterns: Iterable[str],
     ignore: Iterable[str],
     pyproject_path: str | Path,
-) -> list[Path]:
+) -> tuple[list[Path], list[Path]]:
     """Update version strings in files matching ``patterns``.
 
     Args:
@@ -196,22 +201,27 @@ def _update_additional_files(
         pyproject_path: Canonical ``pyproject.toml`` path to skip (already updated).
 
     Returns:
-        List of files that were updated.
+        Tuple of lists: files updated and files skipped due to version mismatch.
     """
 
     base = Path(pyproject_path).resolve().parent
     files = _resolve_files(patterns, ignore, base)
     canon = Path(pyproject_path).resolve()
     changed: list[Path] = []
+    skipped: list[Path] = []
     for f in files:
         if f.resolve() == canon:
             continue
         if _replace_version(f, old, new):
             changed.append(f)
-    return changed
+        else:
+            skipped.append(f)
+    return changed, skipped
 
 
-def _resolve_files(patterns: Iterable[str], ignore: Iterable[str], base_dir: Path) -> list[Path]:
+def _resolve_files(
+    patterns: Iterable[str], ignore: Iterable[str], base_dir: Path
+) -> list[Path]:
     """Expand glob patterns while applying ignore rules relative to ``base_dir``.
 
     Args:
@@ -232,7 +242,9 @@ def _resolve_files(patterns: Iterable[str], ignore: Iterable[str], base_dir: Pat
 
 
 @lru_cache(maxsize=None)
-def _resolve_files_cached(patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str) -> tuple[Path, ...]:
+def _resolve_files_cached(
+    patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str
+) -> tuple[Path, ...]:
     """Resolve files for caching.
 
     This function performs the actual glob resolution and is wrapped with

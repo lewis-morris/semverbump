@@ -39,6 +39,22 @@ def test_display_result_json(capsys):
     _display_result(args, vc, dec)
     data = json.loads(capsys.readouterr().out)
     assert data["new_version"] == "0.2.0"
+    assert data["skipped"] == []
+
+
+def test_display_result_text_skipped(capsys):
+    args = argparse.Namespace(format="text")
+    vc = VersionChange(
+        "0.1.0",
+        "0.2.0",
+        "minor",
+        [Path("pyproject.toml")],
+        [Path("extra.py")],
+    )
+    dec = Decision("minor", 1.0, [])
+    _display_result(args, vc, dec)
+    out = capsys.readouterr().out
+    assert "Skipped files: extra.py" in out
 
 
 def test_write_changelog_to_file(tmp_path):
