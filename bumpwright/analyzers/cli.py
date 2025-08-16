@@ -21,12 +21,28 @@ class Command:
 
 
 def _is_str(node: ast.AST) -> bool:
-    """Return ``True`` if ``node`` is a constant string."""
+    """Return whether ``node`` is a constant string.
+
+    Args:
+        node: AST node to examine.
+
+    Returns:
+        ``True`` if the node represents a string literal.
+    """
+
     return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
 
 def _extract_click(node: ast.FunctionDef) -> Command | None:
-    """Extract click command metadata from a function definition."""
+    """Extract click command metadata from a function definition.
+
+    Args:
+        node: Function definition node.
+
+    Returns:
+        :class:`Command` description if ``node`` defines a click command, otherwise
+        ``None``.
+    """
 
     cmd_name: str | None = None
     options: Dict[str, bool] = {}
@@ -80,7 +96,15 @@ def _extract_click(node: ast.FunctionDef) -> Command | None:
 
 
 def _extract_argparse(tree: ast.AST) -> Dict[str, Command]:
-    """Extract argparse commands from AST."""
+    """Extract argparse commands from AST.
+
+    Args:
+        tree: Parsed module AST.
+
+    Returns:
+        Mapping of command name to :class:`Command` objects discovered via
+        ``argparse``.
+    """
 
     commands: Dict[str, Command] = {}
     parsers: Dict[str, str] = {}
@@ -133,7 +157,14 @@ def _extract_argparse(tree: ast.AST) -> Dict[str, Command]:
 
 
 def extract_cli_from_source(code: str) -> Dict[str, Command]:
-    """Extract command definitions from source code."""
+    """Extract command definitions from source code.
+
+    Args:
+        code: Python source text to analyze.
+
+    Returns:
+        Mapping of command name to :class:`Command` definitions.
+    """
 
     tree = ast.parse(code)
     commands: Dict[str, Command] = {}
@@ -147,7 +178,15 @@ def extract_cli_from_source(code: str) -> Dict[str, Command]:
 
 
 def diff_cli(old: Dict[str, Command], new: Dict[str, Command]) -> List[Impact]:
-    """Compare CLI definitions and compute impacts."""
+    """Compare CLI definitions and compute impacts.
+
+    Args:
+        old: Command mapping for the base reference.
+        new: Command mapping for the head reference.
+
+    Returns:
+        List of detected impacts between the two mappings.
+    """
 
     impacts: List[Impact] = []
     for name in old.keys() - new.keys():
@@ -176,7 +215,16 @@ def diff_cli(old: Dict[str, Command], new: Dict[str, Command]) -> List[Impact]:
 def _build_cli_at_ref(
     ref: str, roots: Iterable[str], ignores: Iterable[str]
 ) -> Dict[str, Command]:
-    """Collect commands for all modules at a git ref."""
+    """Collect commands for all modules at a git ref.
+
+    Args:
+        ref: Git reference to inspect.
+        roots: Root directories to scan.
+        ignores: Glob patterns to exclude.
+
+    Returns:
+        Mapping of command name to :class:`Command` objects present at ``ref``.
+    """
 
     out: Dict[str, Command] = {}
     for path in list_py_files_at_ref(ref, roots, ignore_globs=ignores):
@@ -196,11 +244,28 @@ class CLIAnalyzer:
         self.cfg = cfg
 
     def collect(self, ref: str) -> Dict[str, Command]:
-        """Collect CLI commands at the given ref."""
+        """Collect CLI commands at the given ref.
+
+        Args:
+            ref: Git reference to inspect.
+
+        Returns:
+            Mapping of command name to :class:`Command` objects.
+        """
+
         return _build_cli_at_ref(
             ref, self.cfg.project.public_roots, self.cfg.ignore.paths
         )
 
     def compare(self, old: Dict[str, Command], new: Dict[str, Command]) -> List[Impact]:
-        """Compare two command mappings and return impacts."""
+        """Compare two command mappings and return impacts.
+
+        Args:
+            old: Baseline command mapping.
+            new: Updated command mapping.
+
+        Returns:
+            List of impacts describing CLI changes.
+        """
+
         return diff_cli(old, new)

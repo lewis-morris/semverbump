@@ -221,7 +221,15 @@ def init_command(_args: argparse.Namespace) -> int:
 
 
 def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
-    """Handle ``bump --decide`` mode."""
+    """Handle ``bump --decide`` mode.
+
+    Args:
+        args: Parsed command-line arguments.
+        cfg: Project configuration settings.
+
+    Returns:
+        Process exit code.
+    """
 
     base = args.base or last_release_commit() or "HEAD^"
     head = args.head
@@ -249,7 +257,15 @@ def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
 
 
 def _resolve_refs(args: argparse.Namespace, level: str | None) -> tuple[str, str]:
-    """Determine base and head git references."""
+    """Determine base and head git references.
+
+    Args:
+        args: Parsed command-line arguments.
+        level: Desired bump level if already known.
+
+    Returns:
+        Tuple of ``(base, head)`` references.
+    """
 
     if args.base:
         base = args.base
@@ -261,7 +277,15 @@ def _resolve_refs(args: argparse.Namespace, level: str | None) -> tuple[str, str
 
 
 def _safe_changed_paths(base: str, head: str) -> set[str] | None:
-    """Return changed paths, handling missing history gracefully."""
+    """Return changed paths, handling missing history gracefully.
+
+    Args:
+        base: Older git reference.
+        head: Newer git reference.
+
+    Returns:
+        Set of changed file paths or ``None`` if history lookup fails.
+    """
 
     try:
         return changed_paths(base, head)
@@ -270,7 +294,16 @@ def _safe_changed_paths(base: str, head: str) -> set[str] | None:
 
 
 def _infer_level(base: str, head: str, cfg: Config) -> str | None:
-    """Compute bump level from repository differences."""
+    """Compute bump level from repository differences.
+
+    Args:
+        base: Base git reference.
+        head: Head git reference.
+        cfg: Project configuration settings.
+
+    Returns:
+        Suggested bump level or ``None`` if no change is required.
+    """
 
     old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
     new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
@@ -282,7 +315,15 @@ def _infer_level(base: str, head: str, cfg: Config) -> str | None:
 
 
 def _build_changelog(args: argparse.Namespace, new_version: str) -> str | None:
-    """Generate changelog text if requested."""
+    """Generate changelog text if requested.
+
+    Args:
+        args: Parsed command-line arguments.
+        new_version: Newly computed project version.
+
+    Returns:
+        Rendered changelog text or ``None`` when changelog generation is disabled.
+    """
 
     if args.changelog is None:
         return None
@@ -300,7 +341,14 @@ def _build_changelog(args: argparse.Namespace, new_version: str) -> str | None:
 
 
 def bump_command(args: argparse.Namespace) -> int:
-    """Apply a version bump based on repository changes."""
+    """Apply a version bump based on repository changes.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Process exit code.
+    """
 
     cfg = load_config(args.config)
     if args.decide:
