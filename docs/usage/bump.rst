@@ -192,3 +192,6 @@ Common errors
 
 Changes not applied after running
     The ``--dry-run`` flag previews the bump without touching files. Remove it and, if desired, add ``--commit`` and ``--tag`` to persist the change.
+
+Versioned files created or removed
+    Call ``bumpwright.versioning.clear_version_file_cache()`` before the next run or change ``--version-path``/``--version-ignore`` patterns so ``bumpwright`` rescans the filesystem.
