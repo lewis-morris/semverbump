@@ -98,6 +98,9 @@ Arguments
 ``--dry-run``
     Display the new version without modifying any files. Defaults to ``false``.
 
+.. note::
+   Omitting ``--base`` compares against the last release commit or ``HEAD^``. When ``--commit`` or ``--tag`` is used, the working tree must be clean.
+
 Examples
 --------
 

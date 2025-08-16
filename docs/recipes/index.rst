@@ -6,27 +6,18 @@ Monorepo or multi-package layout
 
 .. code-block:: bash
 
-   bumpwright bump --public-roots pkg_a src/pkg_b
+   bumpwright bump --pyproject packages/pkg_a/pyproject.toml
 
-Run analyses across multiple packages while keeping their APIs distinct.
+Analyse a single package in a monorepo while keeping other packages untouched.
 
-Pre-releases and tags
----------------------
-
-.. code-block:: bash
-
-   bumpwright bump --level prerelease --suffix rc
-
-Create release candidates without touching the stable version line.
-
-Ignoring paths / narrowing public roots
----------------------------------------
+Commit and tag
+--------------
 
 .. code-block:: bash
 
-   bumpwright bump --ignore tests/fixtures --public-roots src
+   bumpwright bump --level patch --commit --tag
 
-Exclude helper code and limit scanning to your public modules.
+Create a release commit and matching tag.
 
 Running locally vs CI
 ---------------------
@@ -42,7 +33,6 @@ JSON output + machine consumption
 
 .. code-block:: bash
 
-   bumpwright bump --format json | jq '.suggested'
+   bumpwright bump --format json | jq '.level'
 
 Pipe structured results into other tools or CI steps.
-

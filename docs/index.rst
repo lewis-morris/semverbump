@@ -86,6 +86,7 @@ Reference
 
    cli_reference
    analysers/index
+   glossary
 
 Examples & Recipes
 ------------------

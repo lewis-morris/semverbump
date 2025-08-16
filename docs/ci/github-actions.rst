@@ -33,7 +33,7 @@ when the decision is at least a patch, creates a tag, and pushes it.
          - name: apply bump
            if: steps.decision.outputs.level != 'none'
            run: |
-             bumpwright bump --apply --tag
+             bumpwright bump --commit --tag
              git push --tags
 
 Decision only
@@ -71,7 +71,7 @@ parse the level with ``jq``:
    - run: |
        level=$(jq -r '.level' decision.json)
        if [ "$level" != "none" ]; then
-         bumpwright bump --apply --tag
+         bumpwright bump --commit --tag
          git push --tags
        fi
 
