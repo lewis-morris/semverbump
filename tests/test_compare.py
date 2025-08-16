@@ -1,3 +1,5 @@
+"""Tests for public API comparison helpers."""
+
 from bumpwright.compare import (
     Impact,
     Severity,
@@ -9,6 +11,7 @@ from bumpwright.public_api import FuncSig, Param
 
 MAJOR: Severity = "major"
 MINOR: Severity = "minor"
+CONFIDENCE_HALF = 0.5
 
 
 def _sig(name, params, returns=None):
@@ -69,5 +72,5 @@ def test_confidence_ratio():
     impacts.append(Impact(MINOR, "m:g", "Added public symbol"))
     decision = decide_bump(impacts)
     assert decision.level == MAJOR
-    assert decision.confidence == 0.5
+    assert decision.confidence == CONFIDENCE_HALF
     assert decision.reasons == ["Added required param 'y'"]
