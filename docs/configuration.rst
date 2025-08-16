@@ -23,6 +23,7 @@ Example configuration showing all available sections and their default values:
     [analysers]
     cli = false
     web_routes = false
+    migrations = false
 
     [migrations]
     paths = ["migrations"]
@@ -114,6 +115,9 @@ temporarily override these settings. Built-in analysers include:
    * - ``web_routes``
      - Tracks additions or removals of web routes in frameworks such as
        Flask or FastAPI.
+     - ``false``
+   * - ``migrations``
+     - Scans Alembic migrations for schema impacts.
      - ``false``
 
 Migrations

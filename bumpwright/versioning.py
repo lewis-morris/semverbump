@@ -17,6 +17,21 @@ from .config import Config, load_config
 from .types import BumpLevel
 from .version_schemes import get_version_scheme
 
+_DEFAULT_CFG: Config | None = None
+
+
+def _get_default_config() -> Config:
+    """Return cached configuration loading from disk on first use.
+
+    Returns:
+        Loaded :class:`~bumpwright.config.Config` instance.
+    """
+
+    global _DEFAULT_CFG  # noqa: PLW0603
+    if _DEFAULT_CFG is None:
+        _DEFAULT_CFG = load_config()
+    return _DEFAULT_CFG
+
 
 @dataclass
 class VersionChange:
@@ -54,7 +69,7 @@ def bump_string(v: str, level: BumpLevel, scheme: str | None = None) -> str:
         ValueError: If ``level`` or the scheme name is unsupported.
     """
 
-    scheme_name = scheme or load_config().version.scheme
+    scheme_name = scheme or _get_default_config().version.scheme
     impl = get_version_scheme(scheme_name)
     return impl.bump(v, level)
 
@@ -263,10 +278,10 @@ def _resolve_files_cached(
         base_dir: Directory relative to which patterns are evaluated.
 
     Returns:
-        Tuple of discovered file paths matching ``patterns`` minus ``ignore``.
+        Tuple of unique file paths matching ``patterns`` minus ``ignore``.
     """
 
-    out: list[Path] = []
+    out: set[Path] = set()
     ignore_list = list(ignore)
     base = Path(base_dir)
     for pat in patterns:
@@ -283,10 +298,9 @@ def _resolve_files_cached(
                 rel_str = path_str
             if any(fnmatch(path_str, ig) or fnmatch(rel_str, ig) for ig in ignore_list):
                 continue
-            out.append(p)
+            out.add(p)
     # Ensure deterministic ordering for predictable downstream operations.
-    out.sort()
-    return tuple(out)
+    return tuple(sorted(out))
 
 
 def _replace_version(path: Path, old: str, new: str) -> bool:
