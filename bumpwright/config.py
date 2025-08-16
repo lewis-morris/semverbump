@@ -36,6 +36,8 @@ _DEFAULTS = {
             ".env/**",
             "**/__pycache__/**",
         ],
+
+        "scheme": "semver",
     },
 }
 
@@ -109,6 +111,7 @@ class VersionFiles:
     Attributes:
         paths: Glob patterns to search for version declarations.
         ignore: Glob patterns to skip during version replacement.
+        scheme: Versioning scheme identifier. Defaults to ``"semver"``.
     """
 
     paths: list[str] = field(
@@ -133,6 +136,8 @@ class VersionFiles:
             "**/__pycache__/**",
         ]
     )
+
+    scheme: str = "semver"
 
 
 @dataclass

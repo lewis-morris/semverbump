@@ -98,6 +98,7 @@ locations can be customised via the ``[version]`` section in ``bumpwright.toml``
 or augmented with ``--version-path`` and ``--version-ignore`` to add or exclude
 patterns.
 
+
 **Arguments**
 
 ``--level {major,minor,patch}``

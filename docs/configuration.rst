@@ -32,6 +32,7 @@ Example configuration showing all available sections and their default values:
    [version]
    paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]
    ignore = []
+   scheme = "semver"
 
 Set an analyser value to ``true`` to enable it.
 
@@ -128,7 +129,8 @@ Migrations
 Version
 ~~~~~~~
 
-Controls where version strings are read and updated.
+Controls where version strings are read and updated and which versioning
+scheme is applied.
 
 .. list-table:: Version options
    :header-rows: 1
@@ -145,6 +147,11 @@ Controls where version strings are read and updated.
      - list[str]
      - ``["build/**", "dist/**", "*.egg-info/**", ".eggs/**", ".venv/**", "venv/**", ".env/**", "**/__pycache__/**"]``
      - Glob patterns excluded from version replacement.
+   * - ``scheme``
+     - str
+     - ``"semver"``
+     - Versioning scheme used when bumping. Supported values include
+       ``"semver"`` and ``"pep440"``.
 
 Command-line options ``--version-path`` and ``--version-ignore`` extend these
 defaults for one-off runs.
