@@ -20,7 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -33,6 +35,17 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e .
           python -m pip install -e ".[docs,dev]"
+
+      # Pull coverage.xml produced by the Lint & Tests workflow on this commit
+      - name: Download coverage.xml from Lint & Tests
+        uses: dawidd6/action-download-artifact@v3
+        continue-on-error: true   # don't fail docs if tests aren't done yet
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          workflow: unit-tests.yml
+          name: coverage-xml
+          commit: ${{ github.sha }}
+          path: .  # drop coverage.xml at repo root for the badge script to find
 
       - name: Generate badges into Sphinx _static
         run: |
