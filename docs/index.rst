@@ -28,5 +28,4 @@ Static public-API diff and heuristics to suggest semantic version bumps.
    :maxdepth: 1
    :caption: Project
 
-   changelog
    roadmap

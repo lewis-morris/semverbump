@@ -116,6 +116,11 @@ assignment. These locations can be customised via the ``[version]`` section in
 ``--disable-analyzer NAME``
     Disable analyzer ``NAME`` even if enabled in configuration. Repeatable.
 
+``--changelog [FILE]``
+    Append release notes for the new version to ``FILE``.
+    When ``FILE`` is omitted or set to ``-``, the changelog entry is printed to
+    standard output. If the option is omitted, no changelog entry is produced.
+
 ``--pyproject PATH``
     Path to the project's ``pyproject.toml`` file. Defaults to
     ``pyproject.toml``.
@@ -151,7 +156,11 @@ set, commits and tags the release. Omitting ``--base`` compares against the
 last release commit or the previous commit (``HEAD^``), and omitting
 ``--head`` assumes ``HEAD``.
 
-Generate a Markdown changelog with commit links:
+Changelog generation
+--------------------
+
+``bumpwright`` can generate Markdown release notes when bumping versions. The
+``--changelog`` option controls where these notes go and how they are emitted.
 
 .. code-block:: console
 
@@ -161,6 +170,29 @@ Generate a Markdown changelog with commit links:
 
    ## [v1.2.4] - 2024-04-01
    - [abc123](https://github.com/me/project/commit/abc123) feat: change
+
+Entries follow a simple Markdown structure:
+
+.. code-block:: markdown
+
+   ## [v1.2.4] - 2024-09-14
+   - a1b2c3d fix: correct typo
+   - d4e5f6g feat: add new option
+
+Each entry begins with a version heading and date, followed by a list of commit
+shas and subjects since the previous release.
+
+Projects can set a default changelog path in ``bumpwright.toml`` so the
+``bump`` command writes to that location when ``--changelog`` is omitted:
+
+.. code-block:: toml
+
+   [changelog]
+   path = "CHANGELOG.md"
+
+With this configuration, running ``bumpwright bump`` automatically appends the
+release notes to ``CHANGELOG.md``. To print to stdout instead, invoke
+``bumpwright bump --changelog`` (or pass ``--changelog -`` for clarity).
 
 To preview changes without touching the filesystem, combine ``--dry-run`` with
 JSON output:
