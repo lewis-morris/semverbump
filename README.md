@@ -155,6 +155,20 @@ alternative with ``--config``.
 
 ### Analyzer reference
 
+#### Python API
+
+Compares Python function and method signatures to detect changes.
+
+Severity rules:
+
+- Removed public symbol → **major**
+- Added public symbol → **minor**
+- Removed required parameter → **major**
+- Removed optional parameter → **minor**
+- Added optional parameter → **minor**
+- Parameter kind changed → **major**
+- Return annotation changed → **minor**
+
 #### CLI (``cli``)
 
 Tracks command-line interfaces defined with ``argparse`` or ``click``.

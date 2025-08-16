@@ -24,6 +24,17 @@ def test_removed_required_param_is_major():
     assert any(i.severity == "major" for i in impacts)
 
 
+def test_removed_optional_param_is_minor():
+    old = _sig(
+        "m:f",
+        [_p("x"), _p("timeout", kind="kwonly", default="None")],
+        "-> int",
+    )
+    new = _sig("m:f", [_p("x")], "-> int")
+    impacts = compare_funcs(old, new)
+    assert any(i.severity == "minor" for i in impacts)
+
+
 def test_removed_symbol_is_major():
     old = {"m:f": _sig("m:f", [_p("x")], None)}
     new = {}
