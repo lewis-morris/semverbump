@@ -43,6 +43,7 @@ jobs:
           else
             sphinx-build -b html . _build/html
           fi
+          touch build/html/.nojekyll
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
