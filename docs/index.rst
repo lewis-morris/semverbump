@@ -27,6 +27,12 @@ Static public-API diff and heuristics to suggest semantic version bumps.
 
 .. toctree::
    :maxdepth: 1
+   :caption: Support
+
+   troubleshooting
+
+.. toctree::
+   :maxdepth: 1
    :caption: Project
 
    roadmap
