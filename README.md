@@ -21,8 +21,9 @@ Design goals include:
 ## Features
 
 - Static diff of the public API to highlight breaking changes.
-- Pluggable analysers for command-line tools, web routes and database
-  migrations.
+ - Pluggable analysers for command-line tools, web routes and database
+   migrations. These analysers are **opt-in** and disabled by default; enable
+   them explicitly in configuration.
 - Dry-run mode to preview version bumps without touching any files.
 - Output in plain text, Markdown or JSON for easy integration.
 - Optional helpers to update version numbers across common files and tag the release.
@@ -64,12 +65,18 @@ See [docs/quickstart.rst](docs/quickstart.rst) for a step-by-step example.
 - `--enable-analyser` or `--disable-analyser`: toggle analysers
 - See [CLI reference](docs/cli_reference.rst) for details.
 
-1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
+1. **Create a configuration file** (``bumpwright.toml``). Analysers are
+   opt-in, so enable the ones you need:
 
    ```toml
+   # bumpwright.toml
    [analysers]
-   cli = true      # enable CLI analysis
-   web_routes = false  # disable route analysis
+   cli = true        # enable CLI analysis
+   web_routes = true # enable web route analysis
+   migrations = true # enable migrations analysis
+
+   [migrations]
+   paths = ["migrations"]
    ```
 
    Command-line flags ``--enable-analyser`` and ``--disable-analyser`` can
