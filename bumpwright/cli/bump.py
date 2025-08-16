@@ -8,7 +8,7 @@ import subprocess
 import sys
 from datetime import date
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from jinja2 import Template
 
@@ -21,11 +21,13 @@ from .decide import _decide_only, _infer_level
 _DEFAULT_TEMPLATE = (Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2").read_text(encoding="utf-8")
 
 
-def _commit_tag(pyproject: str, version: str, commit: bool, tag: bool) -> None:
+def _commit_tag(
+    files: Iterable[str | Path], version: str, commit: bool, tag: bool
+) -> None:
     """Optionally commit and tag the updated version.
 
     Args:
-        pyproject: Path to the ``pyproject.toml`` file.
+        files: Paths of files to stage before committing.
         version: Version string to commit and tag.
         commit: Whether to create a commit.
         tag: Whether to create a git tag.
@@ -50,8 +52,12 @@ def _commit_tag(pyproject: str, version: str, commit: bool, tag: bool) -> None:
             raise RuntimeError(msg)
 
     if commit:
-        subprocess.run(["git", "add", pyproject], check=True)
-        subprocess.run(["git", "commit", "-m", f"chore(release): {version}"], check=True)
+        for file in files:
+            subprocess.run(["git", "add", str(file)], check=True)
+        subprocess.run(
+            ["git", "commit", "-m", f"chore(release): {version}"], check=True
+        )
+
     if tag:
         subprocess.run(["git", "tag", f"v{version}"], check=True)
 
@@ -320,6 +326,6 @@ def bump_command(args: argparse.Namespace) -> int:
     changelog = _build_changelog(args, vc.new)
     _display_result(args, vc, decision)
     if not args.dry_run:
-        _commit_tag(str(pyproject), vc.new, args.commit, args.tag)
+        _commit_tag(vc.files, vc.new, args.commit, args.tag)
     _write_changelog(args, changelog)
     return 0
