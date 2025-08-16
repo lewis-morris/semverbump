@@ -105,6 +105,67 @@ def _parse_exports(mod: ast.Module) -> set[str] | None:
     return None
 
 
+def _positional_params(args: ast.arguments) -> list[Param]:
+    """Build positional-only and positional-or-keyword parameters.
+
+    Args:
+        args: Function arguments node from the AST.
+
+    Returns:
+        Positional parameter descriptors in declaration order.
+    """
+
+    posonly = list(args.posonlyargs)
+    pos = list(args.args)
+    defaults = list(args.defaults)
+    # Defaults apply to the tail of the combined positional parameters.
+    total = len(posonly) + len(pos)
+    d_start = total - len(defaults)
+    out: list[Param] = []
+
+    for idx, param in enumerate(posonly + pos):
+        default = _render_expr(defaults[idx - d_start]) if idx >= d_start else None
+        kind = "posonly" if idx < len(posonly) else "pos"
+        out.append(Param(param.arg, kind, default, _render_type(param.annotation)))
+    return out
+
+
+def _vararg_param(args: ast.arguments) -> list[Param]:
+    """Return variable positional parameter if present."""
+
+    if args.vararg:
+        return [
+            Param(args.vararg.arg, "vararg", None, _render_type(args.vararg.annotation))
+        ]
+    return []
+
+
+def _kwonly_params(args: ast.arguments) -> list[Param]:
+    """Build keyword-only parameters in declaration order."""
+
+    out: list[Param] = []
+    for param, default in zip(args.kwonlyargs, args.kw_defaults):
+        out.append(
+            Param(
+                param.arg,
+                "kwonly",
+                _render_expr(default),
+                _render_type(param.annotation),
+            )
+        )
+    return out
+
+
+def _varkw_param(args: ast.arguments) -> list[Param]:
+    """Return variable keyword parameter if present."""
+
+    if args.kwarg:
+        return [
+            Param(args.kwarg.arg, "varkw", None, _render_type(args.kwarg.annotation))
+        ]
+    return []
+
+
 def _param_list(args: ast.arguments) -> list[Param]:
     """Convert AST parameters to :class:`Param` instances.
 
@@ -115,40 +176,21 @@ def _param_list(args: ast.arguments) -> list[Param]:
         Ordered list of parameter descriptors.
     """
 
-    out: list[Param] = []
+    params: list[Param] = []
 
-    def _ann(node: ast.expr | None) -> str | None:
-        return _render_type(node) if node is not None else None
+    # Capture positional-only and positional-or-keyword parameters.
+    params.extend(_positional_params(args))
 
-    # Positional-only and positional params share defaults
-    posonly = list(args.posonlyargs)
-    pos = list(args.args)
-    defaults = list(args.defaults)
-    total = len(posonly) + len(pos)
-    d_start = total - len(defaults)
-    idx = 0
+    # Include *args if provided.
+    params.extend(_vararg_param(args))
 
-    for p in posonly + pos:
-        default = _render_expr(defaults[idx - d_start]) if idx >= d_start else None
-        kind = "posonly" if idx < len(posonly) else "pos"
-        out.append(Param(p.arg, kind, default, _ann(p.annotation)))
-        idx += 1
+    # Append keyword-only parameters following * or *args.
+    params.extend(_kwonly_params(args))
 
-    # Var positional
-    if args.vararg:
-        out.append(Param(args.vararg.arg, "vararg", None, _ann(args.vararg.annotation)))
+    # Include **kwargs if provided.
+    params.extend(_varkw_param(args))
 
-    # Keyword-only params
-    for param, default in zip(args.kwonlyargs, args.kw_defaults):
-        out.append(
-            Param(param.arg, "kwonly", _render_expr(default), _ann(param.annotation))
-        )
-
-    # Var keyword
-    if args.kwarg:
-        out.append(Param(args.kwarg.arg, "varkw", None, _ann(args.kwarg.annotation)))
-
-    return out
+    return params
 
 
 def _is_public(name: str) -> bool:
