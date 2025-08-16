@@ -13,9 +13,24 @@ from pathlib import Path
 from tomlkit import dumps as toml_dumps
 from tomlkit import parse as toml_parse
 
-from .config import load_config
+from .config import Config, load_config
 from .types import BumpLevel
 from .version_schemes import get_version_scheme
+
+_DEFAULT_CFG: Config | None = None
+
+
+def _get_default_config() -> Config:
+    """Return cached configuration loading from disk on first use.
+
+    Returns:
+        Loaded :class:`~bumpwright.config.Config` instance.
+    """
+
+    global _DEFAULT_CFG  # noqa: PLW0603
+    if _DEFAULT_CFG is None:
+        _DEFAULT_CFG = load_config()
+    return _DEFAULT_CFG
 
 
 @dataclass
@@ -54,7 +69,7 @@ def bump_string(v: str, level: BumpLevel, scheme: str | None = None) -> str:
         ValueError: If ``level`` or the scheme name is unsupported.
     """
 
-    scheme_name = scheme or load_config().version.scheme
+    scheme_name = scheme or _get_default_config().version.scheme
     impl = get_version_scheme(scheme_name)
     return impl.bump(v, level)
 
@@ -103,7 +118,9 @@ def read_project_version(pyproject_path: str | Path = "pyproject.toml") -> str:
         raise KeyError("project.version not found in pyproject.toml") from e
 
 
-def write_project_version(new_version: str, pyproject_path: str | Path = "pyproject.toml") -> None:
+def write_project_version(
+    new_version: str, pyproject_path: str | Path = "pyproject.toml"
+) -> None:
     """Write ``new_version`` to the ``pyproject.toml`` file.
 
     Args:
@@ -218,7 +235,9 @@ def _update_additional_files(
     return changed, skipped
 
 
-def _resolve_files(patterns: Iterable[str], ignore: Iterable[str], base_dir: Path) -> list[Path]:
+def _resolve_files(
+    patterns: Iterable[str], ignore: Iterable[str], base_dir: Path
+) -> list[Path]:
     """Expand glob patterns while applying ignore rules relative to ``base_dir``.
 
     Args:
@@ -239,7 +258,9 @@ def _resolve_files(patterns: Iterable[str], ignore: Iterable[str], base_dir: Pat
 
 
 @lru_cache(maxsize=None)
-def _resolve_files_cached(patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str) -> tuple[Path, ...]:
+def _resolve_files_cached(
+    patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str
+) -> tuple[Path, ...]:
     """Resolve files for caching.
 
     This function performs the actual glob resolution and is wrapped with
