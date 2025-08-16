@@ -6,6 +6,7 @@ import shlex
 import subprocess
 from collections.abc import Iterable
 from fnmatch import fnmatch
+from functools import lru_cache
 from pathlib import Path
 
 
@@ -57,22 +58,23 @@ def changed_paths(base: str, head: str, cwd: str | None = None) -> set[str]:
     return {line.strip() for line in out.splitlines() if line.strip()}
 
 
-def list_py_files_at_ref(
+@lru_cache(maxsize=None)
+def _list_py_files_at_ref_cached(
     ref: str,
-    roots: Iterable[str],
-    ignore_globs: Iterable[str] | None = None,
-    cwd: str | None = None,
-) -> set[str]:
-    """List Python files under given roots at a git ref.
+    roots: tuple[str, ...],
+    ignore_globs: tuple[str, ...],
+    cwd: str | None,
+) -> frozenset[str]:
+    """Return cached Python file paths for a given ref.
 
     Args:
         ref: Git reference to inspect.
         roots: Root directories to include.
-        ignore_globs: Optional glob patterns to exclude.
+        ignore_globs: Glob patterns to exclude.
         cwd: Repository path.
 
     Returns:
-        Set of matching Python file paths.
+        Frozen set of matching Python file paths.
     """
 
     out = _run(["git", "ls-tree", "-r", "--name-only", ref], cwd)
@@ -89,7 +91,36 @@ def list_py_files_at_ref(
             if ignore_globs and any(fnmatch(s, pat) for pat in ignore_globs):
                 continue
             paths.add(s)
-    return paths
+    return frozenset(paths)
+
+
+def list_py_files_at_ref(
+    ref: str,
+    roots: Iterable[str],
+    ignore_globs: Iterable[str] | None = None,
+    cwd: str | None = None,
+) -> set[str]:
+    """List Python files under given roots at a git ref.
+
+    Results are cached per ``(ref, tuple(roots), tuple(ignores))`` for improved
+    performance. Use ``list_py_files_at_ref.cache_clear()`` to invalidate.
+
+    Args:
+        ref: Git reference to inspect.
+        roots: Root directories to include.
+        ignore_globs: Optional glob patterns to exclude.
+        cwd: Repository path.
+
+    Returns:
+        Set of matching Python file paths.
+    """
+
+    roots_tuple = tuple(roots)
+    ignores_tuple = tuple(ignore_globs or ())
+    return set(_list_py_files_at_ref_cached(ref, roots_tuple, ignores_tuple, cwd))
+
+
+list_py_files_at_ref.cache_clear = _list_py_files_at_ref_cached.cache_clear  # type: ignore[attr-defined]
 
 
 def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> str | None:
