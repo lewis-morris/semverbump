@@ -4,8 +4,9 @@ import pytest
 from tomlkit import dumps as toml_dumps
 from tomlkit.exceptions import ParseError
 
+from bumpwright.config import Config, load_config
 from bumpwright import versioning
-from bumpwright.config import load_config
+
 from bumpwright.versioning import (
     _replace_version,
     _resolve_files,
@@ -44,7 +45,6 @@ def test_bump_string_uses_cached_config(monkeypatch: pytest.MonkeyPatch) -> None
 def test_bump_string_semver_prerelease_and_build() -> None:
     """SemVer bumps preserve and increment prerelease and build metadata."""
 
-
     assert bump_string("1.2.3-alpha.1+build.1", "patch", scheme="semver") == "1.2.4"
     assert bump_string("1.2.3-alpha.1+build.1", "minor", scheme="semver") == "1.3.0"
     assert bump_string("1.2.3-alpha.1+build.1", "major", scheme="semver") == "2.0.0"
@@ -59,6 +59,7 @@ def test_bump_string_semver_prerelease_and_build() -> None:
 @pytest.mark.parametrize("version", ["01.2.3", "1.02.3", "1.2.03"])
 def test_bump_string_semver_rejects_leading_zeros(version: str) -> None:
     """SemVer parsing rejects numeric components with leading zeros."""
+
 
 
     with pytest.raises(ValueError):
@@ -132,7 +133,8 @@ def test_read_project_version_errors(
 def test_apply_bump(tmp_path: Path):
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
-    out = apply_bump("minor", py)
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump("minor", py, cfg=cfg)
     assert out.old == "0.1.0" and out.new == "0.2.0"
     assert read_project_version(py) == "0.2.0"
     assert py in out.files
@@ -142,7 +144,8 @@ def test_apply_bump(tmp_path: Path):
 def test_apply_bump_dry_run(tmp_path: Path) -> None:
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "1.2.3"}}))
-    out = apply_bump("patch", py, dry_run=True)
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump("patch", py, dry_run=True, cfg=cfg)
     assert out.old == "1.2.3" and out.new == "1.2.4"
     assert read_project_version(py) == "1.2.3"
     assert out.files == []
@@ -163,7 +166,8 @@ def test_apply_bump_updates_extra_files(tmp_path: Path) -> None:
     _ver = pkg / "_version.py"
     _ver.write_text("version = '0.1.0'", encoding="utf-8")
 
-    out = apply_bump("patch", py)
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump("patch", py, cfg=cfg)
     assert out.new == "0.1.1"
     assert "version='0.1.1'" in setup.read_text(encoding="utf-8")
     assert "__version__ = '0.1.1'" in init.read_text(encoding="utf-8")
@@ -182,7 +186,8 @@ def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
     init = pkg / "__init__.py"
     init.write_text("__version__ = '1.0.0'", encoding="utf-8")
 
-    out = apply_bump("minor", py, ignore=[str(init)])
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump("minor", py, ignore=[str(init)], cfg=cfg)
     assert "__version__ = '1.0.0'" in init.read_text(encoding="utf-8")
     assert init not in out.files
     assert out.skipped == []
@@ -218,8 +223,14 @@ def test_default_version_ignore_patterns(
     ignored_file = ignore_path / file_name
     ignored_file.write_text("__version__ = '1.0.0'", encoding="utf-8")
 
-    cfg = load_config(tmp_path / "bumpwright.toml")
-    out = apply_bump("minor", py, paths=cfg.version.paths, ignore=cfg.version.ignore)
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump(
+        "minor",
+        py,
+        paths=cfg.version.paths,
+        ignore=cfg.version.ignore,
+        cfg=cfg,
+    )
 
     assert "__version__ = '1.1.0'" in init.read_text(encoding="utf-8")
     assert "__version__ = '1.0.0'" in ignored_file.read_text(encoding="utf-8")
@@ -233,7 +244,13 @@ def test_apply_bump_skips_files_without_version(tmp_path: Path) -> None:
     extra = tmp_path / "extra.py"
     extra.write_text("print('no version here')", encoding="utf-8")
 
-    out = apply_bump("patch", py, paths=[str(extra)], ignore=[])
+    out = apply_bump(
+        "patch",
+        py,
+        paths=[str(extra)],
+        ignore=[],
+        config_path=tmp_path / "bumpwright.toml",
+    )
 
     assert extra not in out.files
     assert extra in out.skipped
@@ -256,8 +273,9 @@ def test_apply_bump_respects_scheme(
     (tmp_path / "bumpwright.toml").write_text("[version]\nscheme='pep440'\n")
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "1!1.0.0"}}))
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
     monkeypatch.chdir(tmp_path)
-    out = apply_bump("patch", py)
+    out = apply_bump("patch", py, cfg=cfg)
     assert out.new == "1!1.0.1"
     assert out.skipped == []
 
@@ -270,9 +288,10 @@ def test_apply_bump_invalid_scheme(
     (tmp_path / "bumpwright.toml").write_text("[version]\nscheme='unknown'\n")
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
+    cfg: Config = load_config(tmp_path / "bumpwright.toml")
     monkeypatch.chdir(tmp_path)
     with pytest.raises(ValueError, match="Unknown version scheme"):
-        apply_bump("patch", py)
+        apply_bump("patch", py, cfg=cfg)
 
 
 def test_resolve_files_nested_dirs_sorted(tmp_path: Path) -> None:
@@ -340,7 +359,6 @@ def test_resolve_files_overlapping_patterns_deduped(tmp_path: Path) -> None:
     assert out == [a, b]
 
 
-
 def test_resolve_files_uses_cache(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -380,8 +398,18 @@ def test_apply_bump_clears_resolve_cache(
         return glob_orig(pattern, recursive=recursive)
 
     monkeypatch.setattr("bumpwright.versioning.glob", fake_glob)
-    apply_bump("patch", py, paths=["*.cfg"])
-    apply_bump("patch", py, paths=["*.cfg"])
+    apply_bump(
+        "patch",
+        py,
+        paths=["*.cfg"],
+        config_path=tmp_path / "bumpwright.toml",
+    )
+    apply_bump(
+        "patch",
+        py,
+        paths=["*.cfg"],
+        config_path=tmp_path / "bumpwright.toml",
+    )
     assert calls["count"] == 1
 
 

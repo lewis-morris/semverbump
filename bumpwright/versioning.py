@@ -150,6 +150,8 @@ def apply_bump(  # noqa: PLR0913
     paths: Iterable[str] | None = None,
     ignore: Iterable[str] | None = None,
     scheme: str | None = None,
+    cfg: Config | None = None,
+    config_path: str | Path | None = None,
 ) -> VersionChange:
     """Apply a version bump and update version strings.
 
@@ -165,6 +167,10 @@ def apply_bump(  # noqa: PLR0913
             the project configuration when ``None``.
         scheme: Versioning scheme identifier. When ``None``, the scheme from
             configuration is used.
+        cfg: Pre-loaded configuration object. When provided, ``config_path`` is
+            ignored.
+        config_path: Location of the configuration file to load when ``cfg`` is
+            ``None``. Defaults to ``"bumpwright.toml"``.
 
     Returns:
         :class:`VersionChange` detailing the old and new versions, updated files,
@@ -176,7 +182,7 @@ def apply_bump(  # noqa: PLR0913
         and a fresh resolution is required.
     """
 
-    cfg = load_config()
+    cfg = cfg or load_config(config_path or "bumpwright.toml")
     if paths is None:
         paths = cfg.version.paths
     if ignore is None:
