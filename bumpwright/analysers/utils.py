@@ -2,9 +2,23 @@
 
 from __future__ import annotations
 
+import ast
 from collections.abc import Iterable, Iterator
 
 from ..gitutils import list_py_files_at_ref, read_file_at_ref
+
+
+def _is_const_str(node: ast.AST) -> bool:
+    """Return whether ``node`` is an ``ast.Constant`` string.
+
+    Args:
+        node: AST node to inspect.
+
+    Returns:
+        ``True`` if ``node`` represents a constant string literal.
+    """
+
+    return isinstance(node, ast.Constant) and isinstance(node.value, str)
 
 
 def iter_py_files_at_ref(
