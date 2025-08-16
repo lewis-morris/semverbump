@@ -10,16 +10,12 @@ from functools import lru_cache
 from glob import glob
 from pathlib import Path
 
-from .types import BumpLevel
-
-try:  # pragma: no cover - needed for linting when dependency missing
-    from packaging.version import Version
-except ModuleNotFoundError as exc:  # pragma: no cover
-    raise RuntimeError("packaging is required for version operations") from exc
 from tomlkit import dumps as toml_dumps
 from tomlkit import parse as toml_parse
 
 from .config import load_config
+from .types import BumpLevel
+from .version_schemes import get_version_scheme
 
 
 @dataclass
@@ -39,32 +35,25 @@ class VersionChange:
     files: list[Path] = field(default_factory=list)
 
 
-def bump_string(v: str, level: BumpLevel) -> str:
-    """Increment a semantic version string by ``level``.
+def bump_string(v: str, level: BumpLevel, scheme: str | None = None) -> str:
+    """Increment ``v`` according to ``level`` using a version scheme.
 
     Args:
-        v: Version string in ``X.Y.Z`` form.
-        level: Bump level (``"major"``, ``"minor"``, or ``"patch"``).
+        v: Version string to bump.
+        level: Desired bump level.
+        scheme: Optional scheme name. When ``None``, the configured scheme from
+            ``bumpwright.toml`` is used.
 
     Returns:
         Bumped version string.
 
     Raises:
-        ValueError: If ``level`` is not one of the supported values.
+        ValueError: If ``level`` or the scheme name is unsupported.
     """
 
-    pv = Version(v)
-    # Only support simple X.Y.Z for now (reject epoch/local/dev)
-    parts = [pv.major, pv.minor, pv.micro]
-    if level == "major":
-        parts = [parts[0] + 1, 0, 0]
-    elif level == "minor":
-        parts = [parts[0], parts[1] + 1, 0]
-    elif level == "patch":
-        parts = [parts[0], parts[1], parts[2] + 1]
-    else:
-        raise ValueError(f"Unknown level {level}")
-    return f"{parts[0]}.{parts[1]}.{parts[2]}"
+    scheme_name = scheme or load_config().version.scheme
+    impl = get_version_scheme(scheme_name)
+    return impl.bump(v, level)
 
 
 def find_pyproject(start: str | Path | None = None) -> Path | None:
@@ -136,14 +125,15 @@ def write_project_version(
     p.write_text(toml_dumps(data), encoding="utf-8")
 
 
-def apply_bump(
+def apply_bump(  # noqa: PLR0913
     level: BumpLevel,
     pyproject_path: str | Path = "pyproject.toml",
     dry_run: bool = False,
     paths: Iterable[str] | None = None,
     ignore: Iterable[str] | None = None,
+    scheme: str | None = None,
 ) -> VersionChange:
-    """Apply a semantic version bump and update version strings.
+    """Apply a version bump and update version strings.
 
     Args:
         level: Bump level to apply.
@@ -155,6 +145,8 @@ def apply_bump(
             the project. Custom patterns extend this list.
         ignore: Glob patterns to exclude from ``paths``. Defaults to values from
             the project configuration when ``None``.
+        scheme: Versioning scheme identifier. When ``None``, the scheme from
+            configuration is used.
 
     Returns:
         :class:`VersionChange` detailing the old and new versions and updated
@@ -166,16 +158,16 @@ def apply_bump(
         and a fresh resolution is required.
     """
 
-    cfg = None
-    if paths is None or ignore is None:
-        cfg = load_config()
+    cfg = load_config()
     if paths is None:
         paths = cfg.version.paths
     if ignore is None:
         ignore = cfg.version.ignore
+    if scheme is None:
+        scheme = cfg.version.scheme
 
     old = read_project_version(pyproject_path)
-    new = bump_string(old, level)
+    new = bump_string(old, level, scheme)
     if dry_run:
         return VersionChange(old=old, new=new, level=level)
 
