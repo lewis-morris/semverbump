@@ -4,6 +4,7 @@ import pytest
 from tomlkit import dumps as toml_dumps
 from tomlkit.exceptions import ParseError
 
+from bumpwright import versioning
 from bumpwright.config import load_config
 from bumpwright.versioning import (
     _replace_version,
@@ -23,8 +24,26 @@ def test_bump_string():
     assert bump_string("1.2.3", "major") == "2.0.0"
 
 
+def test_bump_string_uses_cached_config(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Repeated calls reuse cached configuration."""
+
+    versioning._DEFAULT_CFG = None
+    calls = {"count": 0}
+
+    def fake_load_config(path: str = "bumpwright.toml"):
+        calls["count"] += 1
+        return load_config(path)
+
+    monkeypatch.setattr(versioning, "load_config", fake_load_config)
+    assert versioning.bump_string("1.0.0", "patch") == "1.0.1"
+    assert versioning.bump_string("1.0.1", "patch") == "1.0.2"
+    assert calls["count"] == 1
+    versioning._DEFAULT_CFG = None
+
+
 def test_bump_string_semver_prerelease_and_build() -> None:
-    """SemVer release bumps clear prerelease and build metadata."""
+    """SemVer bumps preserve and increment prerelease and build metadata."""
+
 
     assert bump_string("1.2.3-alpha.1+build.1", "patch", scheme="semver") == "1.2.4"
     assert bump_string("1.2.3-alpha.1+build.1", "minor", scheme="semver") == "1.3.0"
@@ -40,6 +59,7 @@ def test_bump_string_semver_prerelease_and_build() -> None:
 @pytest.mark.parametrize("version", ["01.2.3", "1.02.3", "1.2.03"])
 def test_bump_string_semver_rejects_leading_zeros(version: str) -> None:
     """SemVer parsing rejects numeric components with leading zeros."""
+
 
     with pytest.raises(ValueError):
         bump_string(version, "patch", scheme="semver")
