@@ -38,7 +38,7 @@ jobs:
       run: |
         python scripts/generate_badges.py
     - name: Commit badges
-      uses: stefanzweifel/git-auto-commit-action@v5
+      uses: stefanzweifel/git-auto-commit-action@v6
       with:
         commit_message: "chore(badges): update badges"
         file_pattern: docs/_static/badges/*.svg
