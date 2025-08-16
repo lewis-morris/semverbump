@@ -3,98 +3,77 @@ Quickstart
 
 Start with a tiny example project to see **bumpwright** in action.
 
-#. Install the package.
+Install
+-------
 
-   .. code-block:: bash
+.. code-block:: bash
 
-      pip install bumpwright
+   pip install bumpwright
 
-   Install the CLI from PyPI.
+**Command**
 
-#. Create a minimal repository.
+- ``pip install bumpwright`` – Install the CLI from PyPI.
 
-   .. code-block:: bash
+Set up repo
+-----------
 
-      mkdir demo && cd demo
-      git init
-      cat > pyproject.toml <<'EOF'
-      [project]
-      name = "demo"
-      version = "0.1.0"
-      EOF
-      git add pyproject.toml
-      git commit -m "chore: initial commit"
+.. code-block:: bash
 
-   Set up Git and a baseline ``pyproject.toml``. The configuration file
-   shown here is kept intentionally simple; see :doc:`configuration` for
-   detailed options.
+   mkdir demo && cd demo
+   git init
+   cat > pyproject.toml <<'EOF'
+   [project]
+   name = "demo"
+   version = "0.1.0"
+   EOF
+   git add pyproject.toml
+   git commit -m "chore: initial commit"
+   bumpwright init
 
-#. Initialise configuration.
+**Commands**
 
-   .. code-block:: bash
+- ``mkdir demo && cd demo`` – Create and enter project directory.
+- ``git init`` – Initialise repository.
+- ``cat > pyproject.toml <<'EOF' ... EOF`` – Add minimal project metadata.
+- ``git add pyproject.toml`` – Stage configuration file.
+- ``git commit -m "chore: initial commit"`` – Commit baseline.
+- ``bumpwright init`` – Record baseline for bumpwright.
 
-      bumpwright init
+Run analysis
+------------
 
-   Records a ``chore(release): initialise baseline`` commit so later runs
-   know where to start. Learn more about this step in :doc:`usage`.
+.. code-block:: bash
 
-#. Make a change and commit it.
+   cat > demo.py <<'EOF'
+   def greet() -> str:
+       return "hi"
+   EOF
+   git add demo.py
+   git commit -m "feat: add greet helper"
+   bumpwright bump --decide
 
-   .. code-block:: bash
+.. code-block:: text
 
-      cat > demo.py <<'EOF'
-      def greet() -> str:
-          return "hi"
-      EOF
-      git add demo.py
-      git commit -m "feat: add greet helper"
+   Suggested bump: minor
+   - [MINOR] demo:greet: Added public symbol
 
-   This conventional commit describes a new feature, which usually implies a
-   MINOR version bump.
+**Commands**
 
-#. Recommend the next version.
+- ``cat > demo.py <<'EOF' ... EOF`` – Add sample code.
+- ``git add demo.py`` – Stage change.
+- ``git commit -m "feat: add greet helper"`` – Commit feature indicating MINOR bump.
+- ``bumpwright bump --decide`` – Recommend the next version.
 
-   .. code-block:: bash
+Release
+-------
 
-      bumpwright bump --decide
+.. code-block:: bash
 
-   .. code-block:: text
+   bumpwright bump --commit --tag
 
-      Suggested bump: minor
-      - [MINOR] demo:greet: Added public symbol
+**Command**
 
-   ``bumpwright`` inspects commits since the baseline and suggests the next
-   semantic version. The lines following the suggestion list the impacts that
-   informed it. Note that ``bumpwright bump --decide`` compares ``HEAD`` to the
-   last release or ``HEAD^``.
-
-   .. code-block:: bash
-
-      bumpwright bump --decide --format md
-
-   .. code-block:: text
-
-      ## Suggested bump: minor
-      - [MINOR] demo:greet: Added public symbol
-
-   .. code-block:: bash
-
-      bumpwright bump --decide --format json
-
-   .. code-block:: json
-
-      {"suggested_bump": "minor", "impacts": [{"scope": "demo:greet", "level": "MINOR", "description": "Added public symbol"}]}
-
-#. Apply the bump and tag the release.
-
-   .. code-block:: bash
-
-      bumpwright bump --commit --tag
-
-   This updates version files, creates a ``chore(release): <version>`` commit,
-   and tags the release. When ``--commit`` is used, this is the default commit
-   message. Omit ``--commit`` and ``--tag`` to preview the bump without
-   modifying the repository.
+- ``bumpwright bump --commit --tag`` – Apply the version bump and tag the release.
 
 Flow
 ----
