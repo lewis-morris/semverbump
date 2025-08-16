@@ -8,7 +8,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from bumpwright import cli, gitutils
+from bumpwright import gitutils
+from bumpwright.cli.decide import _infer_base_ref
 
 
 def _legacy_list_py_files_at_ref(
@@ -79,7 +80,7 @@ def test_infer_base_ref_with_upstream(
     proc = subprocess.CompletedProcess(args=[], returncode=0, stdout="origin/main\n")
     monkeypatch.setattr(subprocess, "run", Mock(return_value=proc))
 
-    assert cli._infer_base_ref() == "origin/main"
+    assert _infer_base_ref() == "origin/main"
 
 
 def test_infer_base_ref_without_upstream(
@@ -92,4 +93,4 @@ def test_infer_base_ref_without_upstream(
 
     monkeypatch.setattr(subprocess, "run", Mock(side_effect=_raise))
 
-    assert cli._infer_base_ref() == "origin/HEAD"
+    assert _infer_base_ref() == "origin/HEAD"
