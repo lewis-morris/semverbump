@@ -17,6 +17,13 @@ def test_added_optional_param_is_minor():
     assert any(i.severity == "minor" for i in impacts)
 
 
+def test_added_required_param_is_major():
+    old = _sig("m:f", [_p("x")], "-> int")
+    new = _sig("m:f", [_p("x"), _p("y")], "-> int")
+    impacts = compare_funcs(old, new)
+    assert any(i.severity == "major" for i in impacts)
+
+
 def test_removed_required_param_is_major():
     old = _sig("m:f", [_p("x"), _p("y")], None)
     new = _sig("m:f", [_p("x")], None)

@@ -71,7 +71,7 @@ def compare_funcs(
                     Impact("minor", old.fullname, f"Removed optional param '{name}'")
                 )
 
-    # Param kind changes are major; added optional params are minor
+    # Param kind changes are major; added params are major if required otherwise minor
     for name, np in newp.items():
         if name in oldp:
             op = oldp[name]
@@ -86,10 +86,15 @@ def compare_funcs(
                         f"Param '{name}' kind changed {op.kind}→{np.kind}",
                     )
                 )
-        elif np.default is not None or np.kind in ("kwonly", "vararg", "varkw"):
-            impacts.append(
-                Impact("minor", old.fullname, f"Added optional param '{name}'")
-            )
+        else:
+            if np.default is None and np.kind in ("posonly", "pos", "kwonly"):
+                impacts.append(
+                    Impact("major", old.fullname, f"Added required param '{name}'")
+                )
+            else:
+                impacts.append(
+                    Impact("minor", old.fullname, f"Added optional param '{name}'")
+                )
 
     # Return annotation change -> configurable severity
     if old.returns != new.returns:
