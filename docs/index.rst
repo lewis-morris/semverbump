@@ -12,6 +12,7 @@ Static public-API diff and heuristics to suggest semantic version bumps.
    changelog
    analyzers
    advanced
+   workflows
    configuration
    troubleshooting
    roadmap

@@ -1,0 +1,32 @@
+name: bumpwright release
+
+on:
+  workflow_dispatch:
+    inputs:
+      level:
+        description: 'Version bump level'
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install bumpwright
+        run: pip install bumpwright
+      - name: Apply version bump
+        run: |
+          bumpwright bump --level ${{ github.event.inputs.level }} \
+            --pyproject pyproject.toml --commit --tag
+      - name: Push changes
+        run: git push origin HEAD --follow-tags
