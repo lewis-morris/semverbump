@@ -186,7 +186,7 @@ def _resolve_pyproject(path: str) -> Path:
 def init_command(_args: argparse.Namespace) -> int:
     """Create an empty baseline release commit.
 
-    This command records an empty ``chore(release): initialize baseline`` commit
+    This command records an empty ``chore(release): initialise baseline`` commit
     so that subsequent invocations of :func:`last_release_commit` have a
     reference point. It is typically run once when integrating bumpwright into a
     project that lacks prior release commits.
@@ -203,7 +203,7 @@ def init_command(_args: argparse.Namespace) -> int:
     """
 
     if last_release_commit() is not None:
-        print("Baseline already initialized.")
+        print("Baseline already initialised.")
         return 0
 
     subprocess.run(
@@ -212,7 +212,7 @@ def init_command(_args: argparse.Namespace) -> int:
             "commit",
             "--allow-empty",
             "-m",
-            "chore(release): initialize baseline",
+            "chore(release): initialise baseline",
         ],
         check=True,
     )
@@ -450,7 +450,7 @@ def main(argv: list[str] | None = None) -> int:
         "init",
         help="Create baseline release commit",
         description=(
-            "Create an empty 'chore(release): initialize baseline' commit to "
+            "Create an empty 'chore(release): initialise baseline' commit to "
             "establish a comparison point for future bumps."
         ),
     )
