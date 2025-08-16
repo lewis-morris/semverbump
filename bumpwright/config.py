@@ -103,10 +103,13 @@ class Changelog:
         path: Default changelog file path. Empty string disables changelog generation.
         template: Jinja2 template file for changelog entries. Empty string selects
             the built-in template.
+        exclude: Regular expression patterns for commit subjects to omit from
+            changelog entries.
     """
 
     path: str = ""
     template: str = ""
+    exclude: list[str] = field(default_factory=list)
 
 
 @dataclass

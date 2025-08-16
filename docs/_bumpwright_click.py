@@ -131,6 +131,13 @@ def init(args: argparse.Namespace) -> int:
     type=str,
     help=("Jinja2 template file for changelog entries; defaults to built-in template."),
 )
+@click.option(
+    "--changelog-exclude",
+    multiple=True,
+    help=(
+        "Regex pattern for commit subjects to exclude from changelog " "(repeatable)."
+    ),
+)
 @click.pass_obj
 def bump(args: argparse.Namespace, **kwargs: object) -> int:
     """Update version metadata and optionally commit and tag the change.
@@ -188,6 +195,9 @@ def bump(args: argparse.Namespace, **kwargs: object) -> int:
             changelog_template (str | None): Path to a Jinja2 template used to
             render changelog entries. Defaults to the built-in template.
 
+            changelog_exclude (tuple[str, ...]): Regex patterns of commit
+            subjects to omit from changelog entries.
+
     Returns:
         Exit status code, where ``0`` indicates success and ``1`` an error.
     """
@@ -198,5 +208,6 @@ def bump(args: argparse.Namespace, **kwargs: object) -> int:
     params["disable_analyser"] = list(params.get("disable_analyser", []))
     params["version_path"] = list(params.get("version_path", []))
     params["version_ignore"] = list(params.get("version_ignore", []))
+    params["changelog_exclude"] = list(params.get("changelog_exclude", []))
     params["format"] = params.pop("format_")
     return bump_command(argparse.Namespace(**params))

@@ -192,6 +192,7 @@ paths = ["migrations"]
 [changelog]
 path = ""
 template = ""
+exclude = []
 
 [version]
 paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]
@@ -208,7 +209,7 @@ aspect of bumpwright:
 - **migrations** – directories containing Alembic migration scripts.
 - **changelog** – default changelog file used with ``--changelog``.
   ``template`` selects a custom Jinja2 template (leave empty for the built-in
-  version).
+  version) and ``exclude`` lists regex patterns for commit subjects to skip.
 - **version** – files where version strings are read and updated.
 
 Symbols beginning with any prefix listed in ``private_prefixes`` are excluded

@@ -77,6 +77,9 @@ Arguments
 ``--changelog-template PATH``
     Jinja2 template file used when rendering changelog entries. Defaults to the built-in template or ``[changelog].template`` when configured. Useful for customising changelog layout.
 
+``--changelog-exclude REGEX``
+    Regex pattern for commit subjects to exclude from changelog entries. Repeatable. Patterns from configuration are combined with CLI values.
+
 ``--pyproject PATH``
     Path to the project's ``pyproject.toml`` file. Defaults to ``pyproject.toml``.
 

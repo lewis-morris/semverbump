@@ -238,6 +238,10 @@ Changelog
      - ``""``
      - Jinja2 template file for changelog entries. Empty string selects the
        built-in template.
+   * - ``exclude``
+     - list[str]
+     - ``[]``
+     - Regex patterns for commit subjects to omit from changelog entries.
 
 All sections and keys are optional; unspecified values fall back to the
 defaults shown above.
