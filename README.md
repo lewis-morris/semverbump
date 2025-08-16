@@ -181,14 +181,14 @@ template = ""
 
 [version]
 paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]
-ignore = []
+ignore = ["build/**", "dist/**", "*.egg-info/**", ".eggs/**", ".venv/**", "venv/**", ".env/**", "**/__pycache__/**"]
 ```
 
 Set an analyser to ``true`` to enable it. Each section configures a different
 aspect of bumpwright:
 
 - **project** – identifies the package, public API roots, and metadata file.
-- **ignore** – glob patterns excluded from analysis.
+- **ignore** – glob patterns excluded from analysis. These defaults skip common build artifacts and virtual environments such as `build/**`, `dist/**`, `*.egg-info/**`, `.eggs/**`, `.venv/**`, `venv/**`, `.env/**`, and `**/__pycache__/**`.
 - **rules** – maps findings to semantic version levels.
 - **[analysers]** – toggles built-in or plugin analysers.
 - **migrations** – directories containing Alembic migration scripts.
