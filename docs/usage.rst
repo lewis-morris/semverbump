@@ -51,9 +51,11 @@ require.
 
 ``--enable-analyser NAME``
     Enable analyser ``NAME`` in addition to configuration. Repeatable.
+    Defaults to none.
 
 ``--disable-analyser NAME``
     Disable analyser ``NAME`` even if enabled in configuration. Repeatable.
+    Defaults to none.
 
 **Examples**
 
@@ -100,7 +102,7 @@ patterns.
 
 ``--level {major,minor,patch}``
     Desired bump level. If omitted, ``--base`` and ``--head`` are used to
-    determine the level automatically.
+    determine the level automatically. Defaults to automatic detection.
 
 ``--base BASE``
     Base git reference when auto-deciding the level. Defaults to the last
@@ -114,25 +116,28 @@ patterns.
     and ``json`` produces machine-readable data. Defaults to ``text``.
 
 ``--repo-url URL``
-    Base repository URL for linking commit hashes in Markdown output.
+    Base repository URL used to build commit links in Markdown output.
+    Defaults to none, showing raw commit hashes when unset.
 
 ``--enable-analyser NAME``
     Enable analyser ``NAME`` in addition to configuration. Repeatable.
+    Defaults to none.
 
 ``--disable-analyser NAME``
     Disable analyser ``NAME`` even if enabled in configuration. Repeatable.
+    Defaults to none.
 
 ``--changelog [FILE]``
-    Append release notes for the new version to ``FILE``.
-    When ``FILE`` is omitted or set to ``-``, the changelog entry is printed to
-    standard output. If the option is omitted entirely, the
-    ``[changelog].path`` setting provides a default location. See
-    :doc:`configuration` for more detail.
+    Append release notes for the new version to ``FILE``. When ``FILE`` is
+    omitted or set to ``-``, the changelog entry is printed to standard output.
+    Defaults to none, producing no changelog unless ``[changelog].path`` in
+    ``bumpwright.toml`` supplies a default. See :doc:`configuration` for more
+    detail.
 
 ``--changelog-template PATH``
     Jinja2 template file used when rendering changelog entries. Defaults to the
-    built-in template or ``[changelog].template`` when configured. See
-    :doc:`configuration` for more detail.
+    built-in template or ``[changelog].template`` when configured. Useful for
+    customising changelog layout.
 
 ``--pyproject PATH``
     Path to the project's ``pyproject.toml`` file. Defaults to
@@ -140,23 +145,24 @@ patterns.
 
 ``--version-path GLOB``
     Glob pattern for files that contain the project version. May be repeated to
-    update multiple locations.
+    update multiple locations. Defaults to none, using only the built-in search
+    paths.
 
 ``--version-ignore GLOB``
-    Glob pattern for paths to exclude from version updates.
+    Glob pattern for paths to exclude from version updates. Defaults to none.
 
 ``--commit``
-    Create a git commit for the version change.
+    Create a git commit for the version change. Defaults to ``false``.
 
     .. note::
         The version will bump on every invocation unless the change is
         committed or reverted.
 
 ``--tag``
-    Create a git tag for the new version.
+    Create a git tag for the new version. Defaults to ``false``.
 
 ``--dry-run``
-    Display the new version without modifying any files.
+    Display the new version without modifying any files. Defaults to ``false``.
 
 **Examples**
 
@@ -172,19 +178,27 @@ last release commit or the previous commit (``HEAD^``), and omitting
 Changelog generation
 --------------------
 
-``bumpwright`` can generate Markdown release notes when bumping versions. The
-``--changelog`` option controls where these notes go and how they are emitted.
+``bumpwright`` can generate Markdown release notes when bumping versions. Use
+``--changelog`` to control the destination, ``--repo-url`` to turn commit hashes
+into hyperlinks, and ``--changelog-template`` to customise the entry format.
+
+.. code-block:: jinja
+
+   ## [v{{ version }}] - {{ date }}
+   {% for commit in commits %}
+   - [{{ commit.sha[:7] }}]({{ commit.link }}) {{ commit.subject }}
+   {% endfor %}
 
 .. code-block:: console
 
-   bumpwright bump --dry-run --format md --repo-url https://github.com/me/project --changelog -
+   bumpwright bump --dry-run --format md --repo-url https://github.com/me/project --changelog CHANGELOG.md --changelog-template changelog.j2
 
-.. code-block:: text
+.. code-block:: markdown
 
    ## [v1.2.4] - 2024-04-01
    - [abc123](https://github.com/me/project/commit/abc123) feat: change
 
-Entries follow a simple Markdown structure:
+Entries follow a simple Markdown structure by default:
 
 .. code-block:: markdown
 
@@ -205,8 +219,8 @@ Templates receive the following variables:
     List of mappings with ``sha``, ``subject``, and optional ``link`` keys for
     commits since the previous release.
 
-Projects can set a default changelog path in ``bumpwright.toml`` so the
-``bump`` command writes to that location when ``--changelog`` is omitted:
+Projects can set a default changelog path and template in ``bumpwright.toml`` so
+the ``bump`` command writes to that location when ``--changelog`` is omitted:
 
 .. code-block:: toml
 
