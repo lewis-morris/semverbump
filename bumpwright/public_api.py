@@ -84,23 +84,33 @@ def _parse_exports(mod: ast.Module) -> set[str] | None:
         Set of exported symbol names or ``None`` if ``__all__`` is undefined.
     """
 
-    def _eval(node: ast.AST, env: dict[str, list[str]]) -> list[str] | None:
-        """Evaluate simple expressions to a list of strings.
+    def _eval(  # noqa: PLR0911
+        node: ast.AST, env: dict[str, list[str]]
+    ) -> list[str] | None:
+        """Evaluate a restricted subset of Python expressions and statements.
 
-        This supports:
+        The evaluator understands only safe operations that construct or mutate
+        lists of string literals.  It tracks simple variable assignments so that
+        subsequent references can be resolved without executing user code.
 
-        * List or tuple literals containing only string constants.
-        * ``+`` concatenation of supported expressions.
-        * References to previously assigned names stored in ``env``.
+        Args:
+            node: AST node to evaluate.
+            env: Mapping of variable names to lists of strings.
+
+        Returns:
+            List of strings produced by ``node`` or ``None`` if evaluation is
+            not possible.
         """
 
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            return [node.value]
         if isinstance(node, (ast.List, ast.Tuple)):
             out: list[str] = []
             for el in node.elts:
-                if isinstance(el, ast.Constant) and isinstance(el.value, str):
-                    out.append(el.value)
-                else:
+                evaluated = _eval(el, env)
+                if evaluated is None or len(evaluated) != 1:
                     return None
+                out.extend(evaluated)
             return out
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Add):
             left = _eval(node.left, env)
@@ -110,20 +120,54 @@ def _parse_exports(mod: ast.Module) -> set[str] | None:
             return None
         if isinstance(node, ast.Name):
             return env.get(node.id)
+        if isinstance(node, ast.Assign) and len(node.targets) == 1:
+            target = node.targets[0]
+            if isinstance(target, ast.Name):
+                val = _eval(node.value, env)
+                if val is not None:
+                    env[target.id] = val
+                    return val
+            return None
+        if (
+            isinstance(node, ast.AugAssign)
+            and isinstance(node.target, ast.Name)
+            and isinstance(node.op, ast.Add)
+        ):
+            val = _eval(node.value, env)
+            if val is not None:
+                env.setdefault(node.target.id, [])
+                env[node.target.id].extend(val)
+                return env[node.target.id]
+            return None
+        if (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Call)
+            and isinstance(node.value.func, ast.Attribute)
+            and isinstance(node.value.func.value, ast.Name)
+        ):
+            name = node.value.func.value.id
+            attr = node.value.func.attr
+            args = node.value.args
+            if attr == "append" and len(args) == 1:
+                val = _eval(args[0], env)
+                if val is not None and len(val) == 1:
+                    env.setdefault(name, [])
+                    env[name].extend(val)
+                    return env[name]
+                return None
+            if attr == "extend" and len(args) == 1:
+                val = _eval(args[0], env)
+                if val is not None:
+                    env.setdefault(name, [])
+                    env[name].extend(val)
+                    return env[name]
+                return None
         return None
 
     env: dict[str, list[str]] = {}
     for stmt in mod.body:
-        if isinstance(stmt, ast.Assign) and len(stmt.targets) == 1:
-            tgt = stmt.targets[0]
-            if not isinstance(tgt, ast.Name):
-                continue
-            evaluated = _eval(stmt.value, env)
-            if tgt.id == "__all__":
-                return set(evaluated) if evaluated is not None else None
-            if evaluated is not None:
-                env[tgt.id] = evaluated
-    return None
+        _eval(stmt, env)
+    return set(env["__all__"]) if "__all__" in env else None
 
 
 def _positional_params(args: ast.arguments) -> list[Param]:
