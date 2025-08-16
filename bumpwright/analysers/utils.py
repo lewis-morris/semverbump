@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import ast
+import logging
 from collections.abc import Iterable, Iterator
 from functools import lru_cache
 
 from ..gitutils import list_py_files_at_ref, read_file_at_ref, read_files_at_ref
+
+logger = logging.getLogger(__name__)
 
 
 def _is_const_str(node: ast.AST) -> bool:
@@ -28,7 +31,7 @@ def parse_python_source(ref: str, path: str, cwd: str | None = None) -> ast.AST 
 
     Results are cached per ``(ref, path, cwd)`` to avoid repeated git
     lookups and ``ast.parse`` calls when analysers inspect the same files
-    multiple times.
+    multiple times. Invalid or unreadable files are skipped.
 
     Args:
         ref: Git reference of the file to parse.
@@ -36,14 +39,18 @@ def parse_python_source(ref: str, path: str, cwd: str | None = None) -> ast.AST 
         cwd: Repository path. Defaults to the current working directory.
 
     Returns:
-        Parsed module AST or ``None`` if the file does not exist at
-        ``ref``.
+        Parsed module AST or ``None`` if the file does not exist or is
+        invalid at ``ref``.
     """
 
     code = read_file_at_ref(ref, path, cwd=cwd)
     if code is None:
         return None
-    return ast.parse(code)
+    try:
+        return ast.parse(code)
+    except (SyntaxError, UnicodeDecodeError):
+        logger.warning("Failed to parse %s at %s", path, ref)
+        return None
 
 
 def iter_py_files_at_ref(
