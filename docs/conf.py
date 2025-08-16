@@ -1,6 +1,9 @@
 """Sphinx configuration for project documentation."""
 
+import importlib
+import inspect
 from datetime import datetime
+from pathlib import Path
 
 project = "bumpwright"
 author = "Lewis Morris (arched.dev)"
@@ -11,10 +14,13 @@ html_title = project
 
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "sphinx.ext.napoleon",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
+    "sphinx.ext.linkcode",
+    "sphinxcontrib.autoprogram",
     "sphinx_autodoc_typehints",
     "sphinx_copybutton",
     "sphinx_wagtail_theme",
@@ -38,7 +44,15 @@ napoleon_use_rtype = True
 
 # Cross-referencing and external links
 autosectionlabel_prefix_document = True
-intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "click": ("https://click.palletsprojects.com/en/latest/", None),
+    "flask": ("https://flask.palletsprojects.com/en/latest/", None),
+    "fastapi": ("https://fastapi.tiangolo.com/", None),
+    "alembic": ("https://alembic.sqlalchemy.org/en/latest/", None),
+}
+
+autosummary_generate = True
 
 # Autodoc / typehints behaviour
 autodoc_default_options = {
@@ -61,6 +75,41 @@ myst_enable_extensions = [
     "substitution",  # |subst| support
     "tasklist",  # - [ ] tasks
 ]
+
+
+def linkcode_resolve(domain: str, info: dict) -> str | None:
+    """Resolve GitHub source links for documented objects.
+
+    Args:
+        domain: Sphinx domain of the object.
+        info: Mapping with module and fullname keys.
+
+    Returns:
+        URL to the corresponding source on GitHub, if resolvable.
+    """
+
+    if domain != "py" or not info.get("module"):
+        return None
+    modname = info["module"]
+    fullname = info.get("fullname")
+    try:
+        mod = importlib.import_module(modname)
+    except Exception:
+        return None
+    obj = mod
+    for part in (fullname or "").split("."):
+        obj = getattr(obj, part, None)
+        if obj is None:
+            break
+    try:
+        fn = inspect.getsourcefile(obj) or inspect.getsourcefile(mod)
+        source, lineno = inspect.getsourcelines(obj)
+    except Exception:
+        return None
+    repo_root = Path(__file__).resolve().parents[1]
+    relpath = Path(fn).resolve().relative_to(repo_root)
+    return f"https://github.com/lewis-morris/bumpwright/blob/main/{relpath.as_posix()}#L{lineno}"
+
 
 # -- HTML output -------------------------------------------------------------
 

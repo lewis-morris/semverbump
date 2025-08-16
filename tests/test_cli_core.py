@@ -3,6 +3,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+from bumpwright.cli import build_parser, bump_command, init_command
 from bumpwright.versioning import read_project_version
 from tests.cli_helpers import run, setup_repo
 
@@ -70,3 +71,12 @@ def test_main_shows_help_when_no_args(tmp_path: Path) -> None:
         env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
     )
     assert "usage: bumpwright" in res.stdout
+
+
+def test_build_parser_includes_commands() -> None:
+    """Parser exposes expected subcommands."""
+    parser = build_parser()
+    args = parser.parse_args(["init"])
+    assert args.func is init_command
+    args = parser.parse_args(["bump", "--dry-run"])
+    assert args.func is bump_command

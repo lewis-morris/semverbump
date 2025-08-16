@@ -422,20 +422,20 @@ def bump_command(args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Entry point for the ``bumpwright`` CLI.
-
-    Args:
-        argv: Optional argument vector.
+def build_parser() -> argparse.ArgumentParser:
+    """Create the top-level argument parser for the CLI.
 
     Returns:
-        Process exit code.
+        Configured :class:`argparse.ArgumentParser` instance.
     """
 
     avail = ", ".join(available()) or "none"
     parser = argparse.ArgumentParser(
         prog="bumpwright",
-        description=f"Suggest and apply semantic version bumps. Available analyzers: {avail}.",
+        description=(
+            "Suggest and apply semantic version bumps. "
+            f"Available analyzers: {avail}."
+        ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -459,7 +459,10 @@ def main(argv: list[str] | None = None) -> int:
     p_bump = sub.add_parser(
         "bump",
         help="Apply a bump to pyproject.toml",
-        description="Update project version metadata and optionally commit and tag the change.",
+        description=(
+            "Update project version metadata and optionally commit and tag the "
+            "change."
+        ),
     )
     p_bump.add_argument(
         "--level",
@@ -469,8 +472,8 @@ def main(argv: list[str] | None = None) -> int:
     p_bump.add_argument(
         "--base",
         help=(
-            "Base git reference when auto-deciding the level. Defaults to the last release "
-            "commit or the previous commit (HEAD^)."
+            "Base git reference when auto-deciding the level. Defaults to the "
+            "last release commit or the previous commit (HEAD^)."
         ),
     )
     p_bump.add_argument(
@@ -504,8 +507,8 @@ def main(argv: list[str] | None = None) -> int:
         dest="version_path",
         help=(
             "Additional glob pattern for files containing the project version "
-            "(repeatable). Defaults include pyproject.toml, setup.py, setup.cfg, "
-            "and any __init__.py, version.py, or _version.py files."
+            "(repeatable). Defaults include pyproject.toml, setup.py, "
+            "setup.cfg, and any __init__.py, version.py, or _version.py files."
         ),
     )
     p_bump.add_argument(
@@ -537,6 +540,20 @@ def main(argv: list[str] | None = None) -> int:
     )
     p_bump.set_defaults(func=bump_command)
 
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Entry point for the ``bumpwright`` CLI.
+
+    Args:
+        argv: Optional argument vector.
+
+    Returns:
+        Process exit code.
+    """
+
+    parser = build_parser()
     args = parser.parse_args(argv)
     if not hasattr(args, "func"):
         parser.print_help()
