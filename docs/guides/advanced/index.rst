@@ -1,0 +1,39 @@
+Advanced Usage
+==============
+
+Customize bumpwright beyond the basics.
+
+Customise rules for version decisions:
+
+.. code-block:: toml
+
+   [rules]
+   return_type_change = "major"
+
+Exclude paths from API scanning:
+
+.. code-block:: toml
+
+   [ignore]
+   paths = ["tests/**", "examples/**"]
+
+Specify additional version file locations:
+
+.. code-block:: toml
+
+   [version]
+   paths = ["pyproject.toml", "setup.py", "src/pkg/__init__.py"]
+   ignore = ["examples/**"]
+
+Apply a bump and commit/tag automatically:
+
+.. code-block:: console
+
+   bumpwright bump --base v1.0.0 --head HEAD --commit --tag
+
+.. toctree::
+   :maxdepth: 1
+
+   ci_pipelines
+   monorepos
+   plugins
