@@ -7,8 +7,8 @@ The following items outline potential directions for improving
 Analyser enhancements
 ---------------------
 
-* GraphQL schema diffing
-* OpenAPI specification comparison
+* Enhanced GraphQL schema diffing
+* Deeper OpenAPI specification comparison
 * Python type stub analysis to catch interface drift
 
 Ecosystem features

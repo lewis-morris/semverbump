@@ -40,7 +40,7 @@ Key Features
 
 - Static diff of functions, classes, and other exported symbols.
 - Pluggable analysers for command-line interfaces, gRPC services, web routes,
-  and database migrations.
+  database migrations, OpenAPI specifications, and GraphQL schemas.
 - Dry-run mode to preview changes without touching files.
 - Output in plain text, Markdown, or JSON for easy integration.
 
