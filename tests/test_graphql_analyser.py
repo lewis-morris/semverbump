@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from bumpwright.analysers.graphql import (
+from bumpwright.analysers.graphql_schema import (
     TypeDef,
     diff_types,
     extract_types_from_schema,
