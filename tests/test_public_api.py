@@ -129,3 +129,15 @@ def bar():
     api = extract_public_api_from_source("pkg.mod", code)
     keys = set(api.keys())
     assert {"pkg.mod:foo", "pkg.mod:bar"} == keys
+
+
+def test_custom_private_prefix() -> None:
+    code = """
+def internal_func():
+    pass
+def public():
+    pass
+"""
+    api = extract_public_api_from_source("pkg.mod", code, ["internal_"])
+    assert "pkg.mod:public" in api
+    assert "pkg.mod:internal_func" not in api

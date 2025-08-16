@@ -167,6 +167,7 @@ all sections and their default values looks like:
 [project]
 package = ""
 public_roots = ["."]
+private_prefixes = ["_"]
 
 [ignore]
 paths = ["tests/**", "examples/**", "scripts/**"]
@@ -193,7 +194,7 @@ ignore = ["build/**", "dist/**", "*.egg-info/**", ".eggs/**", ".venv/**", "venv/
 Set an analyser to ``true`` to enable it. Each section configures a different
 aspect of bumpwright:
 
-- **project** – identifies the package, public API roots, and metadata file.
+- **project** – identifies the package, public API roots, private symbol prefixes, and metadata file.
 - **ignore** – glob patterns excluded from analysis. These defaults skip common build artifacts and virtual environments such as `build/**`, `dist/**`, `*.egg-info/**`, `.eggs/**`, `.venv/**`, `venv/**`, `.env/**`, and `**/__pycache__/**`.
 - **rules** – maps findings to semantic version levels.
 - **[analysers]** – toggles built-in or plugin analysers.
@@ -202,6 +203,10 @@ aspect of bumpwright:
   ``template`` selects a custom Jinja2 template (leave empty for the built-in
   version).
 - **version** – files where version strings are read and updated.
+
+Symbols beginning with any prefix listed in ``private_prefixes`` are excluded
+from public API analysis, preventing internal helpers from triggering
+unnecessary version bumps.
 
 See ``docs/configuration.rst`` for in-depth descriptions and additional
 examples. The default file name is ``bumpwright.toml`` but you may specify an

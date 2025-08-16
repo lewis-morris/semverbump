@@ -43,10 +43,12 @@ class Project:
         package: Importable package containing the project's code. When empty the
             repository layout is used.
         public_roots: Paths whose contents constitute the public API.
+        private_prefixes: Symbol name prefixes treated as private.
     """
 
     package: str = ""
     public_roots: list[str] = field(default_factory=lambda: ["."])
+    private_prefixes: list[str] = field(default_factory=lambda: ["_"])
 
 
 @dataclass
