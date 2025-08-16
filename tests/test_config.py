@@ -10,10 +10,12 @@ from bumpwright.config import load_config
 
 
 def test_load_config_parses_analysers(tmp_path: Path) -> None:
+    """Enable and disable analysers based on config values."""
+
     cfg_file = tmp_path / "bumpwright.toml"
-    cfg_file.write_text("[analysers]\nflask_routes = true\nsqlalchemy = false\n")
+    cfg_file.write_text("[analysers]\nweb_routes = true\nmigrations = false\n")
     cfg = load_config(cfg_file)
-    assert cfg.analysers.enabled == {"flask_routes"}
+    assert cfg.analysers.enabled == {"web_routes"}
 
 
 def test_load_config_defaults_analysers(tmp_path: Path) -> None:

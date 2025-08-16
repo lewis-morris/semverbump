@@ -14,7 +14,7 @@ _DEFAULTS = {
     "project": {"package": "", "public_roots": ["."]},
     "ignore": {"paths": ["tests/**", "examples/**", "scripts/**"]},
     "rules": {"return_type_change": "minor"},  # or "major"
-    "analysers": {"cli": False},
+    "analysers": {"cli": False, "web_routes": False, "migrations": False},
     "migrations": {"paths": ["migrations"]},
     "changelog": {"path": "", "template": ""},
     "version": {
