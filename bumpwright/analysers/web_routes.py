@@ -15,8 +15,9 @@ from dataclasses import dataclass
 
 from ..compare import Impact
 from ..config import Config
+from ..gitutils import list_py_files_at_ref
 from . import register
-from .utils import _is_const_str, iter_py_files_at_ref
+from .utils import _is_const_str, parse_python_source
 
 HTTP_METHODS = {"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"}
 
@@ -47,19 +48,19 @@ def _extract_params(args: ast.arguments) -> dict[str, bool]:
     return params
 
 
-def extract_routes_from_source(code: str) -> dict[tuple[str, str], Route]:
+def extract_routes_from_source(code: str | ast.AST) -> dict[tuple[str, str], Route]:
     """Extract routes from source code.
 
     Supports synchronous and asynchronous route handlers.
 
     Args:
-        code: Module source code.
+        code: Module source text or a pre-parsed AST.
 
     Returns:
-        Mapping of (path, method) to :class:`Route` objects.
+        Mapping of ``(path, method)`` to :class:`Route` objects.
     """
 
-    tree = ast.parse(code)
+    tree = ast.parse(code) if isinstance(code, str) else code
     routes: dict[tuple[str, str], Route] = {}
 
     for node in ast.walk(tree):
@@ -110,8 +111,10 @@ def _build_routes_at_ref(
     """
 
     out: dict[tuple[str, str], Route] = {}
-    for _path, code in iter_py_files_at_ref(ref, roots, ignores):
-        out.update(extract_routes_from_source(code))
+    for path in list_py_files_at_ref(ref, roots, ignore_globs=ignores):
+        tree = parse_python_source(ref, path)
+        if tree is not None:
+            out.update(extract_routes_from_source(tree))
     return out
 
 

@@ -8,9 +8,10 @@ from dataclasses import dataclass
 
 from ..compare import Impact
 from ..config import Config
+from ..gitutils import list_py_files_at_ref
 from ..types import BumpLevel
 from . import register
-from .utils import _is_const_str, iter_py_files_at_ref
+from .utils import _is_const_str, parse_python_source
 
 
 @dataclass(frozen=True)
@@ -144,19 +145,19 @@ def _extract_argparse(tree: ast.AST) -> dict[str, Command]:
     return commands
 
 
-def extract_cli_from_source(code: str) -> dict[str, Command]:
+def extract_cli_from_source(code: str | ast.AST) -> dict[str, Command]:
     """Extract command definitions from source code.
 
     Handles both synchronous and asynchronous click commands.
 
     Args:
-        code: Python source text to analyze.
+        code: Python source text or a pre-parsed AST to analyze.
 
     Returns:
         Mapping of command name to :class:`Command` definitions.
     """
 
-    tree = ast.parse(code)
+    tree = ast.parse(code) if isinstance(code, str) else code
     commands: dict[str, Command] = {}
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -217,8 +218,10 @@ def _build_cli_at_ref(
     """
 
     out: dict[str, Command] = {}
-    for _path, code in iter_py_files_at_ref(ref, roots, ignores):
-        out.update(extract_cli_from_source(code))
+    for path in list_py_files_at_ref(ref, roots, ignore_globs=ignores):
+        tree = parse_python_source(ref, path)
+        if tree is not None:
+            out.update(extract_cli_from_source(tree))
     return out
 
 

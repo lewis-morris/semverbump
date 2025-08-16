@@ -9,10 +9,10 @@ import subprocess
 from collections.abc import Iterable
 
 from ..analysers import get_analyser_info
-from ..analysers.utils import iter_py_files_at_ref
+from ..analysers.utils import parse_python_source
 from ..compare import Decision, Impact, decide_bump, diff_public_api
 from ..config import Config
-from ..gitutils import last_release_commit
+from ..gitutils import last_release_commit, list_py_files_at_ref
 from ..public_api import (
     PublicAPI,
     extract_public_api_from_source,
@@ -28,11 +28,13 @@ def _build_api_at_ref(ref: str, roots: list[str], ignores: Iterable[str]) -> Pub
 
     api: PublicAPI = {}
     for root in roots:
-        for path, code in sorted(
-            iter_py_files_at_ref(ref, [root], ignores), key=lambda t: t[0]
-        ):
+        paths = sorted(list_py_files_at_ref(ref, [root], ignore_globs=ignores))
+        for path in paths:
+            tree = parse_python_source(ref, path)
+            if tree is None:
+                continue
             modname = module_name_from_path(root, path)
-            api.update(extract_public_api_from_source(modname, code))
+            api.update(extract_public_api_from_source(modname, tree))
     return api
 
 
