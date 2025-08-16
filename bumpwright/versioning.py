@@ -146,7 +146,7 @@ def apply_bump(
         level: Bump level to apply (``"major"``, ``"minor"``, or ``"patch"``).
             pyproject_path: Path to the canonical ``pyproject.toml`` file.
         dry_run: If ``True``, compute the new version without writing to disk.
-        paths: Glob patterns pointing to files that may contain the version. 
+        paths: Glob patterns pointing to files that may contain the version.
             Defaults include ``pyproject.toml``, ``setup.py``, ``setup.cfg`` and
             any ``__init__.py``, ``version.py`` or ``_version.py`` files within
             the project. Custom patterns extend this list.
@@ -218,7 +218,16 @@ def _update_additional_files(
 def _resolve_files(
     patterns: Iterable[str], ignore: Iterable[str], base_dir: Path
 ) -> List[Path]:
-    """Expand glob patterns while applying ignore rules relative to ``base_dir``."""
+    """Expand glob patterns while applying ignore rules relative to ``base_dir``.
+
+    Args:
+        patterns: Glob patterns to search for version files.
+        ignore: Glob patterns to exclude from results.
+        base_dir: Directory relative to which patterns are evaluated.
+
+    Returns:
+        List of discovered file paths matching ``patterns`` minus ``ignore``.
+    """
 
     out: List[Path] = []
     ignore_list = list(ignore)
@@ -242,7 +251,13 @@ def _resolve_files(
 
 
 def _replace_version(path: Path, old: str, new: str) -> None:
-    """Replace occurrences of ``old`` version with ``new`` in ``path``."""
+    """Replace occurrences of ``old`` version with ``new`` in ``path``.
+
+    Args:
+        path: File whose contents should be updated.
+        old: Previous version string.
+        new: New version string.
+    """
 
     text = path.read_text(encoding="utf-8")
     patterns = [
