@@ -6,7 +6,7 @@ from pathlib import Path
 
 import tomli
 
-from bumpwright.config import load_config
+from bumpwright.config import Config, load_config
 
 
 def test_load_config_parses_analysers(tmp_path: Path) -> None:
@@ -66,13 +66,12 @@ def test_tomli_fallback(monkeypatch, tmp_path: Path) -> None:
 def test_mutating_config_does_not_alter_defaults(tmp_path: Path) -> None:
     """Ensure modifying a loaded config leaves defaults unchanged."""
 
+    defaults = Config()
     cfg = load_config(tmp_path / "missing.toml")
     cfg.project.public_roots.append("src")
 
-    import bumpwright.config as config_module  # noqa: PLC0415
-
     fresh = load_config(tmp_path / "missing.toml")
-    assert config_module._DEFAULTS["project"]["public_roots"] == ["."]
+    assert defaults.project.public_roots == ["."]
     assert fresh.project.public_roots == ["."]
 
 

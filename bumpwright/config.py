@@ -7,38 +7,8 @@ try:  # pragma: no cover - exercised in Python <3.11 tests
 except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib
 import copy
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
-
-_DEFAULTS = {
-    "project": {"package": "", "public_roots": ["."]},
-    "ignore": {"paths": ["tests/**", "examples/**", "scripts/**"]},
-    "rules": {"return_type_change": "minor"},  # or "major"
-    "analysers": {"cli": False, "web_routes": False, "migrations": False},
-    "migrations": {"paths": ["migrations"]},
-    "changelog": {"path": "", "template": ""},
-    "version": {
-        "paths": [
-            "pyproject.toml",
-            "setup.py",
-            "setup.cfg",
-            "**/__init__.py",
-            "**/version.py",
-            "**/_version.py",
-        ],
-        "ignore": [
-            "build/**",
-            "dist/**",
-            "*.egg-info/**",
-            ".eggs/**",
-            ".venv/**",
-            "venv/**",
-            ".env/**",
-            "**/__pycache__/**",
-        ],
-        "scheme": "semver",
-    },
-}
 
 
 @dataclass
@@ -66,7 +36,9 @@ class Project:
 class Ignore:
     """Paths to ignore during scanning."""
 
-    paths: list[str] = field(default_factory=lambda: ["tests/**", "examples/**", "scripts/**"])
+    paths: list[str] = field(
+        default_factory=lambda: ["tests/**", "examples/**", "scripts/**"]
+    )
 
 
 @dataclass
@@ -159,17 +131,18 @@ class Config:
     version: VersionFiles = field(default_factory=VersionFiles)
 
 
-def _merge_defaults(data: dict | None) -> dict:
-    """Merge user configuration with built-in defaults.
+def _merge_defaults(data: dict | None, defaults: dict) -> dict:
+    """Merge user configuration with dataclass defaults.
 
     Args:
         data: Raw configuration mapping or ``None`` for no user overrides.
+        defaults: Default configuration mapping generated from dataclasses.
 
     Returns:
         Combined configuration with defaults applied.
     """
 
-    out = copy.deepcopy(_DEFAULTS)  # Deep clone to avoid shared mutable defaults.
+    out = copy.deepcopy(defaults)  # Avoid mutating the defaults mapping
     for section, content in (data or {}).items():
         out.setdefault(section, {}).update(content or {})
     return out
@@ -185,17 +158,19 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
         Parsed configuration object.
     """
     p = Path(path)
+    raw: dict
     if not p.exists():
-        raw: dict = {}
+        raw = {}
     else:
         raw = tomllib.loads(p.read_text(encoding="utf-8"))
+    defaults = asdict(Config())
     user_ignore = raw.get("version", {}).get("ignore")
     if user_ignore:
         raw.setdefault("version", {})["ignore"] = [
-            *_DEFAULTS["version"]["ignore"],
+            *defaults["version"]["ignore"],
             *user_ignore,
         ]
-    d = _merge_defaults(raw)
+    d = _merge_defaults(raw, defaults)
     proj = Project(**d["project"])
     rules = Rules(**d["rules"])
     ign = Ignore(**d["ignore"])
