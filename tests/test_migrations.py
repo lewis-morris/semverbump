@@ -1,5 +1,6 @@
-"""Tests for the migrations analyzer."""
+"""Tests for the migrations analyzer plugin."""
 
+import os
 import subprocess
 from pathlib import Path
 
@@ -8,8 +9,9 @@ try:  # pragma: no cover - handled when pytest not installed
 except ModuleNotFoundError:  # pragma: no cover
     pytest = None  # type: ignore
 
-from bumpwright.analyzers.migrations import analyze_migrations
-from bumpwright.config import Migrations
+from bumpwright.analyzers import load_enabled
+from bumpwright.compare import Impact
+from bumpwright.config import Config, Migrations
 
 
 def _run(cmd: list[str], cwd: Path) -> str:
@@ -38,7 +40,32 @@ def _commit_migration(repo: Path, name: str, content: str) -> str:
 
 
 def _baseline(repo: Path) -> str:
+    """Return the current HEAD commit hash."""
+
     return _run(["git", "rev-parse", "HEAD"], repo)
+
+
+def _analyze(repo: Path, base: str, head: str) -> list[Impact]:
+    """Run the migrations analyzer and return impacts.
+
+    Args:
+        repo: Repository root path.
+        base: Base git reference.
+        head: Head git reference.
+
+    Returns:
+        List of detected impacts.
+    """
+
+    cfg = Config(migrations=Migrations(paths=["migrations"]))
+    cfg.analyzers.enabled.add("migrations")
+    analyzer = load_enabled(cfg)[0]
+    old_cwd = os.getcwd()
+    os.chdir(repo)
+    try:
+        return analyzer.compare(analyzer.collect(base), analyzer.collect(head))
+    finally:
+        os.chdir(old_cwd)
 
 
 def test_add_nullable_column_minor(repo: Path) -> None:
@@ -56,7 +83,7 @@ def upgrade():
     op.add_column('t', sa.Column('c', sa.Integer(), nullable=True))
 """,
     )
-    impacts = analyze_migrations(base, head, Migrations(paths=["migrations"]), cwd=repo)
+    impacts = _analyze(repo, base, head)
     assert any(i.severity == "minor" for i in impacts)
 
 
@@ -74,7 +101,7 @@ def upgrade():
     op.drop_column('t', 'c')
 """,
     )
-    impacts = analyze_migrations(base, head, Migrations(paths=["migrations"]), cwd=repo)
+    impacts = _analyze(repo, base, head)
     assert any(i.severity == "major" for i in impacts)
 
 
@@ -93,7 +120,7 @@ def upgrade():
     op.add_column('t', sa.Column('d', sa.Integer(), nullable=False))
 """,
     )
-    impacts = analyze_migrations(base, head, Migrations(paths=["migrations"]), cwd=repo)
+    impacts = _analyze(repo, base, head)
     assert any(i.severity == "major" for i in impacts)
 
 
@@ -111,5 +138,5 @@ def upgrade():
     op.create_index('ix_t_c', 't', ['c'])
 """,
     )
-    impacts = analyze_migrations(base, head, Migrations(paths=["migrations"]), cwd=repo)
+    impacts = _analyze(repo, base, head)
     assert any(i.severity == "minor" for i in impacts)

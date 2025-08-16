@@ -11,8 +11,9 @@ import ast
 from pathlib import Path
 
 from ..compare import Impact
-from ..config import Migrations
+from ..config import Config, Migrations
 from ..gitutils import changed_paths, read_file_at_ref
+from . import register
 
 
 class _UpgradeVisitor(ast.NodeVisitor):
@@ -134,3 +135,42 @@ def analyze_migrations(
             continue
         impacts.extend(_analyze_content(path, content))
     return impacts
+
+
+@register("migrations", "Analyze database migrations for schema changes.")
+class MigrationsAnalyzer:
+    """Analyzer plugin for Alembic migrations."""
+
+    def __init__(self, cfg: Config) -> None:
+        """Initialize the analyzer with configuration.
+
+        Args:
+            cfg: Global configuration object.
+        """
+
+        self.cfg = cfg
+
+    def collect(self, ref: str) -> str:
+        """Collect analyzer state for ``ref``.
+
+        Args:
+            ref: Git reference to inspect.
+
+        Returns:
+            The provided git reference for later comparison.
+        """
+
+        return ref
+
+    def compare(self, old: str, new: str) -> list[Impact]:
+        """Compare two git references and return migration impacts.
+
+        Args:
+            old: Baseline git reference.
+            new: Updated git reference.
+
+        Returns:
+            List of detected schema change impacts.
+        """
+
+        return analyze_migrations(old, new, self.cfg.migrations)

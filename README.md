@@ -41,8 +41,8 @@ pip install bumpwright
 ## Quick start
 | Command | Purpose | Key options |
 |---------|---------|-------------|
-| `bump --decide` | Recommend a bump between two references | `--base`, `--head`, `--format` |
-| `bump` | Apply a specific version bump | `--level`, `--pyproject`, `--format`, `--commit`, `--tag` |
+| `bump --decide` | Recommend a bump between two references | `--base`, `--head`, `--format`, `--enable-analyzer`, `--disable-analyzer` |
+| `bump` | Apply a specific version bump | `--level`, `--pyproject`, `--format`, `--commit`, `--tag`, `--enable-analyzer`, `--disable-analyzer` |
 
 1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
 
@@ -51,6 +51,9 @@ pip install bumpwright
    cli = true      # enable CLI analysis
    web_routes = false  # disable route analysis
    ```
+
+   Command-line flags ``--enable-analyzer`` and ``--disable-analyzer`` can
+   temporarily override these settings for a single invocation.
 
 2. **Suggest the next version** between two git references:
 

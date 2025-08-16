@@ -52,6 +52,12 @@ require.
 ``--repo-url URL``
     Base repository URL for linking commit hashes in Markdown output.
 
+``--enable-analyzer NAME``
+    Enable analyzer ``NAME`` in addition to configuration. Repeatable.
+
+``--disable-analyzer NAME``
+    Disable analyzer ``NAME`` even if enabled in configuration. Repeatable.
+
 **Examples**
 
 .. code-block:: console
@@ -72,24 +78,7 @@ Running ``bumpwright bump --decide`` without ``--base`` compares the current
 commit against the last release commit or, if none exists, its parent (``HEAD^``).
 Because this mode only inspects commits, there is no effect on the filesystem.
 
-.. code-block:: console
 
-   bumpwright bump --decide --format json
-
-.. code-block:: json
-
-   {
-     "level": "minor",
-     "impacts": [
-       {"severity": "minor", "symbol": "cli.new_command", "reason": "added CLI entry 'greet'"}
-     ]
-   }
-
-Omitting ``--head`` uses the current ``HEAD``:
-
-.. code-block:: console
-
-   bumpwright bump --decide --base origin/main --format json
 
 ``bump`` – apply a bump
 -----------------------
@@ -120,6 +109,12 @@ assignment. These locations can be customised via the ``[version]`` section in
 
 ``--repo-url URL``
     Base repository URL for linking commit hashes in Markdown output.
+
+``--enable-analyzer NAME``
+    Enable analyzer ``NAME`` in addition to configuration. Repeatable.
+
+``--disable-analyzer NAME``
+    Disable analyzer ``NAME`` even if enabled in configuration. Repeatable.
 
 ``--pyproject PATH``
     Path to the project's ``pyproject.toml`` file. Defaults to
