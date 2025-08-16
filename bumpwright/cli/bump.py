@@ -24,10 +24,36 @@ _DEFAULT_TEMPLATE = (
 
 
 def _commit_tag(pyproject: str, version: str, commit: bool, tag: bool) -> None:
-    """Optionally commit and tag the updated version."""
+    """Optionally commit and tag the updated version.
+
+    Args:
+        pyproject: Path to the ``pyproject.toml`` file.
+        version: Version string to commit and tag.
+        commit: Whether to create a commit.
+        tag: Whether to create a git tag.
+
+    Raises:
+        RuntimeError: If the requested tag already exists.
+    """
 
     if not (commit or tag):
         return
+
+    if tag:
+        # Abort early if the tag already exists to avoid accidental reuse.
+        result = subprocess.run(
+            ["git", "rev-parse", "--verify", f"v{version}"],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        if result.returncode == 0:
+            msg = (
+                f"Tag v{version} already exists. "
+                "Delete the tag manually or use a different version."
+            )
+            raise RuntimeError(msg)
+
     if commit:
         subprocess.run(["git", "add", pyproject], check=True)
         subprocess.run(
