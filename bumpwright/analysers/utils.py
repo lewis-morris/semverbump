@@ -1,4 +1,4 @@
-"""Shared helpers for analyzer modules."""
+"""Shared helpers for analyser modules."""
 
 from __future__ import annotations
 

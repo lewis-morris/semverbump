@@ -5,7 +5,7 @@ Enable optional analysers in ``bumpwright.toml``:
 
 .. code-block:: toml
 
-   [analyzers]
+   [analysers]
    cli = true
    web_routes = true
    migrations = true
@@ -14,7 +14,7 @@ Enable optional analysers in ``bumpwright.toml``:
    paths = ["migrations"]
 
 You can also toggle analysers per invocation with the command-line flags
-``--enable-analyzer`` and ``--disable-analyzer``.
+``--enable-analyser`` and ``--disable-analyser``.
 
 .. toctree::
    :maxdepth: 1

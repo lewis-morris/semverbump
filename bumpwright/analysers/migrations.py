@@ -1,7 +1,7 @@
-"""Analyzer for Alembic database migrations.
+"""Analyser for Alembic database migrations.
 
 The utilities here parse migration scripts and flag schema changes such as
-added or removed columns. The analyzer reports these findings as public API
+added or removed columns. The analyser reports these findings as public API
 impacts so they can influence semantic version recommendations.
 """
 
@@ -116,7 +116,7 @@ def analyze_migrations(
     Args:
         base: Base git reference to compare from.
         head: Head git reference to compare to.
-        config: Migration analyzer settings.
+        config: Migration analyser settings.
         cwd: Repository root.
 
     Returns:
@@ -138,11 +138,11 @@ def analyze_migrations(
 
 
 @register("migrations", "Analyze database migrations for schema changes.")
-class MigrationsAnalyzer:
-    """Analyzer plugin for Alembic migrations."""
+class MigrationsAnalyser:
+    """Analyser plugin for Alembic migrations."""
 
     def __init__(self, cfg: Config) -> None:
-        """Initialize the analyzer with configuration.
+        """Initialize the analyser with configuration.
 
         Args:
             cfg: Global configuration object.
@@ -151,7 +151,7 @@ class MigrationsAnalyzer:
         self.cfg = cfg
 
     def collect(self, ref: str) -> str:
-        """Collect analyzer state for ``ref``.
+        """Collect analyser state for ``ref``.
 
         Args:
             ref: Git reference to inspect.

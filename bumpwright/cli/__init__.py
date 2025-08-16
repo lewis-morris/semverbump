@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from ..analyzers import available
+from ..analysers import available
 
 
 def add_ref_options(parser: argparse.ArgumentParser) -> None:
@@ -29,24 +29,24 @@ def add_ref_options(parser: argparse.ArgumentParser) -> None:
     )
 
 
-def add_analyzer_toggles(parser: argparse.ArgumentParser) -> None:
-    """Attach analyzer enable/disable flags to ``parser``.
+def add_analyser_toggles(parser: argparse.ArgumentParser) -> None:
+    """Attach analyser enable/disable flags to ``parser``.
 
     Args:
-        parser: Subparser receiving analyzer toggling options.
+        parser: Subparser receiving analyser toggling options.
     """
 
     parser.add_argument(
-        "--enable-analyzer",
+        "--enable-analyser",
         action="append",
-        dest="enable_analyzer",
-        help="Enable analyzer NAME (repeatable) in addition to configuration.",
+        dest="enable_analyser",
+        help="Enable analyser NAME (repeatable) in addition to configuration.",
     )
     parser.add_argument(
-        "--disable-analyzer",
+        "--disable-analyser",
         action="append",
-        dest="disable_analyzer",
-        help="Disable analyzer NAME (repeatable) even if configured.",
+        dest="disable_analyser",
+        help="Disable analyser NAME (repeatable) even if configured.",
     )
 
 
@@ -61,7 +61,7 @@ def get_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="bumpwright",
         description=(
-            f"Suggest and apply semantic version bumps. Available analyzers: {avail}."
+            f"Suggest and apply semantic version bumps. Available analysers: {avail}."
         ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
@@ -109,7 +109,7 @@ def get_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Only determine the bump level without modifying any files.",
     )
-    add_analyzer_toggles(p_bump)
+    add_analyser_toggles(p_bump)
     p_bump.add_argument(
         "--pyproject",
         default="pyproject.toml",
