@@ -6,7 +6,7 @@ import ast
 from collections.abc import Iterable, Iterator
 from functools import lru_cache
 
-from ..gitutils import list_py_files_at_ref, read_files_at_ref
+from ..gitutils import list_py_files_at_ref, read_file_at_ref, read_files_at_ref
 
 
 def _is_const_str(node: ast.AST) -> bool:
