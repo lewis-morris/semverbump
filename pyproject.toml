@@ -13,6 +13,24 @@ dependencies = [
   "tomli>=1.0.0",
 ]
 
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Topic :: Software Development :: Version Control",
+]
+keywords = ["semantic-versioning", "semver", "api", "diff", "release"]
+
+[project.urls]
+homepage = "https://github.com/arched-dev/bumpwright"
+repository = "https://github.com/arched-dev/bumpwright"
+documentation = "https://bumpwright.readthedocs.io"
+bug_tracker = "https://github.com/arched-dev/bumpwright/issues"
+
 [project.scripts]
 bumpwright = "bumpwright:main"
 
