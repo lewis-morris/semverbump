@@ -53,3 +53,21 @@ def test_module_name_from_path_outside_root(tmp_path):
     path = tmp_path / "other" / "mod.py"
     with pytest.raises(ValueError):
         module_name_from_path(str(root), str(path))
+
+
+def test_param_kinds():
+    code = """
+def sample(a, /, b, c=1, *d, e, f=2, **g):
+    pass
+"""
+    api = extract_public_api_from_source("pkg.mod", code)
+    params = api["pkg.mod:sample"].params
+    assert [(p.name, p.kind, p.default) for p in params] == [
+        ("a", "posonly", None),
+        ("b", "pos", None),
+        ("c", "pos", "1"),
+        ("d", "vararg", None),
+        ("e", "kwonly", None),
+        ("f", "kwonly", "2"),
+        ("g", "varkw", None),
+    ]
