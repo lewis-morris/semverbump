@@ -4,6 +4,12 @@ Versioning
 ``bumpwright`` provides multiple versioning schemes and preserves prerelease
 and build metadata when bumping versions.
 
+.. note::
+
+   The :func:`bumpwright.versioning.bump_string` utility supports
+   additional ``pre`` and ``build`` increments. The CLI exposes only the
+   ``major``, ``minor``, and ``patch`` levels.
+
 SemVer
 ------
 
