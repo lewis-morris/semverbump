@@ -4,7 +4,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-from tests.cli_helpers import run, setup_repo
+from cli_helpers import run, setup_repo
 
 
 def test_bump_uses_config_path(tmp_path: Path) -> None:

@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from bumpwright.gitutils import last_release_commit
-from tests.cli_helpers import run, setup_repo
+from cli_helpers import run, setup_repo
 
 
 def test_init_creates_baseline_commit(tmp_path: Path) -> None:

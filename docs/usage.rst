@@ -78,24 +78,7 @@ Running ``bumpwright bump --decide`` without ``--base`` compares the current
 commit against the last release commit or, if none exists, its parent (``HEAD^``).
 Because this mode only inspects commits, there is no effect on the filesystem.
 
-.. code-block:: console
 
-   bumpwright bump --decide --format json
-
-.. code-block:: json
-
-   {
-     "level": "minor",
-     "impacts": [
-       {"severity": "minor", "symbol": "cli.new_command", "reason": "added CLI entry 'greet'"}
-     ]
-   }
-
-Omitting ``--head`` uses the current ``HEAD``:
-
-.. code-block:: console
-
-   bumpwright bump --decide --base origin/main --format json
 
 ``bump`` – apply a bump
 -----------------------
