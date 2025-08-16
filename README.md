@@ -134,10 +134,10 @@ web_routes = false
 paths = ["migrations"]
 
 [changelog]
-path = "CHANGELOG.md"
+path = ""
 
 [version]
-paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/*.py"]
+paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]
 ignore = []
 ```
 
