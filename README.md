@@ -39,10 +39,28 @@ pip install bumpwright
 ```
 
 ## Quick start
-| Command | Purpose | Key options |
-|---------|---------|-------------|
-| `bump --decide` | Recommend a bump between two references | `--base`, `--head`, `--format`, `--enable-analyzer`, `--disable-analyzer` |
-| `bump` | Apply a specific version bump | `--level`, `--pyproject`, `--format`, `--commit`, `--tag`, `--enable-analyzer`, `--disable-analyzer` |
+| Command | Purpose |
+|---------|---------|
+| `bump --decide` | Recommend a bump between two references |
+| `bump` | Apply a specific version bump |
+
+### `bump --decide` options
+
+- `--base`: base git reference
+- `--head`: head git reference
+- `--format`: output format
+- `--enable-analyzer` or `--disable-analyzer`: toggle analyzers
+- See [CLI reference](docs/cli_reference.rst) for details.
+
+### `bump` options
+
+- `--level`: bump level to apply
+- `--pyproject`: path to pyproject file
+- `--format`: output format
+- `--commit`: commit the version bump
+- `--tag`: create a git tag
+- `--enable-analyzer` or `--disable-analyzer`: toggle analyzers
+- See [CLI reference](docs/cli_reference.rst) for details.
 
 1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
 
