@@ -201,6 +201,20 @@ def test_read_file_at_ref_caches(
     gitutils.read_file_at_ref.cache_clear()
 
 
+def test_last_release_commit_found(tmp_path: Path) -> None:
+    """Return the hash of the latest release commit."""
+
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "file.txt").write_text("hi\n", encoding="utf-8")
+    gitutils._run(["git", "init"], str(repo))
+    gitutils._run(["git", "config", "user.email", "test@example.com"], str(repo))
+    gitutils._run(["git", "config", "user.name", "Test"], str(repo))
+    gitutils._run(["git", "add", "file.txt"], str(repo))
+    gitutils._run(["git", "commit", "-m", "chore(release): 1.0.0"], str(repo))
+    head = gitutils._run(["git", "rev-parse", "HEAD"], str(repo)).strip()
+    assert gitutils.last_release_commit(str(repo)) == head
+
 def test_read_files_at_ref(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """Read multiple file contents and handle missing paths."""
 
