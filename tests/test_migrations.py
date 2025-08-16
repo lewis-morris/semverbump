@@ -39,6 +39,26 @@ def _commit_migration(repo: Path, name: str, content: str) -> str:
     return _run(["git", "rev-parse", "HEAD"], repo)
 
 
+def _commit_migrations(repo: Path, files: dict[str, str]) -> str:
+    """Commit multiple migration files at once.
+
+    Args:
+        repo: Repository root path.
+        files: Mapping of file names to their contents.
+
+    Returns:
+        The commit hash after committing the migrations.
+    """
+
+    mig_dir = repo / "migrations"
+    mig_dir.mkdir(exist_ok=True)
+    for name, content in files.items():
+        (mig_dir / name).write_text(content)
+    _run(["git", "add", str(mig_dir)], repo)
+    _run(["git", "commit", "-m", "batch"], repo)
+    return _run(["git", "rev-parse", "HEAD"], repo)
+
+
 def _baseline(repo: Path) -> str:
     """Return the current HEAD commit hash."""
 
@@ -140,3 +160,30 @@ def upgrade():
     )
     impacts = _analyze(repo, base, head)
     assert any(i.severity == "minor" for i in impacts)
+
+
+def test_multiple_migrations_single_commit(repo: Path) -> None:
+    """Processing multiple migration files in one commit works."""
+
+    base = _baseline(repo)
+    head = _commit_migrations(
+        repo,
+        {
+            "0005_add_col.py": """
+from alembic import op
+import sqlalchemy as sa
+
+def upgrade():
+    op.add_column('t', sa.Column('e', sa.Integer(), nullable=True))
+""",
+            "0006_drop_col.py": """
+from alembic import op
+
+def upgrade():
+    op.drop_column('t', 'e')
+""",
+        },
+    )
+    impacts = _analyze(repo, base, head)
+    severities = {i.severity for i in impacts}
+    assert {"minor", "major"}.issubset(severities)

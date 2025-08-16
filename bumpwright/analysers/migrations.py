@@ -12,7 +12,7 @@ from pathlib import Path
 
 from ..compare import Impact
 from ..config import Config, Migrations
-from ..gitutils import changed_paths, read_file_at_ref
+from ..gitutils import changed_paths, read_files_at_ref
 from . import register
 
 
@@ -32,7 +32,9 @@ class _UpgradeVisitor(ast.NodeVisitor):
     def visit_Call(self, node: ast.Call) -> None:  # noqa: D401
         """Record relevant Alembic operations."""
 
-        if isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name):
+        if isinstance(node.func, ast.Attribute) and isinstance(
+            node.func.value, ast.Name
+        ):
             if node.func.value.id == "op":
                 attr = node.func.attr
                 if attr == "drop_column":
@@ -60,7 +62,11 @@ def _analyze_add_column(node: ast.Call, path: str) -> Impact | None:
 
     column = None
     for arg in node.args:
-        if isinstance(arg, ast.Call) and isinstance(arg.func, ast.Attribute) and arg.func.attr == "Column":
+        if (
+            isinstance(arg, ast.Call)
+            and isinstance(arg.func, ast.Attribute)
+            and arg.func.attr == "Column"
+        ):
             column = arg
             break
     if column is None:
@@ -102,7 +108,9 @@ def _analyze_content(path: str, content: str) -> list[Impact]:
     return impacts
 
 
-def analyze_migrations(base: str, head: str, config: Migrations, cwd: str | Path | None = None) -> list[Impact]:
+def analyze_migrations(
+    base: str, head: str, config: Migrations, cwd: str | Path | None = None
+) -> list[Impact]:
     """Analyze Alembic migrations between two git references.
 
     Args:
@@ -116,13 +124,15 @@ def analyze_migrations(base: str, head: str, config: Migrations, cwd: str | Path
     """
 
     dirs = [str(Path(p)) for p in config.paths]
-    impacts: list[Impact] = []
+    relevant: list[str] = []
     for path in changed_paths(base, head, cwd=cwd):
         if not path.endswith(".py"):
             continue
-        if not any(path == d or path.startswith(f"{d}/") for d in dirs):
-            continue
-        content = read_file_at_ref(head, path, cwd=cwd)
+        if any(path == d or path.startswith(f"{d}/") for d in dirs):
+            relevant.append(path)
+    contents = read_files_at_ref(head, relevant, cwd=cwd)
+    impacts: list[Impact] = []
+    for path, content in contents.items():
         if content is None:
             continue
         impacts.extend(_analyze_content(path, content))
