@@ -1,6 +1,4 @@
-"""Scan Python sources for framework-specific route decorators and compare
-HTTP endpoints across git references to identify breaking or compatible route
-changes."""
+"""Analyze HTTP route decorators to compare endpoints across git references."""
 
 from __future__ import annotations
 

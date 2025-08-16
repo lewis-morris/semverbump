@@ -1,4 +1,4 @@
-"""CLI analyzer for argparse and click based applications."""
+"""Extract CLI command definitions for argparse and Click applications."""
 
 from __future__ import annotations
 
