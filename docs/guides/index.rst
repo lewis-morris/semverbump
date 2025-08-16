@@ -1,10 +1,16 @@
-Guides
-======
+How-to guides
+=============
 
-Practical guides for using bumpwright in complex scenarios.
+Step-by-step recipes for using Bumpwright in real projects.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :titlesonly:
 
-   advanced/index
-   workflows
+   customization
+   monorepos
+   github-actions
+
+* :doc:`customization` – tweak rules, ignored paths, and version files.
+* :doc:`monorepos` – handle projects with multiple packages.
+* :doc:`github-actions` – integrate Bumpwright into GitHub Actions.
