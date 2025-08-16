@@ -1,6 +1,11 @@
 """Sphinx configuration for project documentation."""
 
+import inspect
+import os
+import sys
 from datetime import datetime
+
+import bumpwright
 
 project = "bumpwright"
 author = "Lewis Morris (arched.dev)"
@@ -17,12 +22,15 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "sphinx_copybutton",
-    "sphinx_argparse",
     "sphinx_wagtail_theme",
+    "sphinx.ext.autosummary",
+    "sphinxcontrib.autoprogram",
+    "sphinx.ext.linkcode",
 ]
 
 templates_path = ["_templates"]
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+autosummary_generate = True
 
 # Allow both .rst and .md sources
 source_suffix = {
@@ -39,7 +47,13 @@ napoleon_use_rtype = True
 
 # Cross-referencing and external links
 autosectionlabel_prefix_document = True
-intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3", None),
+    "click": ("https://click.palletsprojects.com/en/latest/", None),
+    "flask": ("https://flask.palletsprojects.com/en/latest/", None),
+    "fastapi": ("https://fastapi.tiangolo.com/", None),
+    "alembic": ("https://alembic.sqlalchemy.org/en/latest/", None),
+}
 
 # Autodoc / typehints behaviour
 autodoc_default_options = {
@@ -98,3 +112,40 @@ html_theme_options = dict(
         ]
     ),
 )
+
+
+def linkcode_resolve(domain: str, info: dict[str, str]) -> str | None:
+    """Resolve GitHub source links for documented objects.
+
+    Args:
+        domain: The documentation domain (e.g., ``"py"``).
+        info: Mapping with module and object path information.
+
+    Returns:
+        A URL pointing to the object on GitHub, or ``None`` if not resolvable.
+    """
+    if domain != "py" or not info.get("module"):
+        return None
+
+    module = sys.modules.get(info["module"])
+    if module is None:
+        return None
+
+    obj = module
+    for part in info["fullname"].split("."):
+        obj = getattr(obj, part, None)
+        if obj is None:
+            return None
+
+    try:
+        filename = inspect.getsourcefile(obj)
+        source, lineno = inspect.getsourcelines(obj)
+    except OSError:
+        return None
+
+    relpath = os.path.relpath(filename, start=os.path.dirname(bumpwright.__file__))
+    end_line = lineno + len(source) - 1
+    return (
+        "https://github.com/lewis-morris/bumpwright/blob/main/bumpwright/"
+        f"{relpath}#L{lineno}-L{end_line}"
+    )
