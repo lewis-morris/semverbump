@@ -42,6 +42,10 @@ Set up repo
 Run analysis
 ------------
 
+Records a ``chore(release): initialise baseline`` commit so later runs
+know where to start. Learn more about this step in :doc:`usage/index`.
+
+   
 .. code-block:: bash
 
    cat > demo.py <<'EOF'
@@ -95,5 +99,5 @@ Flow
    Release
 
 For deeper explanations of commands, flags, and configuration, see
-:doc:`usage` and :doc:`configuration`.
+:doc:`usage/index` and :doc:`configuration`.
 

@@ -33,8 +33,8 @@ Version keeps incrementing
 committed or reverted.
 
 *Fix*: Commit or discard the change before rerunning, or use ``--dry-run`` to
-preview the bump without writing to disk. See :doc:`usage` for details on dry
-runs.
+preview the bump without writing to disk. See :doc:`usage/index` for details on
+dry runs.
 
 Changelog file not created
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,7 +67,7 @@ How do I check which analysers ran?
 Can I simulate a bump without writing to disk?
     Yes. Run with ``--dry-run`` to preview changes without modifying files.
     ``--dry-run`` still respects ``--changelog`` for path resolution but does
-    not write any files. The :doc:`usage` guide explains how to combine this
+    not write any files. The :doc:`usage/index` guide explains how to combine this
     with other options.
 
 Why do I see Git errors about missing references?

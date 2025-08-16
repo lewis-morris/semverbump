@@ -35,6 +35,4 @@ Apply a bump and commit/tag automatically:
 .. toctree::
    :maxdepth: 1
 
-   ci_pipelines
    monorepos
-   plugins

@@ -46,7 +46,9 @@ class AnalyserInfo:
 REGISTRY: dict[str, AnalyserInfo] = {}
 
 
-def register(name: str, description: str | None = None) -> Callable[[type[Analyser]], type[Analyser]]:
+def register(
+    name: str, description: str | None = None
+) -> Callable[[type[Analyser]], type[Analyser]]:
     """Decorator registering an analyser implementation.
 
     Args:
