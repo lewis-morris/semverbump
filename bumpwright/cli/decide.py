@@ -23,7 +23,12 @@ from . import add_analyser_toggles, add_ref_options
 logger = logging.getLogger(__name__)
 
 
-def _build_api_at_ref(ref: str, roots: list[str], ignores: Iterable[str]) -> PublicAPI:
+def _build_api_at_ref(
+    ref: str,
+    roots: list[str],
+    ignores: Iterable[str],
+    private_prefixes: Iterable[str],
+) -> PublicAPI:
     """Collect the public API for ``roots`` at a git reference."""
 
     api: PublicAPI = {}
@@ -34,7 +39,7 @@ def _build_api_at_ref(ref: str, roots: list[str], ignores: Iterable[str]) -> Pub
             if tree is None:
                 continue
             modname = module_name_from_path(root, path)
-            api.update(extract_public_api_from_source(modname, tree))
+            api.update(extract_public_api_from_source(modname, tree, private_prefixes))
     return api
 
 
@@ -112,8 +117,18 @@ def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
 
     base = args.base or last_release_commit() or "HEAD^"
     head = args.head
-    old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
-    new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
+    old_api = _build_api_at_ref(
+        base,
+        cfg.project.public_roots,
+        cfg.ignore.paths,
+        cfg.project.private_prefixes,
+    )
+    new_api = _build_api_at_ref(
+        head,
+        cfg.project.public_roots,
+        cfg.ignore.paths,
+        cfg.project.private_prefixes,
+    )
     impacts = diff_public_api(
         old_api, new_api, return_type_change=cfg.rules.return_type_change
     )
@@ -150,8 +165,18 @@ def _infer_level(
 ) -> Decision:
     """Compute bump level from repository differences."""
 
-    old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
-    new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
+    old_api = _build_api_at_ref(
+        base,
+        cfg.project.public_roots,
+        cfg.ignore.paths,
+        cfg.project.private_prefixes,
+    )
+    new_api = _build_api_at_ref(
+        head,
+        cfg.project.public_roots,
+        cfg.ignore.paths,
+        cfg.project.private_prefixes,
+    )
     impacts = diff_public_api(
         old_api, new_api, return_type_change=cfg.rules.return_type_change
     )

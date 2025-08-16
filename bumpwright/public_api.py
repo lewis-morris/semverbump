@@ -9,6 +9,7 @@ so dynamically constructed symbols or runtime side effects may be missed.
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -213,17 +214,19 @@ def _param_list(args: ast.arguments) -> list[Param]:
     return params
 
 
-def _is_public(name: str) -> bool:
+def _is_public(name: str, private_prefixes: tuple[str, ...]) -> bool:
     """Return whether ``name`` represents a public symbol.
 
     Args:
         name: Symbol name to evaluate.
+        private_prefixes: Symbol prefixes considered non-public.
 
     Returns:
-        ``True`` if ``name`` does not begin with an underscore.
+        ``True`` if ``name`` does not begin with any prefix in
+        ``private_prefixes``.
     """
 
-    return not name.startswith("_")
+    return not name.startswith(private_prefixes)
 
 
 # --------- Visitor that collects public API ---------
@@ -232,17 +235,24 @@ def _is_public(name: str) -> bool:
 class _APIVisitor(ast.NodeVisitor):
     """Collect public function and method signatures from a module."""
 
-    def __init__(self, module_name: str, exports: set[str] | None) -> None:
+    def __init__(
+        self,
+        module_name: str,
+        exports: set[str] | None,
+        private_prefixes: tuple[str, ...],
+    ) -> None:
         """Initialize the visitor.
 
         Args:
             module_name: Name of the module being inspected.
             exports: Explicitly exported symbols if ``__all__`` is defined.
                 ``None`` indicates that all public symbols are considered.
+            private_prefixes: Symbol prefixes treated as private.
         """
 
         self.module_name = module_name
         self.exports = exports
+        self.private_prefixes = private_prefixes
         self.sigs: list[FuncSig] = []
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:  # noqa: D401
@@ -251,7 +261,7 @@ class _APIVisitor(ast.NodeVisitor):
         fn = node.name
         if self.exports is not None and fn not in self.exports:
             return
-        if not _is_public(fn):
+        if not _is_public(fn, self.private_prefixes):
             return
         params = tuple(_param_list(node.args))
         ret = render_node(node.returns)
@@ -266,13 +276,13 @@ class _APIVisitor(ast.NodeVisitor):
         cname = node.name
         if self.exports is not None and cname not in self.exports:
             return
-        if not _is_public(cname):
+        if not _is_public(cname, self.private_prefixes):
             return
 
         for elt in node.body:
             if isinstance(elt, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 mname = elt.name
-                if not _is_public(mname):
+                if not _is_public(mname, self.private_prefixes):
                     continue
                 params = tuple(_param_list(elt.args))
                 ret = render_node(elt.returns)
@@ -302,12 +312,17 @@ def module_name_from_path(root: str, path: str) -> str:
     return ".".join(rel.parts)
 
 
-def extract_public_api_from_source(module_name: str, code: str | ast.AST) -> PublicAPI:
+def extract_public_api_from_source(
+    module_name: str,
+    code: str | ast.AST,
+    private_prefixes: Iterable[str] = ("_",),
+) -> PublicAPI:
     """Extract the public API from Python source code.
 
     Args:
         module_name: Name of the module represented by ``code``.
         code: Source text or a pre-parsed module AST.
+        private_prefixes: Symbol prefixes treated as private.
 
     Returns:
         Mapping of symbol names to :class:`FuncSig` objects.
@@ -315,7 +330,7 @@ def extract_public_api_from_source(module_name: str, code: str | ast.AST) -> Pub
 
     mod = ast.parse(code) if isinstance(code, str) else code
     exports = _parse_exports(mod)
-    visitor = _APIVisitor(module_name, exports)
+    visitor = _APIVisitor(module_name, exports, tuple(private_prefixes))
     visitor.visit(mod)
     return {s.fullname: s for s in visitor.sigs}
 
