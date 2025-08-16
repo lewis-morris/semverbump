@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from datetime import date
 from pathlib import Path
@@ -115,8 +116,6 @@ def _infer_base_ref() -> str:
         'origin/main'
     """
 
-    import subprocess
-
     try:
         res = subprocess.run(
             ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
@@ -147,8 +146,6 @@ def _commit_tag(pyproject: str, version: str, commit: bool, tag: bool) -> None:
 
     if not (commit or tag):
         return
-
-    import subprocess
 
     if commit:
         subprocess.run(["git", "add", pyproject], check=True)
@@ -186,8 +183,8 @@ def _resolve_pyproject(path: str) -> Path:
     raise FileNotFoundError(f"pyproject.toml not found at {path}")
 
 
-def init_command(args: argparse.Namespace) -> int:
-    """CLI command to create an empty baseline release commit.
+def init_command(_args: argparse.Namespace) -> int:
+    """Create an empty baseline release commit.
 
     This command records an empty ``chore(release): initialize baseline`` commit
     so that subsequent invocations of :func:`last_release_commit` have a
@@ -195,7 +192,7 @@ def init_command(args: argparse.Namespace) -> int:
     project that lacks prior release commits.
 
     Args:
-        args: Parsed command-line arguments (unused).
+        _args: Parsed command-line arguments (unused).
 
     Returns:
         Process exit code.
@@ -208,8 +205,6 @@ def init_command(args: argparse.Namespace) -> int:
     if last_release_commit() is not None:
         print("Baseline already initialized.")
         return 0
-
-    import subprocess
 
     subprocess.run(
         [
@@ -225,75 +220,94 @@ def init_command(args: argparse.Namespace) -> int:
     return 0
 
 
-def bump_command(args: argparse.Namespace) -> int:
-    """CLI command to apply a version bump.
+def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
+    """Handle ``bump --decide`` mode."""
 
-    If ``--level`` is not specified, the bump level is inferred by comparing
-    ``--base`` (defaults to the last release commit or the previous commit
-    ``HEAD^``) and ``--head`` (defaults to ``HEAD``).
-
-    Args:
-        args: Parsed command-line arguments.
-
-    Args:
-        args: Parsed command-line arguments.
-
-    Returns:
-        Process exit code.
-
-    Examples:
-        Suggest a bump between commits without touching files:
-
-        $ bumpwright bump --decide
-        Suggested bump: patch
-
-        Apply an explicit minor bump and create a commit:
-
-        $ bumpwright bump --level minor --commit
-        Bumped version: 1.2.3 -> 1.3.0 (minor)
-
-    If ``--decide`` is given or no relevant files have changed, the command
-    reports ``No version bump needed`` and exits without modifying the project
-    version.
-    """
-
-    cfg = load_config(args.config)
-
-    # When --decide is used, simply report the suggested bump level.
-    if args.decide:
-        base = args.base or last_release_commit() or "HEAD^"
-        head = args.head
-        old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
-        new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
-        impacts = diff_public_api(
-            old_api, new_api, return_type_change=cfg.rules.return_type_change
-        )
-        impacts.extend(_run_analyzers(base, head, cfg))
-        level = decide_bump(impacts)
-        if args.format == "json":
-            print(
-                json.dumps(
-                    {"level": level, "impacts": [i.__dict__ for i in impacts]},
-                    indent=2,
-                )
+    base = args.base or last_release_commit() or "HEAD^"
+    head = args.head
+    old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
+    new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
+    impacts = diff_public_api(
+        old_api, new_api, return_type_change=cfg.rules.return_type_change
+    )
+    impacts.extend(_run_analyzers(base, head, cfg))
+    level = decide_bump(impacts)
+    if args.format == "json":
+        print(
+            json.dumps(
+                {"level": level, "impacts": [i.__dict__ for i in impacts]},
+                indent=2,
             )
-        elif args.format == "md":
-            print(f"**bumpwright** suggests: `{level}`\n")
-            print(_format_impacts_text(impacts))
-        else:
-            print(f"Suggested bump: {level}")
-            print(_format_impacts_text(impacts))
-        return 0
+        )
+    elif args.format == "md":
+        print(f"**bumpwright** suggests: `{level}`\n")
+        print(_format_impacts_text(impacts))
+    else:
+        print(f"Suggested bump: {level}")
+        print(_format_impacts_text(impacts))
+    return 0
 
-    # If level not provided, compute from base/head.
-    level = args.level
+
+def _resolve_refs(args: argparse.Namespace, level: str | None) -> tuple[str, str]:
+    """Determine base and head git references."""
+
     if args.base:
         base = args.base
     elif level:
         base = "HEAD^"
     else:
         base = last_release_commit() or "HEAD^"
-    head = args.head
+    return base, args.head
+
+
+def _safe_changed_paths(base: str, head: str) -> set[str] | None:
+    """Return changed paths, handling missing history gracefully."""
+
+    try:
+        return changed_paths(base, head)
+    except subprocess.CalledProcessError:
+        return None
+
+
+def _infer_level(base: str, head: str, cfg: Config) -> str | None:
+    """Compute bump level from repository differences."""
+
+    old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
+    new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
+    impacts = diff_public_api(
+        old_api, new_api, return_type_change=cfg.rules.return_type_change
+    )
+    impacts.extend(_run_analyzers(base, head, cfg))
+    return decide_bump(impacts)
+
+
+def _build_changelog(args: argparse.Namespace, new_version: str) -> str | None:
+    """Generate changelog text if requested."""
+
+    if args.changelog is None:
+        return None
+    base = last_release_commit() or f"{args.head}^"
+    commits = collect_commits(base, args.head)
+    lines = [f"## [v{new_version}] - {date.today().isoformat()}"]
+    for sha, subject in commits:
+        if args.repo_url and args.format == "md":
+            base_url = args.repo_url.rstrip("/")
+            link = f"{base_url}/commit/{sha}"
+            lines.append(f"- [{sha}]({link}) {subject}")
+        else:
+            lines.append(f"- {sha} {subject}")
+    return "\n".join(lines) + "\n"
+
+
+def bump_command(args: argparse.Namespace) -> int:
+    """Apply a version bump based on repository changes."""
+
+    cfg = load_config(args.config)
+    if args.decide:
+        return _decide_only(args, cfg)
+
+    level = args.level
+    base, head = _resolve_refs(args, level)
 
     try:
         pyproject = _resolve_pyproject(args.pyproject)
@@ -305,12 +319,7 @@ def bump_command(args: argparse.Namespace) -> int:
     if args.version_path:
         paths.extend(args.version_path)
     version_files = {p for p in paths if not any(ch in p for ch in "*?[")}
-
-    try:
-        changed = changed_paths(base, head)
-    except Exception:  # git diff may fail on initial commit
-        changed = None
-
+    changed = _safe_changed_paths(base, head)
     if changed is not None:
         filtered = {
             p for p in changed if p != Path(pyproject).name and p not in version_files
@@ -320,13 +329,7 @@ def bump_command(args: argparse.Namespace) -> int:
             return 0
 
     if not level:
-        old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
-        new_api = _build_api_at_ref(head, cfg.project.public_roots, cfg.ignore.paths)
-        impacts = diff_public_api(
-            old_api, new_api, return_type_change=cfg.rules.return_type_change
-        )
-        impacts.extend(_run_analyzers(base, head, cfg))
-        level = decide_bump(impacts)
+        level = _infer_level(base, head, cfg)
         if level is None:
             print("No version bump needed")
             return 0
@@ -341,19 +344,7 @@ def bump_command(args: argparse.Namespace) -> int:
         paths=paths,
         ignore=ignore,
     )
-    changelog: str | None = None
-    if args.changelog is not None:
-        base = last_release_commit() or f"{args.head}^"
-        commits = collect_commits(base, args.head)
-        lines = [f"## [v{vc.new}] - {date.today().isoformat()}"]
-        for sha, subject in commits:
-            if args.repo_url and args.format == "md":
-                base_url = args.repo_url.rstrip("/")
-                link = f"{base_url}/commit/{sha}"
-                lines.append(f"- [{sha}]({link}) {subject}")
-            else:
-                lines.append(f"- {sha} {subject}")
-        changelog = "\n".join(lines) + "\n"
+    changelog = _build_changelog(args, vc.new)
     if args.format == "json":
         print(
             json.dumps(

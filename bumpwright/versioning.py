@@ -9,14 +9,14 @@ from glob import glob
 from pathlib import Path
 from typing import Iterable, List, Optional
 
-from .config import load_config
-
 try:  # pragma: no cover - needed for linting when dependency missing
     from packaging.version import Version
 except ModuleNotFoundError as exc:  # pragma: no cover
     raise RuntimeError("packaging is required for version operations") from exc
 from tomlkit import dumps as toml_dumps
 from tomlkit import parse as toml_parse
+
+from .config import load_config
 
 
 @dataclass
@@ -139,15 +139,14 @@ def apply_bump(
     dry_run: bool = False,
     paths: Iterable[str] | None = None,
     ignore: Iterable[str] | None = None,
-    config_path: str | Path = "bumpwright.toml",
 ) -> VersionChange:
     """Apply a semantic version bump and update version strings.
 
     Args:
         level: Bump level to apply (``"major"``, ``"minor"``, or ``"patch"``).
-        pyproject_path: Path to the canonical ``pyproject.toml`` file.
+            pyproject_path: Path to the canonical ``pyproject.toml`` file.
         dry_run: If ``True``, compute the new version without writing to disk.
-        paths: Glob patterns pointing to files that may contain the version.
+        paths: Glob patterns pointing to files that may contain the version. 
             Defaults include ``pyproject.toml``, ``setup.py``, ``setup.cfg`` and
             any ``__init__.py``, ``version.py`` or ``_version.py`` files within
             the project. Custom patterns extend this list.
@@ -163,7 +162,7 @@ def apply_bump(
 
     cfg = None
     if paths is None or ignore is None:
-        cfg = load_config(config_path)
+        cfg = load_config()
     if paths is None:
         paths = cfg.version.paths
     if ignore is None:
