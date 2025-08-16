@@ -165,6 +165,7 @@ Severity rules:
 - Added public symbol → **minor**
 - Removed required parameter → **major**
 - Removed optional parameter → **minor**
+- Added required parameter → **major**
 - Added optional parameter → **minor**
 - Parameter kind changed → **major**
 - Return annotation changed → **minor**
