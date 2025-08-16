@@ -47,10 +47,6 @@ def test_bump_string_semver_prerelease_and_build() -> None:
     assert bump_string("1.2.3-alpha.1+build.1", "patch", scheme="semver") == "1.2.4"
     assert bump_string("1.2.3-alpha.1+build.1", "minor", scheme="semver") == "1.3.0"
     assert bump_string("1.2.3-alpha.1+build.1", "major", scheme="semver") == "2.0.0"
-    assert (
-        bump_string("1.2.3-alpha.1+build.1", "patch", scheme="semver")
-        == "1.2.4-alpha.1+build.1"
-    )
     assert bump_string("1.2.3-alpha.1", "pre", scheme="semver") == "1.2.3-alpha.2"
     assert bump_string("1.2.3+build.1", "build", scheme="semver") == "1.2.3+build.2"
 
@@ -69,9 +65,6 @@ def test_bump_string_pep440_pre_and_local() -> None:
     assert bump_string("1.2.3rc1+local.1", "patch", scheme="pep440") == "1.2.4"
     assert bump_string("1.2.3rc1+local.1", "minor", scheme="pep440") == "1.3.0"
     assert bump_string("1.2.3rc1+local.1", "major", scheme="pep440") == "2.0.0"
-    assert (
-        bump_string("1.2.3rc1+local.1", "patch", scheme="pep440") == "1.2.4rc1+local.1"
-    )
     assert bump_string("1.2.3a1", "pre", scheme="pep440") == "1.2.3a2"
     assert bump_string("1.2.3+local.1", "build", scheme="pep440") == "1.2.3+local.2"
 
