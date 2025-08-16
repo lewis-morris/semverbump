@@ -29,7 +29,8 @@ docs = [
   "sphinx-wagtail-theme",
   "sphinx-autodoc-typehints>=2.2",
   "sphinx-copybutton>=0.5.2",
-  "myst-parser"
+  "myst-parser",
+  "sphinx-argparse"
 ]
 dev = [
   "pytest>=8.2",
