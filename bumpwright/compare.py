@@ -183,6 +183,39 @@ def _param_default_changes(
     return impacts
 
 
+def _param_annotation_changes(
+    oldp: dict[str, Param],
+    newp: dict[str, Param],
+    fullname: str,
+    severity: Severity,
+) -> list[Impact]:
+    """Detect parameter annotation changes between two mappings.
+
+    Args:
+        oldp: Parameters from the original function signature indexed by name.
+        newp: Parameters from the updated function signature indexed by name.
+        fullname: Fully qualified name of the function for reporting.
+        severity: Impact level for annotation changes.
+
+    Returns:
+        List of :class:`Impact` instances describing annotation changes.
+    """
+
+    impacts: list[Impact] = []
+    for name, np in newp.items():
+        if name in oldp:
+            op = oldp[name]
+            if op.annotation != np.annotation:
+                if op.annotation is None and np.annotation is not None:
+                    reason = f"Param '{name}' annotation added"
+                elif op.annotation is not None and np.annotation is None:
+                    reason = f"Param '{name}' annotation removed"
+                else:
+                    reason = f"Param '{name}' annotation changed {op.annotation}→{np.annotation}"
+                impacts.append(Impact(severity, fullname, reason))
+    return impacts
+
+
 def _return_annotation_change(
     old: FuncSig, new: FuncSig, severity: Severity
 ) -> list[Impact]:
@@ -204,7 +237,10 @@ def _return_annotation_change(
 
 
 def compare_funcs(
-    old: FuncSig, new: FuncSig, return_type_change: Severity = "minor"
+    old: FuncSig,
+    new: FuncSig,
+    return_type_change: Severity = "minor",
+    param_annotation_change: Severity = "patch",
 ) -> list[Impact]:
     """Compare two function signatures and record API impacts.
 
@@ -212,6 +248,7 @@ def compare_funcs(
         old: Original function signature.
         new: Updated function signature.
         return_type_change: Severity level for return type changes.
+        param_annotation_change: Severity level for parameter annotation changes.
 
     Returns:
         List of :class:`Impact` instances describing detected changes.
@@ -224,6 +261,7 @@ def compare_funcs(
         _removed_params(oldp, newp, old.fullname)
         + _param_kind_changes(oldp, newp, old.fullname)
         + _param_default_changes(oldp, newp, old.fullname)
+        + _param_annotation_changes(oldp, newp, old.fullname, param_annotation_change)
         + _added_params(oldp, newp, old.fullname)
         + _return_annotation_change(old, new, return_type_change)
     )
@@ -232,7 +270,10 @@ def compare_funcs(
 
 
 def diff_public_api(
-    old: PublicAPI, new: PublicAPI, return_type_change: Severity = "minor"
+    old: PublicAPI,
+    new: PublicAPI,
+    return_type_change: Severity = "minor",
+    param_annotation_change: Severity = "patch",
 ) -> list[Impact]:
     """Compute impacts between two public API mappings.
 
@@ -240,6 +281,7 @@ def diff_public_api(
         old: Mapping of symbols to signatures for the base reference.
         new: Mapping of symbols to signatures for the head reference.
         return_type_change: Severity level for return type changes.
+        param_annotation_change: Severity level for parameter annotation changes.
 
     Returns:
         List of detected impacts.
@@ -254,7 +296,12 @@ def diff_public_api(
     # Surviving symbols
     for k in old.keys() & new.keys():
         impacts.extend(
-            compare_funcs(old[k], new[k], return_type_change=return_type_change)
+            compare_funcs(
+                old[k],
+                new[k],
+                return_type_change=return_type_change,
+                param_annotation_change=param_annotation_change,
+            )
         )
 
     # Added symbols

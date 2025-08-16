@@ -136,10 +136,26 @@ def test_rules_invalid_return_type_change() -> None:
         Rules(return_type_change="patch")
 
 
+def test_rules_invalid_param_annotation_change() -> None:
+    """Reject unsupported parameter annotation change levels."""
+
+    with pytest.raises(ValueError):
+        Rules(param_annotation_change="build")
+
+
 def test_load_config_invalid_return_type_change(tmp_path: Path) -> None:
     """Raise an error when config specifies an invalid return type change."""
 
     cfg_file = tmp_path / "bumpwright.toml"
     cfg_file.write_text("[rules]\nreturn_type_change='patch'\n")
+    with pytest.raises(ValueError):
+        load_config(cfg_file)
+
+
+def test_load_config_invalid_param_annotation_change(tmp_path: Path) -> None:
+    """Raise an error when config specifies an invalid param annotation change."""
+
+    cfg_file = tmp_path / "bumpwright.toml"
+    cfg_file.write_text("[rules]\nparam_annotation_change='build'\n")
     with pytest.raises(ValueError):
         load_config(cfg_file)

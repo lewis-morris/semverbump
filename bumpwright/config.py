@@ -20,19 +20,28 @@ class Rules:
     Attributes:
         return_type_change: Version bump level triggered when a public API
             return type changes.
+        param_annotation_change: Version bump level for parameter annotation
+            changes.
     """
 
     return_type_change: BumpLevel = "minor"
+    param_annotation_change: BumpLevel = "patch"
 
     def __post_init__(self) -> None:
         """Validate rule configuration.
 
         Raises:
-            ValueError: If ``return_type_change`` is not ``"major"`` or ``"minor"``.
+            ValueError: If ``return_type_change`` is not ``"major"`` or
+                ``"minor"``. ``param_annotation_change`` must be ``"major"``,
+                ``"minor"``, or ``"patch"``.
         """
 
         if self.return_type_change not in {"major", "minor"}:
             raise ValueError("return_type_change must be 'major' or 'minor'")
+        if self.param_annotation_change not in {"major", "minor", "patch"}:
+            raise ValueError(
+                "param_annotation_change must be 'major', 'minor', or 'patch'"
+            )
 
 
 @dataclass
