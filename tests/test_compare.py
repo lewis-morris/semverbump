@@ -3,6 +3,7 @@
 from bumpwright.compare import (
     Impact,
     _added_params,
+    _param_annotation_changes,
     _param_default_changes,
     _param_kind_changes,
     _removed_params,
@@ -84,6 +85,28 @@ def test_param_default_changes_detected():
     assert Impact(MINOR, "m:f", "Param 'z' default changed 1→2") in impacts
 
 
+def test_param_annotation_changes_detected():
+    old = _sig(
+        "m:f",
+        [_p("x", ann="int"), _p("y", ann="int"), _p("z")],
+        "-> int",
+    )
+    new = _sig(
+        "m:f",
+        [_p("x"), _p("y", ann="str"), _p("z", ann="int")],
+        "-> int",
+    )
+    impacts = _param_annotation_changes(
+        {p.name: p for p in old.params},
+        {p.name: p for p in new.params},
+        "m:f",
+        MINOR,
+    )
+    assert Impact(MINOR, "m:f", "Param 'x' annotation removed") in impacts
+    assert Impact(MINOR, "m:f", "Param 'y' annotation changed int→str") in impacts
+    assert Impact(MINOR, "m:f", "Param 'z' annotation added") in impacts
+
+
 def test_return_annotation_change_helper():
     old = _sig("m:f", [_p("x")], "int")
     new = _sig("m:f", [_p("x")], "str")
@@ -145,6 +168,13 @@ def test_compare_funcs_default_changes():
     assert Impact(MAJOR, "m:f", "Param 'x' default removed") in impacts
     assert Impact(MINOR, "m:f", "Param 'y' default added") in impacts
     assert Impact(MINOR, "m:f", "Param 'z' default changed 1→2") in impacts
+
+
+def test_compare_funcs_param_annotation_change():
+    old = _sig("m:f", [_p("x", ann="int")], None)
+    new = _sig("m:f", [_p("x", ann="str")], None)
+    impacts = compare_funcs(old, new, param_annotation_change=MINOR)
+    assert impacts == [Impact(MINOR, "m:f", "Param 'x' annotation changed int→str")]
 
 
 def test_diff_public_api_added_symbol():
