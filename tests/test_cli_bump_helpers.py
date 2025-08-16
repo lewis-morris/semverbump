@@ -3,9 +3,11 @@ import json
 import os
 from pathlib import Path
 
+import pytest
 from cli_helpers import run, setup_repo
 
 from bumpwright.cli.bump import (
+    _commit_tag,
     _display_result,
     _prepare_version_files,
     _write_changelog,
@@ -62,3 +64,20 @@ def test_write_changelog_to_file(tmp_path):
     content = "entry\n"
     _write_changelog(args, content)
     assert (tmp_path / "CHANGELOG.md").read_text(encoding="utf-8") == content
+
+
+def test_commit_tag_existing_tag(tmp_path):
+    repo, _, _ = setup_repo(tmp_path)
+    pyproj = repo / "pyproject.toml"
+    # Simulate bumping to a new version that already has a tag
+    pyproj.write_text(pyproj.read_text().replace("0.1.0", "0.1.1"), encoding="utf-8")
+    run(["git", "tag", "v0.1.1"], repo)
+    cwd = os.getcwd()
+    os.chdir(repo)
+    try:
+        with pytest.raises(RuntimeError, match="Tag v0.1.1 already exists"):
+            _commit_tag("pyproject.toml", "0.1.1", commit=True, tag=True)
+    finally:
+        os.chdir(cwd)
+    head = run(["git", "log", "-1", "--pretty=%s"], repo)
+    assert head == "base"
