@@ -185,17 +185,18 @@ def test_read_file_at_ref_caches(
     gitutils._run(["git", "commit", "-m", "first"], str(repo))
 
     gitutils.read_file_at_ref.cache_clear()
-    original = gitutils._run
+    original = subprocess.run
     calls: list[list[str]] = []
 
-    def spy(cmd: list[str], cwd: str | None = None) -> str:
-        if cmd[:2] == ["git", "show"]:
+    def spy(cmd: list[str], *args, **kwargs) -> subprocess.CompletedProcess:
+        if isinstance(cmd, list) and cmd[:3] == ["git", "cat-file", "--batch"]:
             calls.append(cmd)
-        return original(cmd, cwd)
+        return original(cmd, *args, **kwargs)
 
-    monkeypatch.setattr(gitutils, "_run", spy)
+    monkeypatch.setattr(subprocess, "run", spy)
     gitutils.read_file_at_ref("HEAD", "file.txt", str(repo))
     gitutils.read_file_at_ref("HEAD", "file.txt", str(repo))
+    assert calls and calls[0][:3] == ["git", "cat-file", "--batch"]
     assert len(calls) == 1
     gitutils.read_file_at_ref.cache_clear()
 
