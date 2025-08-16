@@ -12,84 +12,69 @@ bumpwright documentation
 
 |coverage| |version| |python| |license|
 
-Static public-API diff and heuristics to suggest semantic version bumps.
-
-Bumpwright inspects a project's public API to highlight breaking changes and
-recommend the appropriate semantic version increment. It is designed for
-library maintainers, continuous integration systems, and release managers who
-need a reliable view of how code changes affect downstream consumers.
-
-Why Bumpwright?
----------------
-
-Semantic versioning only works when release numbers reflect the true impact of
-code changes. Tracking every public entry point by hand is tedious and
-error-prone. Bumpwright automates this process with static analysis so you can
-ship confident releases without manual bookkeeping.
-
-How It Works
+Introduction
 ------------
 
-Bumpwright compares two git references, builds a model of the public API for
-each, and uses heuristics to determine whether changes are major, minor, or
-patch level. The tool outputs a recommended bump and a list of detected
-impacts, making it simple to understand the reasoning behind the suggestion.
+Bumpwright is a static analysis tool that compares two Git references and
+recommends the appropriate semantic version bump. Unlike tools such as
+``bump2version`` or ``python-semantic-release`` that rely on manual hints or
+commit messages, Bumpwright inspects the public API itself, making it ideal for
+libraries and services that expose stable interfaces.
 
-Key Features
-------------
+Benefits
+~~~~~~~~
 
-- Static diff of functions, classes, and other exported symbols.
-- Pluggable analysers for command-line interfaces, gRPC services, web routes,
-  database migrations, OpenAPI specifications, and GraphQL schemas.
-- Dry-run mode to preview changes without touching files.
-- Output in plain text, Markdown, or JSON for easy integration.
+- **Simplicity** – run a single command to see how your API changed.
+- **Flexibility** – enable analysers and override defaults to fit your workflow.
+- **Accuracy** – catch breaking changes that commit messages may miss.
 
-Comparison to Similar Tools
----------------------------
+Trade-offs
+~~~~~~~~~~
 
-.. list-table::
-   :header-rows: 1
+- Requires a baseline reference to compare against.
+- Static heuristics cannot account for runtime behaviour.
 
-   * - Tool
-     - Approach
-     - Best for
-     - Limitations
-   * - Bumpwright
-     - Public API analysis with heuristics
-     - Libraries that expose a stable API
-     - Requires a baseline reference
-   * - bump2version
-     - Manual version string management
-     - Small projects with manual release workflow
-     - No analysis of code changes
-   * - semantic-release
-     - Commit message conventions
-     - Teams with disciplined commit history
-     - Ignores actual API surface
-   * - Release Please
-     - Structured commit messages and release PRs
-     - Mono-repos and automated PR-based releases
-     - Doesn't inspect API changes
+Primary use cases
+~~~~~~~~~~~~~~~~~
 
-Getting Started
----------------
+- Library maintainers verifying API stability before release.
+- CI/CD pipelines enforcing semantic versioning.
+- Release managers reviewing change impact.
+
+Quickstart Guide
+----------------
 
 .. toctree::
    :maxdepth: 2
 
    installation
    quickstart
-   usage/index
 
-User Guide
-----------
+Core Concepts
+-------------
 
 .. toctree::
    :maxdepth: 2
 
-   configuration
-   guides/index
    versioning
+   configuration
+
+Basic Usage
+-----------
+
+.. toctree::
+   :maxdepth: 2
+
+   usage/index
+
+Advanced Usage
+--------------
+
+.. toctree::
+   :maxdepth: 2
+
+   performance
+   guides/index
 
 Reference
 ---------
@@ -100,18 +85,28 @@ Reference
    cli_reference
    analysers/index
 
-Project Resources
------------------
+Examples & Recipes
+------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   recipes
+
+Troubleshooting & FAQ
+---------------------
 
 .. toctree::
    :maxdepth: 1
 
    troubleshooting
-   performance
+
+Changelog & Contribution Guide
+------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   contributing
    roadmap
 
-Community and Feedback
-----------------------
-
-Found a bug or have an idea? Open an issue or pull request on the project's
-GitHub page to help make Bumpwright better.

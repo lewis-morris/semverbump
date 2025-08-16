@@ -5,359 +5,75 @@
 ![Python Versions](docs/_static/badges/python.svg)
 ![License](docs/_static/badges/license.svg)
 
-Keep your project's version numbers honest by inspecting public interfaces and
-recommending the next semantic version. It can even apply the bump for you.
+## Introduction
 
-## Why Bumpwright
+Bumpwright inspects your project's public API to recommend the correct semantic
+version bump. It compares two Git references, reports the impact of their
+differences, and can update version files for you.
 
-Semantic versioning only works when releases accurately reflect the impact of
-code changes. Manually tracking public interfaces across a project is tedious
-and error-prone. **Bumpwright** automates this process by scanning source code
-for API changes and recommending the appropriate version bump.
+### Comparison with similar tools
 
-Design goals include:
+- **bump2version** – manually increments version strings without analysing code.
+- **python-semantic-release** – infers releases from commit messages rather than
+  the exported API.
 
-- **Safety** – catch breaking changes before they reach users.
-- **Determinism** – produce consistent results across environments.
-- **Extensibility** – support new domains through pluggable analysers.
-- **Ease of adoption** – require minimal configuration and integrate with
-  existing workflows.
+Bumpwright focuses on the code itself, making it a good fit for libraries and
+services that expose stable interfaces.
 
-## Features
+### Benefits
 
-- Static diff of the public API to highlight breaking changes.
-- Pluggable analysers for command-line tools, gRPC services, web routes,
-  database migrations, OpenAPI specifications, and GraphQL schemas. These
-  analysers are **opt-in** and disabled by default; enable them explicitly in
-  configuration.
-- Dry-run mode to preview version bumps without touching any files.
-- Output in plain text, Markdown or JSON for easy integration.
-- Optional helpers to update version numbers across common files and tag the release.
+- **Simplicity** – run one command to review API changes.
+- **Flexibility** – pluggable analysers and configuration overrides.
+- **Accuracy** – highlights breaking changes commit messages may miss.
 
-The bump command updates version strings in ``pyproject.toml``, ``setup.py``,
-``setup.cfg`` and any ``__init__.py``, ``version.py`` or ``_version.py`` files
-by default. Use ``--version-ignore`` or configuration settings to exclude
-locations.
+### Trade-offs
 
-## Installation
+- Requires a baseline reference to compare against.
+- Static analysis cannot detect runtime-only behaviour.
+
+### Primary use cases
+
+- Library maintainers checking semantic versioning.
+- CI systems gating releases on API changes.
+- Release managers reviewing change impact.
+
+## Quickstart
 
 Requires Python 3.11 or later.
 
 ```bash
 pip install bumpwright
+bumpwright init
+bumpwright bump --decide
+bumpwright bump --commit --tag
 ```
 
-## Quick start
-See [docs/quickstart.rst](docs/quickstart.rst) for a step-by-step example.
+Example output from `bumpwright bump --decide`:
 
-| Command | Purpose |
-|---------|---------|
-| `bumpwright init` | Record a baseline release commit |
-| `bumpwright bump --decide` | Recommend a bump between two references |
-| `bumpwright bump` | Apply a specific version bump |
-
-### `bumpwright bump --decide` options
-
-- `--base`: base git reference. Defaults to the last release commit or `HEAD^`.
-- `--head`: head git reference. Defaults to `HEAD`.
-- `--format`: output format (`text`, `md`, or `json`). Defaults to `text`.
-- `--enable-analyser` or `--disable-analyser`: toggle analysers
-- See [CLI reference](docs/cli_reference.rst) for details.
-
-### `bumpwright bump` options
-
-- `--level`: bump level to apply. When omitted, the level is inferred from history.
-- `--pyproject`: path to `pyproject.toml`. Defaults to `pyproject.toml` in the current directory.
-- `--format`: output format (`text`, `md`, or `json`). Defaults to `text`.
-- `--commit`: commit the version bump.
-- `--tag`: create a git tag.
-- `--enable-analyser` or `--disable-analyser`: toggle analysers
-- See [CLI reference](docs/cli_reference.rst) for details.
-
-
-Using ``--commit`` or ``--tag`` requires a clean working tree; the command
-aborts if uncommitted changes are detected.
-
-1. **Create a configuration file** (``bumpwright.toml``). Analysers are
-   opt-in, so enable the ones you need:
-
-   ```toml
-   # bumpwright.toml
-   [analysers]
-   cli = true        # enable CLI analysis
-   grpc = true       # enable gRPC analysis
-   web_routes = true # enable web route analysis
-   migrations = true # enable migrations analysis
-   openapi = true    # enable OpenAPI analysis
-   graphql = true    # enable GraphQL analysis
-
-   [migrations]
-   paths = ["migrations"]
-
-   [openapi]
-   paths = ["openapi.yaml"]
-   ```
-
-   Command-line flags ``--enable-analyser`` and ``--disable-analyser`` can
-   temporarily override these settings for a single invocation.
-
-2. **Suggest the next version** between two git references:
-
-   ```console
-   $ bumpwright bump --decide --base origin/main --format text
-   Suggested bump: minor
-
-   - [MINOR] cli.new_command: added CLI entry 'greet'
-   ```
-
-   ```console
-   $ bumpwright bump --decide --base origin/main --format md
-   **bumpwright** suggests: `minor`
-
-
-   - [MINOR] cli.new_command: added CLI entry 'greet'
-   ```
-
-   ```console
-   $ bumpwright bump --decide --base origin/main --format json
-   {
-     "level": "minor",
-     "confidence": 1.0,
-     "reasons": ["added CLI entry 'greet'"],
-     "impacts": [
-       {"severity": "minor", "symbol": "cli.new_command", "reason": "added CLI entry 'greet'"}
-     ]
-   }
-   ```
-
-   The ``confidence`` value indicates the proportion of impacts that triggered
-   the suggested level, while ``reasons`` summarise those impacts.
-
-   If ``--base`` is omitted, the command compares the current commit to its
-   immediate parent (``HEAD^``).
-
-3. **Apply the bump** and optionally commit and tag the release:
-
-   ```console
-   $ bumpwright bump --level minor --pyproject pyproject.toml --commit --tag
-   Bumped version: 1.2.3 -> 1.3.0 (minor)
-   ```
-
-   Omitting ``--level`` triggers an automatic decision using ``--base`` and
-   ``--head``.
-
-4. **Run everything in one step** with automatic bumping and tagging:
-
-   ```console
-   $ bumpwright bump --base origin/main --commit --tag --pyproject pyproject.toml
-   Bumped version: 1.2.3 -> 1.3.0 (minor)
-   Created tag: v1.3.0
-   ```
-
-   Omit ``--base`` to compare against the upstream branch automatically. After
-   the tag is created, push it upstream with:
-
-   ```console
-   $ git push --follow-tags
-   ```
-
-For deeper usage and configuration details, see the [usage guide](docs/usage.rst)
-and [configuration reference](docs/configuration.rst).
-
-## Configuration
-
-``bumpwright`` reads settings from ``bumpwright.toml``. If the file or any
-section is missing, built-in defaults apply. A complete configuration file with
-all sections and their default values looks like:
-
-```toml
-[project]
-package = ""
-public_roots = ["."]
-private_prefixes = ["_"]
-
-[ignore]
-paths = ["tests/**", "examples/**", "scripts/**"]
-
-[rules]
-return_type_change = "minor"  # or "major"
-
-[analysers]
-cli = false
-web_routes = false
-
-[migrations]
-paths = ["migrations"]
-
-[changelog]
-path = ""
-template = ""
-
-[version]
-paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]
-ignore = ["build/**", "dist/**", "*.egg-info/**", ".eggs/**", ".venv/**", "venv/**", ".env/**", "**/__pycache__/**"]
+```text
+Suggested bump: minor
+- [MINOR] demo:greet: Added public symbol
 ```
 
-Set an analyser to ``true`` to enable it. Each section configures a different
-aspect of bumpwright:
-
-- **project** – identifies the package, public API roots, private symbol prefixes, and metadata file.
-- **ignore** – glob patterns excluded from analysis. These defaults skip common build artifacts and virtual environments such as `build/**`, `dist/**`, `*.egg-info/**`, `.eggs/**`, `.venv/**`, `venv/**`, `.env/**`, and `**/__pycache__/**`.
-- **rules** – maps findings to semantic version levels.
-- **[analysers]** – toggles built-in or plugin analysers.
-- **migrations** – directories containing Alembic migration scripts.
-- **changelog** – default changelog file used with ``--changelog``.
-  ``template`` selects a custom Jinja2 template (leave empty for the built-in
-  version).
-- **version** – files where version strings are read and updated.
-
-Symbols beginning with any prefix listed in ``private_prefixes`` are excluded
-from public API analysis, preventing internal helpers from triggering
-unnecessary version bumps.
-
-See ``docs/configuration.rst`` for in-depth descriptions and additional
-examples. The default file name is ``bumpwright.toml`` but you may specify an
-alternative with ``--config``.
-
-### Analyser reference
-
-#### Python API
-
-Compares Python function and method signatures to detect changes.
-
-Severity rules:
-
-- Removed public symbol → **major**
-- Added public symbol → **minor**
-- Removed required parameter → **major**
-- Removed optional parameter → **minor**
-- Added required parameter → **major**
-- Added optional parameter → **minor**
-- Parameter kind changed → **major**
-- Return annotation changed → **minor**
-
-#### CLI (``cli``)
-
-Tracks ``argparse`` or ``click`` command-line interfaces through static analysis.
-
-Severity rules:
-
-- Removed command → **major**
-- Added command → **minor**
-- Removed required option/argument → **major**
-- Removed optional option/argument → **minor**
-- Added required option/argument → **major**
-- Added optional option/argument → **minor**
-- Option/argument became optional → **minor**
-- Option/argument became required → **major**
-
-Configuration:
-
-```toml
-[analysers]
-cli = true  # enable
-# cli = false  # disable
-```
-
-Dependencies: none. The analyser inspects source code statically and only
-requires ``click`` if your project depends on it.
-
-#### Web routes (``web_routes``)
-
-Detects HTTP route changes in Flask or FastAPI applications.
-
-Severity rules:
-
-- Removed route → **major**
-- Added route → **minor**
-- Removed required parameter → **major**
-- Removed optional parameter → **minor**
-- Added required parameter → **major**
-- Added optional parameter → **minor**
-- Parameter became optional → **minor**
-- Parameter became required → **major**
-
-Configuration:
-
-```toml
-[analysers]
-web_routes = true  # enable
-# web_routes = false  # disable
-```
-
-Dependencies: requires ``flask`` or ``fastapi``.
-
-#### Migrations
-
-Analyses Alembic migration scripts for schema changes.
-
-Severity rules:
-
-- ``op.drop_column`` → **major**
-- ``op.add_column`` (non-nullable without default) → **major**
-- ``op.add_column`` (otherwise) → **minor**
-- ``op.create_index`` → **minor**
-
-Configuration:
-
-```toml
-[migrations]
-paths = ["migrations"]  # directories containing Alembic scripts
-# paths = []             # disable migration analysis
-```
-
-Dependencies: expects migrations generated by ``alembic``.
-
-### Third-party dependencies
-
-Ensure project dependencies for analysers are installed:
-
- - ``click`` for the CLI analyser
- - No additional packages required for gRPC analysis
- - ``flask`` or ``fastapi`` for the web route analyser
- - ``alembic`` for the migrations analyser
- - ``PyYAML`` for the OpenAPI analyser
- - ``graphql-core`` for the GraphQL analyser
- - Other plugins may require additional libraries such as ``jsonschema``
-
+See the [documentation](docs/index.rst) for detailed guides and advanced
+scenarios.
 
 ## Development
 
-This project uses [pre-commit](https://pre-commit.com/) to maintain code
-style and quality with tools like Ruff, Black, and isort.
-
-Install the pre-commit hooks:
+This project uses [pre-commit](https://pre-commit.com/) with Ruff, Black, and
+isort to maintain code style and quality.
 
 ```bash
 pre-commit install
-```
-
-Run all checks locally before opening a pull request:
-
-```bash
 pre-commit run --all-files
 ```
 
 ## Roadmap
 
-Planned enhancements and ideas for future development include:
-
-- **Additional analysers**: explore new domains and enhance existing
-  analysers to broaden coverage of public interfaces.
-- **Plugin architecture**: allow projects to register custom analysers and
-  severity rules through a stable extension API.
-- **Configurable severity**: enable user-defined mapping of changes to
-  semantic version levels.
-- **Rich reports**: emit machine-readable JSON or human-friendly HTML
-  summaries of detected changes.
-- **CI integration**: provide streamlined helpers for GitHub Actions and
-  other CI systems.
-- **Performance improvements**: caching mechanisms and smarter diffing to
-  handle large repositories efficiently.
-
-For more background and advanced usage, see the full documentation in the
-``docs`` directory.
+Planned enhancements include additional analysers, a plugin architecture, and
+better CI integrations. See the [roadmap](docs/roadmap.rst) for details.
 
 ## License
 
 Distributed under the MIT License. See [LICENSE](LICENSE) for details.
+
