@@ -145,7 +145,7 @@ scheme is applied.
      - Glob patterns scanned for version declarations.
    * - ``ignore``
      - list[str]
-     - ``[]``
+     - ``["build/**", "dist/**", "*.egg-info/**", ".eggs/**", ".venv/**", "venv/**", ".env/**", "**/__pycache__/**"]``
      - Glob patterns excluded from version replacement.
    * - ``scheme``
      - str

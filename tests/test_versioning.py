@@ -4,6 +4,7 @@ import pytest
 from tomlkit import dumps as toml_dumps
 from tomlkit.exceptions import ParseError
 
+from bumpwright.config import load_config
 from bumpwright.versioning import (
     _replace_version,
     _resolve_files,
@@ -125,6 +126,43 @@ def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
     assert "__version__ = '1.0.0'" in init.read_text(encoding="utf-8")
     assert init not in out.files
 
+
+@pytest.mark.parametrize(
+    "ignore_dir,file_name",
+    [
+        ("build/pkg", "__init__.py"),
+        ("dist/pkg", "__init__.py"),
+        ("project.egg-info", "__init__.py"),
+        (".eggs/pkg", "__init__.py"),
+        (".venv/pkg", "__init__.py"),
+        ("venv/pkg", "__init__.py"),
+        (".env/pkg", "__init__.py"),
+        ("pkg/__pycache__", "version.py"),
+    ],
+)
+def test_default_version_ignore_patterns(
+    tmp_path: Path, ignore_dir: str, file_name: str
+) -> None:
+    """Version files in ignored directories are skipped by default."""
+
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "1.0.0"}}))
+    pkg = tmp_path / "pkg"
+    pkg.mkdir()
+    init = pkg / "__init__.py"
+    init.write_text("__version__ = '1.0.0'", encoding="utf-8")
+
+    ignore_path = tmp_path / ignore_dir
+    ignore_path.mkdir(parents=True)
+    ignored_file = ignore_path / file_name
+    ignored_file.write_text("__version__ = '1.0.0'", encoding="utf-8")
+
+    cfg = load_config(tmp_path / "bumpwright.toml")
+    out = apply_bump("minor", py, paths=cfg.version.paths, ignore=cfg.version.ignore)
+
+    assert "__version__ = '1.1.0'" in init.read_text(encoding="utf-8")
+    assert "__version__ = '1.0.0'" in ignored_file.read_text(encoding="utf-8")
+    assert ignored_file not in out.files
 
 def test_apply_bump_skips_files_without_version(tmp_path: Path) -> None:
     py = tmp_path / "pyproject.toml"

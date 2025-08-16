@@ -26,7 +26,17 @@ _DEFAULTS = {
             "**/version.py",
             "**/_version.py",
         ],
-        "ignore": [],
+        "ignore": [
+            "build/**",
+            "dist/**",
+            "*.egg-info/**",
+            ".eggs/**",
+            ".venv/**",
+            "venv/**",
+            ".env/**",
+            "**/__pycache__/**",
+        ],
+
         "scheme": "semver",
     },
 }
@@ -114,7 +124,19 @@ class VersionFiles:
             "**/_version.py",
         ]
     )
-    ignore: list[str] = field(default_factory=list)
+    ignore: list[str] = field(
+        default_factory=lambda: [
+            "build/**",
+            "dist/**",
+            "*.egg-info/**",
+            ".eggs/**",
+            ".venv/**",
+            "venv/**",
+            ".env/**",
+            "**/__pycache__/**",
+        ]
+    )
+
     scheme: str = "semver"
 
 
@@ -167,9 +189,16 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
     """
     p = Path(path)
     if not p.exists():
-        d = _merge_defaults({})
+        raw: dict = {}
     else:
-        d = _merge_defaults(tomllib.loads(p.read_text(encoding="utf-8")))
+        raw = tomllib.loads(p.read_text(encoding="utf-8"))
+    user_ignore = raw.get("version", {}).get("ignore")
+    if user_ignore:
+        raw.setdefault("version", {})["ignore"] = [
+            *_DEFAULTS["version"]["ignore"],
+            *user_ignore,
+        ]
+    d = _merge_defaults(raw)
     proj = Project(**d["project"])
     rules = Rules(**d["rules"])
     ign = Ignore(**d["ignore"])
