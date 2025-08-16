@@ -11,14 +11,13 @@ from bumpwright.versioning import read_project_version
 def test_bump_command_searches_pyproject(tmp_path: Path) -> None:
     """Ensure bump locates pyproject.toml when run from a subdirectory."""
     repo, pkg, _ = setup_repo(tmp_path)
+    run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
     res = subprocess.run(
         [
             sys.executable,
             "-m",
             "bumpwright.cli",
             "bump",
-            "--level",
-            "patch",
         ],
         cwd=pkg,
         check=True,
@@ -27,8 +26,8 @@ def test_bump_command_searches_pyproject(tmp_path: Path) -> None:
         text=True,
         env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
     )
-    assert "Bumped version: 0.1.0 -> 0.1.1 (patch)" in res.stderr
-    assert read_project_version(repo / "pyproject.toml") == "0.1.1"
+    assert "No version bump needed" in res.stderr
+    assert read_project_version(repo / "pyproject.toml") == "0.1.0"
 
 
 def test_bump_command_applies_changes(tmp_path: Path) -> None:
@@ -77,7 +76,10 @@ def test_main_shows_help_when_no_args(tmp_path: Path) -> None:
 def test_bump_command_requires_clean_worktree(tmp_path: Path) -> None:
     """Abort the bump when uncommitted changes exist."""
 
-    repo, _, _ = setup_repo(tmp_path)
+    repo, pkg, _ = setup_repo(tmp_path)
+    (pkg / "extra.py").write_text("def bar() -> int:\n    return 2\n", encoding="utf-8")
+    run(["git", "add", "pkg/extra.py"], repo)
+    run(["git", "commit", "-m", "feat: add bar"], repo)
     (repo / "dirty.txt").write_text("stale", encoding="utf-8")
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
     res = subprocess.run(
@@ -86,8 +88,6 @@ def test_bump_command_requires_clean_worktree(tmp_path: Path) -> None:
             "-m",
             "bumpwright.cli",
             "bump",
-            "--level",
-            "patch",
             "--commit",
         ],
         cwd=repo,

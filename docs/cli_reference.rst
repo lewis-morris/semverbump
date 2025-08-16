@@ -40,7 +40,7 @@ notes to ``CHANGELOG.md``:
 
 .. code-block:: console
 
-   $ bumpwright bump --level patch --repo-url https://github.com/me/project --changelog CHANGELOG.md
+   $ bumpwright bump --repo-url https://github.com/me/project --changelog CHANGELOG.md
    Bumped version: 0.1.0 -> 0.1.1 (patch)
    Updated files: pyproject.toml, CHANGELOG.md
 

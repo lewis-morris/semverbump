@@ -2,15 +2,6 @@ name: bumpwright release
 
 on:
   workflow_dispatch:
-    inputs:
-      level:
-        description: 'Version bump level'
-        required: true
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
 
 jobs:
   bump:
@@ -28,7 +19,7 @@ jobs:
         run: pip install bumpwright
       - name: Apply version bump
         run: |
-          bumpwright bump --level ${{ github.event.inputs.level }} \  # level from workflow input
+          bumpwright bump \
             --pyproject pyproject.toml --commit --tag
       - name: Push changes
         run: git push origin HEAD --follow-tags

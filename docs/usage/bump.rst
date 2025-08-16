@@ -50,9 +50,6 @@ Update version information in ``pyproject.toml`` and other files. By default, ``
 Arguments
 ---------
 
-``--level {major,minor,patch}``
-    Desired bump level. If omitted, ``--base`` and ``--head`` are used to determine the level automatically. Defaults to automatic detection.
-
 ``--base BASE``
     Base git reference when auto-deciding the level. Defaults to the last release commit if available, otherwise the previous commit (``HEAD^``).
 
@@ -106,7 +103,7 @@ Examples
 
 .. code-block:: console
 
-   bumpwright bump --level minor --pyproject pyproject.toml --commit --tag
+   bumpwright bump --pyproject pyproject.toml --commit --tag
 
 This prints the old and new versions and, when ``--commit`` and ``--tag`` are set, commits and tags the release. Omitting ``--base`` compares against the last release commit or the previous commit (``HEAD^``), and omitting ``--head`` assumes ``HEAD``.
 

@@ -33,7 +33,9 @@ def get_default_template() -> str:
         Default changelog template contents.
     """
 
-    template_path = Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
+    template_path = (
+        Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
+    )
     return template_path.read_text(encoding="utf-8")
 
 
@@ -52,7 +54,9 @@ def _read_template(template_path: str | None) -> str:
     return get_default_template()
 
 
-def _commit_tag(files: Iterable[str | Path], version: str, commit: bool, tag: bool) -> None:
+def _commit_tag(
+    files: Iterable[str | Path], version: str, commit: bool, tag: bool
+) -> None:
     """Optionally commit and tag the updated version.
 
     Args:
@@ -83,7 +87,9 @@ def _commit_tag(files: Iterable[str | Path], version: str, commit: bool, tag: bo
     if commit:
         for file in files:
             subprocess.run(["git", "add", str(file)], check=True)
-        subprocess.run(["git", "commit", "-m", f"chore(release): {version}"], check=True)
+        subprocess.run(
+            ["git", "commit", "-m", f"chore(release): {version}"], check=True
+        )
 
     if tag:
         subprocess.run(["git", "tag", f"v{version}"], check=True)
@@ -102,13 +108,11 @@ def _resolve_pyproject(path: str) -> Path:
     raise FileNotFoundError(f"pyproject.toml not found at {path}")
 
 
-def _resolve_refs(args: argparse.Namespace, level: str | None) -> tuple[str, str]:
+def _resolve_refs(args: argparse.Namespace) -> tuple[str, str]:
     """Determine base and head git references."""
 
     if args.base:
         base = args.base
-    elif level:
-        base = "HEAD^"
     else:
         base = last_release_commit() or "HEAD^"
     return base, args.head
@@ -200,13 +204,17 @@ def _prepare_version_files(
     version_files = {p for p in paths if not has_magic(p)}
     changed = _safe_changed_paths(base, head)
     if changed is not None:
-        filtered = {p for p in changed if p != pyproject.name and p not in version_files}
+        filtered = {
+            p for p in changed if p != pyproject.name and p not in version_files
+        }
         if not filtered:
             return None
     return paths
 
 
-def _display_result(args: argparse.Namespace, vc: VersionChange, decision: Decision) -> None:
+def _display_result(
+    args: argparse.Namespace, vc: VersionChange, decision: Decision
+) -> None:
     """Show bump outcome using the selected format."""
 
     if args.format == "json":
@@ -263,9 +271,6 @@ def bump_command(args: argparse.Namespace) -> int:
 
             config (str): Path to configuration file. Defaults to
                 ``bumpwright.toml``.
-
-            level (str | None): Desired bump level (``major``, ``minor``, or
-                ``patch``) or ``None`` to infer the level automatically.
 
             base (str | None): Git reference used as the comparison base when
                 inferring the bump level. Defaults to the last release commit or
@@ -331,9 +336,7 @@ def bump_command(args: argparse.Namespace) -> int:
     if args.decide:
         return _decide_only(args, cfg)
 
-    level = args.level
-    decision: Decision | None = None
-    base, head = _resolve_refs(args, level)
+    base, head = _resolve_refs(args)
 
     try:
         pyproject = _resolve_pyproject(args.pyproject)
@@ -345,14 +348,11 @@ def bump_command(args: argparse.Namespace) -> int:
         logger.info("No version bump needed")
         return 0
 
-    if not level:
-        decision = _infer_level(base, head, cfg, args)
-        if decision.level is None:
-            logger.info("No version bump needed")
-            return 0
-        level = decision.level
-    else:
-        decision = Decision(level, 1.0, [])
+    decision = _infer_level(base, head, cfg, args)
+    if decision.level is None:
+        logger.info("No version bump needed")
+        return 0
+    level = decision.level
 
     if (args.commit or args.tag) and not args.dry_run:
         status: subprocess.CompletedProcess[str] = subprocess.run(

@@ -47,11 +47,6 @@ def init(args: argparse.Namespace) -> int:
 
 @cli.command()
 @click.option(
-    "--level",
-    type=click.Choice(["major", "minor", "patch"]),
-    help="Desired bump level; if omitted, it is inferred from --base and --head.",
-)
-@click.option(
     "--base",
     help=(
         "Base git reference when auto-deciding the level. Defaults to the last release "
@@ -145,10 +140,6 @@ def bump(args: argparse.Namespace, **kwargs: object) -> int:
     Args:
         args: Parsed command-line arguments from :func:`cli`.
         **kwargs: Command-specific options. Notable parameters include:
-
-            level (str | None): Desired bump level, one of ``major``, ``minor``,
-            or ``patch``. If omitted the level is inferred from repository
-            history.
 
             base (str | None): Git reference used as the comparison base when
             inferring the bump level. Defaults to the latest release commit or

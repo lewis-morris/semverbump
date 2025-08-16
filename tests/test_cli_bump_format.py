@@ -4,12 +4,16 @@ import subprocess
 import sys
 from pathlib import Path
 
-from cli_helpers import setup_repo
+from cli_helpers import run, setup_repo
 
 
 def test_bump_command_json_format(tmp_path: Path) -> None:
     """Ensure bump emits machine-readable JSON when requested."""
-    repo, _, _ = setup_repo(tmp_path)
+    repo, pkg, _ = setup_repo(tmp_path)
+    run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
+    (pkg / "extra.py").write_text("def bar() -> int:\n    return 2\n", encoding="utf-8")
+    run(["git", "add", "pkg/extra.py"], repo)
+    run(["git", "commit", "-m", "feat: add bar"], repo)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
     res = subprocess.run(
         [
@@ -17,8 +21,6 @@ def test_bump_command_json_format(tmp_path: Path) -> None:
             "-m",
             "bumpwright.cli",
             "bump",
-            "--level",
-            "minor",
             "--pyproject",
             "pyproject.toml",
             "--dry-run",
@@ -32,11 +34,9 @@ def test_bump_command_json_format(tmp_path: Path) -> None:
         text=True,
         env=env,
     )
-    assert "Failed to compute changed paths" in res.stderr
-    json_str = res.stderr.split("\n", 1)[1]
-    data = json.loads(json_str)
+    data = json.loads(res.stderr)
     assert data["old_version"] == "0.1.0"
     assert data["new_version"] == "0.2.0"
     assert data["level"] == "minor"
     assert data["confidence"] == 1.0
-    assert data["reasons"] == []
+    assert data["reasons"]

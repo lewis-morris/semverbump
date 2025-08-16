@@ -15,7 +15,7 @@ Commit and tag
 
 .. code-block:: bash
 
-   bumpwright bump --level patch --commit --tag
+   bumpwright bump --commit --tag
 
 Create a release commit and matching tag.
 

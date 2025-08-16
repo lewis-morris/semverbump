@@ -25,7 +25,7 @@ Invoke Bumpwright against the package that changed:
 
 .. code-block:: console
 
-   bumpwright bump --level minor --pyproject packages/pkg_a/pyproject.toml
+   bumpwright bump --pyproject packages/pkg_a/pyproject.toml
 
 .. code-block:: text
 
