@@ -1,7 +1,6 @@
 [project]
 package = "bumpwright"
 public_roots = ["./bumpwright/"]
-index_file = "pyproject.toml"
 
 [ignore]
 paths = ["tests/**", "docs/**", "build/**", ".venv/**"]

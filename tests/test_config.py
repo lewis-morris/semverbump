@@ -49,7 +49,7 @@ def test_tomli_fallback(monkeypatch, tmp_path: Path) -> None:
 
     assert config.tomllib is tomli
     cfg = config.load_config(tmp_path / "missing.toml")
-    assert cfg.project.index_file == "pyproject.toml"
+    assert cfg.project.public_roots == ["."]
 
 
 def test_mutating_config_does_not_alter_defaults(tmp_path: Path) -> None:

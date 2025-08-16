@@ -8,10 +8,9 @@ Example configuration showing all available sections and their default values:
 
 .. code-block:: toml
 
-   [project]
-   package = ""
-   public_roots = ["."]
-   index_file = "pyproject.toml"
+    [project]
+    package = ""
+    public_roots = ["."]
 
    [ignore]
    paths = ["tests/**", "examples/**", "scripts/**"]
@@ -57,10 +56,6 @@ Project
      - list[str]
      - ``["."]``
      - Paths whose contents constitute the public API.
-   * - ``index_file``
-     - str
-     - ``"pyproject.toml"``
-     - File containing project metadata used for version discovery.
 
 Ignore
 ~~~~~~
