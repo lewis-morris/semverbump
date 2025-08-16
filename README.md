@@ -56,8 +56,22 @@ Suggested bump: minor
 - [MINOR] demo:greet: Added public symbol
 ```
 
-See the [documentation](docs/index.rst) for detailed guides and advanced
-scenarios.
+See the [Quickstart guide](docs/quickstart.rst) for a full walk-through and the
+[documentation](docs/index.rst) for detailed guides.
+
+## Badges
+
+The badges above are generated with
+[`docs/scripts/generate_badges.py`](docs/scripts/generate_badges.py).
+Run it in CI after tests to reuse the existing coverage result:
+
+```bash
+python docs/scripts/generate_badges.py <coverage> <version> <license> <python_versions>
+```
+
+Publish the resulting SVGs to any static host such as GitHub Pages and update
+the badge URLs accordingly. Hosted services like [shields.io](https://shields.io)
+are viable alternatives.
 
 ## Development
 

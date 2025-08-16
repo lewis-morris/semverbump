@@ -21,6 +21,8 @@ recommends the appropriate semantic version bump. Unlike tools such as
 commit messages, Bumpwright inspects the public API itself, making it ideal for
 libraries and services that expose stable interfaces.
 
+New to Bumpwright? Start with the :doc:`quickstart`.
+
 Benefits
 ~~~~~~~~
 
@@ -73,7 +75,7 @@ Advanced Usage
 .. toctree::
    :maxdepth: 2
 
-   performance
+   advanced/index
    guides/index
 
 Reference
@@ -91,7 +93,15 @@ Examples & Recipes
 .. toctree::
    :maxdepth: 2
 
-   recipes
+   recipes/index
+
+CI integration
+--------------
+
+.. toctree::
+   :maxdepth: 2
+
+   ci/github-actions
 
 Troubleshooting & FAQ
 ---------------------
