@@ -1,4 +1,4 @@
-"""Helpers for reading and bumping package versions."""
+"""Utilities to read and bump project version numbers."""
 
 from __future__ import annotations
 
