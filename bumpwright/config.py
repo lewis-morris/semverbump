@@ -6,6 +6,7 @@ try:  # pragma: no cover - exercised in Python <3.11 tests
     import tomllib
 except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib
+import copy
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -138,7 +139,7 @@ def _merge_defaults(data: dict | None) -> dict:
         Combined configuration with defaults applied.
     """
 
-    out = {k: dict(v) for k, v in _DEFAULTS.items()}
+    out = copy.deepcopy(_DEFAULTS)  # Deep clone to avoid shared mutable defaults.
     for section, content in (data or {}).items():
         out.setdefault(section, {}).update(content or {})
     return out
