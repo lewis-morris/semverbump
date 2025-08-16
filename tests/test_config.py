@@ -24,6 +24,18 @@ def test_load_config_defaults_analysers(tmp_path: Path) -> None:
     assert cfg.analysers.enabled == set()
 
 
+def test_load_config_private_prefixes(tmp_path: Path) -> None:
+    cfg_file = tmp_path / "bumpwright.toml"
+    cfg_file.write_text("[project]\nprivate_prefixes=['__', 'internal_']\n")
+    cfg = load_config(cfg_file)
+    assert cfg.project.private_prefixes == ["__", "internal_"]
+
+
+def test_load_config_private_prefixes_default(tmp_path: Path) -> None:
+    cfg = load_config(tmp_path / "missing.toml")
+    assert cfg.project.private_prefixes == ["_"]
+
+
 def test_load_config_changelog(tmp_path: Path) -> None:
     cfg_file = tmp_path / "bumpwright.toml"
     cfg_file.write_text("[changelog]\npath='NEWS.md'\ntemplate='tmpl.j2'\n")

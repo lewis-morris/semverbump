@@ -30,7 +30,7 @@ def test_build_api_respects_ignores(tmp_path: Path) -> None:
     old_cwd = os.getcwd()
     os.chdir(repo)
     try:
-        api = _build_api_at_ref(ref, ["pkg"], ["pkg/ignored.py"])
+        api = _build_api_at_ref(ref, ["pkg"], ["pkg/ignored.py"], ["_"])
     finally:
         os.chdir(old_cwd)
 

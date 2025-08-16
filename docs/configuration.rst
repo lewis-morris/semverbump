@@ -12,6 +12,7 @@ Example configuration showing all available sections and their default values:
     [project]
     package = ""
     public_roots = ["."]
+    private_prefixes = ["_"]
 
     [ignore]
     paths = ["tests/**", "examples/**", "scripts/**"]
@@ -61,6 +62,14 @@ Project
      - list[str]
      - ``["."]``
      - Paths whose contents constitute the public API.
+   * - ``private_prefixes``
+     - list[str]
+     - ``["_"]``
+     - Symbol prefixes treated as private and ignored during API analysis.
+
+Symbols beginning with any of the values in ``private_prefixes`` are excluded
+from public API comparisons, allowing helper functions to avoid triggering
+version bumps.
 
 Ignore
 ~~~~~~
