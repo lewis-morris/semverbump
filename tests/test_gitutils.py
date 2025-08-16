@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import subprocess
 from collections.abc import Iterable
 from fnmatch import fnmatch
 from pathlib import Path
+from unittest.mock import Mock
 
-from bumpwright import gitutils
+import pytest
+
+from bumpwright import cli, gitutils
 
 
 def _legacy_list_py_files_at_ref(
@@ -65,3 +69,27 @@ def test_collect_commits(tmp_path):
     sha = gitutils._run(["git", "rev-parse", "--short", "HEAD"], str(repo)).strip()
     commits = gitutils.collect_commits("HEAD^", "HEAD", str(repo))
     assert commits == [(sha, "second")]
+
+
+def test_infer_base_ref_with_upstream(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Return the upstream branch when configured."""
+
+    proc = subprocess.CompletedProcess(args=[], returncode=0, stdout="origin/main\n")
+    monkeypatch.setattr(subprocess, "run", Mock(return_value=proc))
+
+    assert cli._infer_base_ref() == "origin/main"
+
+
+def test_infer_base_ref_without_upstream(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fallback to ``origin/HEAD`` when no upstream is set."""
+
+    def _raise(*args: object, **kwargs: object) -> subprocess.CompletedProcess:
+        raise subprocess.CalledProcessError(1, "git rev-parse")
+
+    monkeypatch.setattr(subprocess, "run", Mock(side_effect=_raise))
+
+    assert cli._infer_base_ref() == "origin/HEAD"
