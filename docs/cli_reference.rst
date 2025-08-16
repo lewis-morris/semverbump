@@ -33,13 +33,25 @@ Apply a version bump and update project files.
 .. click:: _bumpwright_click:bump
    :prog: bumpwright bump
 
-Example:
+Examples:
+
+Create a patch release, link commits to the repository, and append release
+notes to ``CHANGELOG.md``:
 
 .. code-block:: console
 
-   $ bumpwright bump --level patch
+   $ bumpwright bump --level patch --repo-url https://github.com/me/project --changelog CHANGELOG.md
    Bumped version: 0.1.0 -> 0.1.1 (patch)
-   Updated files: pyproject.toml
+   Updated files: pyproject.toml, CHANGELOG.md
+
+Suggest a bump without modifying files:
+
+.. code-block:: console
+
+   $ bumpwright bump --decide --base origin/main --format text
+   bumpwright suggests: patch
+
+   - [PATCH] docs: clarify usage
 
 By default the command searches for version strings in ``pyproject.toml``,
 ``setup.py``, ``setup.cfg``, and any ``__init__.py``, ``version.py``, or
