@@ -1,24 +1,37 @@
 import builtins
 import importlib
+from pathlib import Path
 
 import tomli
 
 from bumpwright.config import load_config
 
 
-def test_load_config_parses_analyzers(tmp_path):
+def test_load_config_parses_analyzers(tmp_path: Path) -> None:
     cfg_file = tmp_path / "bumpwright.toml"
     cfg_file.write_text("[analyzers]\nflask_routes = true\nsqlalchemy = false\n")
     cfg = load_config(cfg_file)
     assert cfg.analyzers.enabled == {"flask_routes"}
 
 
-def test_load_config_defaults_analyzers(tmp_path):
+def test_load_config_defaults_analyzers(tmp_path: Path) -> None:
     cfg = load_config(tmp_path / "missing.toml")
     assert cfg.analyzers.enabled == set()
 
 
-def test_tomli_fallback(monkeypatch, tmp_path):
+def test_load_config_changelog(tmp_path: Path) -> None:
+    cfg_file = tmp_path / "bumpwright.toml"
+    cfg_file.write_text("[changelog]\npath='NEWS.md'\n")
+    cfg = load_config(cfg_file)
+    assert cfg.changelog.path == "NEWS.md"
+
+
+def test_load_config_changelog_default(tmp_path: Path) -> None:
+    cfg = load_config(tmp_path / "missing.toml")
+    assert cfg.changelog.path == ""
+
+
+def test_tomli_fallback(monkeypatch, tmp_path: Path) -> None:
     """Ensure ``tomli`` is used when ``tomllib`` is unavailable."""
     import bumpwright.config as config
 
