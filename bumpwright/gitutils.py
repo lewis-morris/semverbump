@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import shlex
 import subprocess
 from collections.abc import Iterable
 from fnmatch import fnmatch
@@ -30,15 +29,8 @@ def _run(cmd: list[str], cwd: str | None = None) -> str:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
-        check=False,
+        check=True,
     )
-    if res.returncode != 0:
-        raise subprocess.CalledProcessError(
-            res.returncode,
-            shlex.join(cmd),
-            output=res.stdout,
-            stderr=res.stderr,
-        )
     return res.stdout
 
 
