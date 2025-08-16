@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from bumpwright import gitutils
 from bumpwright.analysers.utils import clear_caches, parse_python_source
-from tests.test_parse_cache import _init_repo
+from test_parse_cache import _init_repo
 
 
 def _init_repo_with_bad_file(tmp_path: Path) -> Path:
