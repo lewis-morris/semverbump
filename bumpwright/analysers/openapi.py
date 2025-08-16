@@ -5,6 +5,7 @@ Parses OpenAPI YAML or JSON documents to detect endpoint and schema changes.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,8 @@ from ..compare import Impact
 from ..config import Config
 from ..gitutils import read_files_at_ref
 from . import register
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -43,15 +46,22 @@ class Spec:
 def _parse_spec(content: str) -> Spec:
     """Parse an OpenAPI document string.
 
+    Invalid documents are ignored with a warning, returning an empty
+    :class:`Spec`.
+
     Args:
         content: YAML or JSON formatted OpenAPI document.
 
     Returns:
         Parsed :class:`Spec` containing endpoints, parameters, responses, and
-        schema definitions.
+        schema definitions, or an empty :class:`Spec` if parsing fails.
     """
 
-    data = yaml.safe_load(content) or {}
+    try:
+        data = yaml.safe_load(content) or {}
+    except yaml.YAMLError as exc:
+        logger.warning("Failed to parse OpenAPI spec: %s", exc)
+        return Spec(endpoints=set(), schemas={}, operations={})
     paths: dict[str, dict[str, Any]] = data.get("paths", {})
     endpoints: set[tuple[str, str]] = set()
     operations: dict[tuple[str, str], Operation] = {}
