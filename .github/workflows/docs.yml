@@ -43,15 +43,14 @@ jobs:
         run: |
           # Support both layouts: docs/source -> build/html OR docs/ -> build
           if [ -d "source" ]; then
-            sphinx-build -b html source build/html
+            sphinx-build -b html source _build/html
           else
-            sphinx-build -b html . build
           fi
 
       - name: Upload artifact (for Pages)
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/build/html
+          path: docs/_build/html
 
   deploy:
     needs: build
