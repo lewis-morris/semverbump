@@ -111,9 +111,7 @@ def read_project_version(pyproject_path: str | Path = "pyproject.toml") -> str:
         raise KeyError("project.version not found in pyproject.toml") from e
 
 
-def write_project_version(
-    new_version: str, pyproject_path: str | Path = "pyproject.toml"
-) -> None:
+def write_project_version(new_version: str, pyproject_path: str | Path = "pyproject.toml") -> None:
     """Write ``new_version`` to the ``pyproject.toml`` file.
 
     Args:
@@ -216,14 +214,12 @@ def _update_additional_files(
     for f in files:
         if f.resolve() == canon:
             continue
-        _replace_version(f, old, new)
-        changed.append(f)
+        if _replace_version(f, old, new):
+            changed.append(f)
     return changed
 
 
-def _resolve_files(
-    patterns: Iterable[str], ignore: Iterable[str], base_dir: Path
-) -> list[Path]:
+def _resolve_files(patterns: Iterable[str], ignore: Iterable[str], base_dir: Path) -> list[Path]:
     """Expand glob patterns while applying ignore rules relative to ``base_dir``.
 
     Args:
@@ -244,9 +240,7 @@ def _resolve_files(
 
 
 @lru_cache(maxsize=None)
-def _resolve_files_cached(
-    patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str
-) -> tuple[Path, ...]:
+def _resolve_files_cached(patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str) -> tuple[Path, ...]:
     """Resolve files for caching.
 
     This function performs the actual glob resolution and is wrapped with
@@ -284,13 +278,16 @@ def _resolve_files_cached(
     return tuple(out)
 
 
-def _replace_version(path: Path, old: str, new: str) -> None:
-    """Replace occurrences of ``old`` version with ``new`` in ``path``.
+def _replace_version(path: Path, old: str, new: str) -> bool:
+    """Replace ``old`` version occurrences with ``new`` in ``path``.
 
     Args:
         path: File whose contents should be updated.
         old: Previous version string.
         new: New version string.
+
+    Returns:
+        ``True`` if the file was modified, ``False`` otherwise.
     """
 
     text = path.read_text(encoding="utf-8")
@@ -299,6 +296,11 @@ def _replace_version(path: Path, old: str, new: str) -> None:
         rf"(VERSION\s*=\s*['\"])({re.escape(old)})(['\"])",
         rf"(version\s*=\s*['\"])({re.escape(old)})(['\"])",
     ]
+    replaced = 0
     for pat in patterns:
-        text, _ = re.subn(pat, rf"\g<1>{new}\g<3>", text)
-    path.write_text(text, encoding="utf-8")
+        text, count = re.subn(pat, rf"\g<1>{new}\g<3>", text)
+        replaced += count
+    if replaced:
+        path.write_text(text, encoding="utf-8")
+        return True
+    return False
