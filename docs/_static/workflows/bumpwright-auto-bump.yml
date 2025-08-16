@@ -10,7 +10,7 @@ jobs:
   bump:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: write  # allow committing and tagging
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
