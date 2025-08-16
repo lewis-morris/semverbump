@@ -4,13 +4,14 @@ version = "0.8.0"
 description = "Static public-API diff + heuristics to suggest semantic version bumps."
 readme = "README.md"
 requires-python = ">=3.10"
-authors = [{ name = "Lewis Morris", email = "lewis@arched.dev"}]
-  dependencies = [
-    "libcst>=1.4.0",
-    "tomlkit>=0.13.2",
-    "packaging>=24.0",
-    "tomli>=1.0.0"
-  ]
+authors = [{ name = "Lewis Morris", email = "lewis@arched.dev" }]
+license = { file = "LICENSE" }
+dependencies = [
+  "libcst>=1.4.0",
+  "tomlkit>=0.13.2",
+  "packaging>=24.0",
+  "tomli>=1.0.0",
+]
 
 [project.scripts]
 bumpwright = "bumpwright:main"
@@ -33,7 +34,7 @@ docs = [
   "sphinx-copybutton>=0.5.2",
   "myst-parser",
   "sphinxcontrib-autoprogram",
-  "sphinx-click"
+  "sphinx-click",
 ]
 dev = [
   "pytest>=8.2",

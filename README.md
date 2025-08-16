@@ -290,3 +290,7 @@ Planned enhancements and ideas for future development include:
 
 For more background and advanced usage, see the full documentation in the
 ``docs`` directory.
+
+## License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.
