@@ -33,7 +33,7 @@ def test_load_config_changelog_default(tmp_path: Path) -> None:
 
 def test_tomli_fallback(monkeypatch, tmp_path: Path) -> None:
     """Ensure ``tomli`` is used when ``tomllib`` is unavailable."""
-    import bumpwright.config as config
+    from bumpwright import config
 
     original_import = builtins.__import__
 

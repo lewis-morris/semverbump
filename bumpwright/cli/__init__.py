@@ -85,7 +85,7 @@ def get_parser() -> argparse.ArgumentParser:
 
     p_bump = sub.add_parser(
         "bump",
-        help="Apply a bump to pyproject.toml",
+        help="Apply a version bump",
         description="Update project version metadata and optionally commit and tag the change.",
     )
     p_bump.add_argument(
