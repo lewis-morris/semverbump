@@ -45,6 +45,16 @@ class _UpgradeVisitor(ast.NodeVisitor):
                         self.impacts.append(impact)
                 elif attr == "create_index":
                     self.impacts.append(Impact("minor", self.path, "Added index"))
+                elif attr == "drop_table":
+                    self.impacts.append(Impact("major", self.path, "Dropped table"))
+                elif attr == "rename_column":
+                    self.impacts.append(Impact("major", self.path, "Renamed column"))
+                elif attr == "alter_column":
+                    impact = _analyze_alter_column(node, self.path)
+                    if impact:
+                        self.impacts.append(impact)
+                elif attr == "drop_index":
+                    self.impacts.append(Impact("minor", self.path, "Dropped index"))
         self.generic_visit(node)
 
 
@@ -80,6 +90,27 @@ def _analyze_add_column(node: ast.Call, path: str) -> Impact | None:
     if not nullable and not has_default:
         return Impact("major", path, "Added non-nullable column")
     return Impact("minor", path, "Added column")
+
+
+def _analyze_alter_column(node: ast.Call, path: str) -> Impact | None:
+    """Determine the impact of an ``op.alter_column`` call.
+
+    Args:
+        node: AST call node representing ``op.alter_column``.
+        path: Path of the migration file being analyzed.
+
+    Returns:
+        Impact describing the alteration, or ``None`` if the operation cannot
+        be assessed.
+    """
+
+    kwargs = {kw.arg: kw.value for kw in node.keywords if kw.arg}
+    if "nullable" in kwargs and isinstance(kwargs["nullable"], ast.Constant):
+        nullable = bool(kwargs["nullable"].value)
+        if not nullable:
+            return Impact("major", path, "Altered column to be non-nullable")
+        return Impact("minor", path, "Altered column")
+    return Impact("major", path, "Altered column")
 
 
 def _analyze_content(path: str, content: str) -> list[Impact]:

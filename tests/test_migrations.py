@@ -162,6 +162,96 @@ def upgrade():
     assert any(i.severity == "minor" for i in impacts)
 
 
+def test_drop_table_major(repo: Path) -> None:
+    """Dropping a table should be major."""
+
+    base = _baseline(repo)
+    head = _commit_migration(
+        repo,
+        "0005_drop_table.py",
+        """
+from alembic import op
+
+def upgrade():
+    op.drop_table('t')
+""",
+    )
+    impacts = _analyze(repo, base, head)
+    assert any(i.severity == "major" for i in impacts)
+
+
+def test_rename_column_major(repo: Path) -> None:
+    """Renaming a column should be major."""
+
+    base = _baseline(repo)
+    head = _commit_migration(
+        repo,
+        "0006_rename_col.py",
+        """
+from alembic import op
+
+def upgrade():
+    op.rename_column('t', 'c', 'd')
+""",
+    )
+    impacts = _analyze(repo, base, head)
+    assert any(i.severity == "major" for i in impacts)
+
+
+def test_alter_column_nullable_minor(repo: Path) -> None:
+    """Making a column nullable should be minor."""
+
+    base = _baseline(repo)
+    head = _commit_migration(
+        repo,
+        "0007_alter_col_nullable.py",
+        """
+from alembic import op
+
+def upgrade():
+    op.alter_column('t', 'c', nullable=True)
+""",
+    )
+    impacts = _analyze(repo, base, head)
+    assert any(i.severity == "minor" for i in impacts)
+
+
+def test_alter_column_non_nullable_major(repo: Path) -> None:
+    """Making a column non-nullable should be major."""
+
+    base = _baseline(repo)
+    head = _commit_migration(
+        repo,
+        "0008_alter_col_nn.py",
+        """
+from alembic import op
+
+def upgrade():
+    op.alter_column('t', 'c', nullable=False)
+""",
+    )
+    impacts = _analyze(repo, base, head)
+    assert any(i.severity == "major" for i in impacts)
+
+
+def test_drop_index_minor(repo: Path) -> None:
+    """Dropping an index should be minor."""
+
+    base = _baseline(repo)
+    head = _commit_migration(
+        repo,
+        "0009_drop_index.py",
+        """
+from alembic import op
+
+def upgrade():
+    op.drop_index('ix_t_c', 't')
+""",
+    )
+    impacts = _analyze(repo, base, head)
+    assert any(i.severity == "minor" for i in impacts)
+
+
 def test_multiple_migrations_single_commit(repo: Path) -> None:
     """Processing multiple migration files in one commit works."""
 
