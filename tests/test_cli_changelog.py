@@ -155,3 +155,72 @@ def test_changelog_links_repo_url(tmp_path: Path) -> None:
     content = (repo / "CHANGELOG.md").read_text()
     expected = f"- [{sha}](https://example.com/repo/commit/{sha}) feat: change"
     assert expected in content
+
+
+def test_changelog_custom_template_cli(tmp_path: Path) -> None:
+    repo, pkg, _ = setup_repo(tmp_path)
+    (repo / "tpl.j2").write_text("VERSION={{ version }}\n", encoding="utf-8")
+    run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
+    run(["git", "commit", "-am", "feat: change"], repo)
+    env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "bumpwright.cli",
+            "bump",
+            "--level",
+            "patch",
+            "--pyproject",
+            "pyproject.toml",
+            "--dry-run",
+            "--changelog",
+            "CHANGELOG.md",
+            "--changelog-template",
+            "tpl.j2",
+        ],
+        cwd=repo,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+    assert (repo / "CHANGELOG.md").read_text() == "VERSION=0.1.1\n"
+
+
+def test_changelog_custom_template_config(tmp_path: Path) -> None:
+    repo, pkg, _ = setup_repo(tmp_path)
+    tpl = repo / "tpl.j2"
+    tpl.write_text("Built {{ version }}\n", encoding="utf-8")
+    (repo / "bumpwright.toml").write_text(
+        "[project]\npublic_roots=['pkg']\n[changelog]\npath='CHANGELOG.md'\ntemplate='tpl.j2'\n",
+        encoding="utf-8",
+    )
+    run(["git", "commit", "--allow-empty", "-m", "chore(release): 0.1.0"], repo)
+    (pkg / "__init__.py").write_text(
+        "def foo() -> int:\n    return 2\n", encoding="utf-8"
+    )
+    run(["git", "commit", "-am", "feat: change"], repo)
+    env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "bumpwright.cli",
+            "bump",
+            "--level",
+            "patch",
+            "--pyproject",
+            "pyproject.toml",
+            "--dry-run",
+        ],
+        cwd=repo,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+    assert (repo / "CHANGELOG.md").read_text() == "Built 0.1.1\n"

@@ -16,7 +16,7 @@ _DEFAULTS = {
     "rules": {"return_type_change": "minor"},  # or "major"
     "analysers": {"cli": False},
     "migrations": {"paths": ["migrations"]},
-    "changelog": {"path": ""},
+    "changelog": {"path": "", "template": ""},
     "version": {
         "paths": [
             "pyproject.toml",
@@ -85,9 +85,12 @@ class Changelog:
 
     Attributes:
         path: Default changelog file path. Empty string disables changelog generation.
+        template: Jinja2 template file for changelog entries. Empty string selects
+            the built-in template.
     """
 
     path: str = ""
+    template: str = ""
 
 
 @dataclass
@@ -121,7 +124,7 @@ class Config:
         rules: Rules controlling version bumps.
         ignore: Paths to exclude when scanning.
         analysers: Optional analyser plugin settings.
-        changelog: Default changelog file location.
+        changelog: Changelog file path and template defaults.
         version: Locations containing version strings.
     """
 

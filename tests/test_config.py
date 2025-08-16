@@ -23,19 +23,21 @@ def test_load_config_defaults_analysers(tmp_path: Path) -> None:
 
 def test_load_config_changelog(tmp_path: Path) -> None:
     cfg_file = tmp_path / "bumpwright.toml"
-    cfg_file.write_text("[changelog]\npath='NEWS.md'\n")
+    cfg_file.write_text("[changelog]\npath='NEWS.md'\ntemplate='tmpl.j2'\n")
     cfg = load_config(cfg_file)
     assert cfg.changelog.path == "NEWS.md"
+    assert cfg.changelog.template == "tmpl.j2"
 
 
 def test_load_config_changelog_default(tmp_path: Path) -> None:
     cfg = load_config(tmp_path / "missing.toml")
     assert cfg.changelog.path == ""
+    assert cfg.changelog.template == ""
 
 
 def test_tomli_fallback(monkeypatch, tmp_path: Path) -> None:
     """Ensure ``tomli`` is used when ``tomllib`` is unavailable."""
-    import bumpwright.config as config
+    from bumpwright import config  # noqa: PLC0415
 
     original_import = builtins.__import__
 
@@ -58,7 +60,7 @@ def test_mutating_config_does_not_alter_defaults(tmp_path: Path) -> None:
     cfg = load_config(tmp_path / "missing.toml")
     cfg.project.public_roots.append("src")
 
-    import bumpwright.config as config_module
+    import bumpwright.config as config_module  # noqa: PLC0415
 
     fresh = load_config(tmp_path / "missing.toml")
     assert config_module._DEFAULTS["project"]["public_roots"] == ["."]

@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 """Click wrappers for documenting the :mod:`bumpwright` CLI."""
 
+from __future__ import annotations
+
 import argparse
-
 import click
-
 from bumpwright.cli.bump import bump_command
 from bumpwright.cli.init import init_command
 
@@ -102,6 +100,11 @@ def init(args: argparse.Namespace) -> int:
     "--changelog",
     type=str,
     help="Append release notes to FILE or stdout when no path is given.",
+)
+@click.option(
+    "--changelog-template",
+    type=str,
+    help=("Jinja2 template file for changelog entries; defaults to built-in template."),
 )
 @click.pass_obj
 def bump(args: argparse.Namespace, **kwargs: object) -> int:

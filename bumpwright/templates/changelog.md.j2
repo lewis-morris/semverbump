@@ -1,0 +1,4 @@
+## [v{{ version }}] - {{ date }}
+{% for c in commits %}- {% if c.link %}[{{ c.sha }}]({{ c.link }}){% else %}{{ c.sha }}{% endif %} {{ c.subject }}
+{% endfor %}
+
