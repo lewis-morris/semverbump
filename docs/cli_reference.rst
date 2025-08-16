@@ -49,7 +49,7 @@ Suggest a bump without modifying files:
 .. code-block:: console
 
    $ bumpwright bump --decide --base origin/main --format text
-   bumpwright suggests: patch
+   Suggested bump: patch
 
    - [PATCH] docs: clarify usage
 

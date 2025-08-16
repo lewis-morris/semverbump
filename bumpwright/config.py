@@ -77,6 +77,23 @@ class Migrations:
 
 
 @dataclass
+class OpenAPI:
+    """Settings for the OpenAPI analyser.
+
+    Attributes:
+        paths: File paths to OpenAPI specification documents.
+    """
+
+    paths: list[str] = field(
+        default_factory=lambda: [
+            "openapi.yaml",
+            "openapi.yml",
+            "openapi.json",
+        ]
+    )
+
+
+@dataclass
 class Changelog:
     """Changelog file configuration.
 
@@ -144,6 +161,7 @@ class Config:
     ignore: Ignore = field(default_factory=Ignore)
     analysers: Analysers = field(default_factory=Analysers)
     migrations: Migrations = field(default_factory=Migrations)
+    openapi: OpenAPI = field(default_factory=OpenAPI)
     changelog: Changelog = field(default_factory=Changelog)
     version: VersionFiles = field(default_factory=VersionFiles)
 
@@ -219,6 +237,7 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
     enabled = {name for name, enabled in d["analysers"].items() if enabled}
     analysers = Analysers(enabled=enabled)
     migrations = Migrations(**d.get("migrations", {}))
+    openapi = OpenAPI(**d.get("openapi", {}))
     changelog = Changelog(**d.get("changelog", {}))
     version = VersionFiles(**d.get("version", {}))
     return Config(
@@ -227,6 +246,7 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
         ignore=ign,
         analysers=analysers,
         migrations=migrations,
+        openapi=openapi,
         changelog=changelog,
         version=version,
     )

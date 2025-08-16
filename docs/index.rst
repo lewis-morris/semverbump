@@ -1,6 +1,17 @@
 bumpwright documentation
 ========================
 
+.. |coverage| image:: _static/badges/coverage.svg
+   :alt: test coverage
+.. |version| image:: _static/badges/version.svg
+   :alt: latest version
+.. |python| image:: _static/badges/python.svg
+   :alt: supported Python versions
+.. |license| image:: _static/badges/license.svg
+   :alt: license
+
+|coverage| |version| |python| |license|
+
 Static public-API diff and heuristics to suggest semantic version bumps.
 
 Bumpwright inspects a project's public API to highlight breaking changes and

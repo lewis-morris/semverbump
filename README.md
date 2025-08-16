@@ -1,5 +1,10 @@
 # bumpwright
 
+![Coverage](docs/_static/badges/coverage.svg)
+![Version](docs/_static/badges/version.svg)
+![Python Versions](docs/_static/badges/python.svg)
+![License](docs/_static/badges/license.svg)
+
 Keep your project's version numbers honest by inspecting public interfaces and
 recommending the next semantic version. It can even apply the bump for you.
 
@@ -93,7 +98,7 @@ aborts if uncommitted changes are detected.
 
    ```console
    $ bumpwright bump --decide --base origin/main --format text
-   bumpwright suggests: minor
+   Suggested bump: minor
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
    ```
