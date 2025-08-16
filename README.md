@@ -281,6 +281,17 @@ Ensure project dependencies for analysers are installed:
 - ``alembic`` for the migrations analyser
 - Other plugins may require additional libraries such as ``jsonschema``
 
+## Development
+
+This project uses [Ruff](https://docs.astral.sh/ruff/) for linting. Run
+
+```bash
+ruff check .
+```
+
+before opening a pull request to ensure code style and static analysis
+requirements are met.
+
 ## Roadmap
 
 Planned enhancements and ideas for future development include:
