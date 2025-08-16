@@ -36,6 +36,21 @@ committed or reverted.
 preview the bump without writing to disk. See :doc:`usage` for details on dry
 runs.
 
+Changelog file not created
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Cause*: ``--changelog`` was supplied without a file path or the destination
+directory does not exist.
+
+*Fix*: Pass a valid path to ``--changelog`` or create the containing directory
+before running Bumpwright.
+
+Template path not found
+~~~~~~~~~~~~~~~~~~~~~~~
+*Cause*: The template file referenced by ``--template`` cannot be located.
+
+*Fix*: Provide the full path to an existing template or add it to the expected
+location so Bumpwright can render the changelog.
+
 FAQ
 ---
 
@@ -51,7 +66,9 @@ How do I check which analysers ran?
 
 Can I simulate a bump without writing to disk?
     Yes. Run with ``--dry-run`` to preview changes without modifying files.
-    The :doc:`usage` guide explains how to combine this with other options.
+    ``--dry-run`` still respects ``--changelog`` for path resolution but does
+    not write any files. The :doc:`usage` guide explains how to combine this
+    with other options.
 
 Why do I see Git errors about missing references?
     Bumpwright compares two Git references. Fetch all remote branches and tags
