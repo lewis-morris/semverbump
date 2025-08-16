@@ -36,7 +36,7 @@ jobs:
         pytest --cov=bumpwright --cov-report=xml
     - name: Generate badges
       run: |
-        python scripts/generate_badges.py
+        python docs/scripts/generate_badges.py
     - name: Commit badges
       uses: stefanzweifel/git-auto-commit-action@v5
       with:

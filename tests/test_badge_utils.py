@@ -1,6 +1,14 @@
+import sys
 from pathlib import Path
 
-from bumpwright.badge_utils import generate_badges, read_coverage, read_project_metadata
+DOCS = Path(__file__).resolve().parents[1] / "docs"
+sys.path.insert(0, str(DOCS))
+
+from _utils.badge_utils import (  # noqa: E402
+    generate_badges,
+    read_coverage,
+    read_project_metadata,
+)
 
 
 def test_read_project_metadata(tmp_path: Path) -> None:

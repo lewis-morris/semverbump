@@ -2,14 +2,22 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
-from bumpwright.badge_utils import generate_badges, read_coverage, read_project_metadata
+DOCS: Path = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(DOCS))
 
-ROOT = Path(__file__).resolve().parent.parent
-PYPROJECT = ROOT / "pyproject.toml"
-COVERAGE_XML = ROOT / "coverage.xml"
-BADGE_DIR = ROOT / "docs" / "_static" / "badges"
+from _utils.badge_utils import (  # noqa: E402
+    generate_badges,
+    read_coverage,
+    read_project_metadata,
+)
+
+ROOT: Path = DOCS.parent
+PYPROJECT: Path = ROOT / "pyproject.toml"
+COVERAGE_XML: Path = ROOT / "coverage.xml"
+BADGE_DIR: Path = DOCS / "_static" / "badges"
 
 
 def main() -> None:
