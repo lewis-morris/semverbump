@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
-from typing import Literal
 
 from .public_api import FuncSig, Param, PublicAPI
+from .types import BumpLevel
 
 # Severity levels for public API changes
-Severity = Literal["major", "minor", "patch"]
+Severity = BumpLevel
 
 
 @dataclass(frozen=True)
