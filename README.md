@@ -92,8 +92,18 @@ pip install bumpwright
 
    ```console
    $ bumpwright bump --decide --base origin/main --head HEAD --format json
-   {"level": "minor", "changes": [{"severity": "minor", "symbol": "cli.new_command", "description": "added CLI entry 'greet'"}]}
+   {
+     "level": "minor",
+     "confidence": 1.0,
+     "reasons": ["added CLI entry 'greet'"],
+     "impacts": [
+       {"severity": "minor", "symbol": "cli.new_command", "reason": "added CLI entry 'greet'"}
+     ]
+   }
    ```
+
+   The ``confidence`` value indicates the proportion of impacts that triggered
+   the suggested level, while ``reasons`` summarise those impacts.
 
    If ``--base`` is omitted, the command compares the current commit to its
    immediate parent (``HEAD^``).

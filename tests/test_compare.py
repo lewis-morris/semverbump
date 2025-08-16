@@ -1,4 +1,4 @@
-from bumpwright.compare import compare_funcs, decide_bump, diff_public_api
+from bumpwright.compare import Impact, compare_funcs, decide_bump, diff_public_api
 from bumpwright.public_api import FuncSig, Param
 
 
@@ -47,4 +47,18 @@ def test_removed_symbol_is_major():
     new = {}
     impacts = diff_public_api(old, new)
     assert any(i.severity == "major" for i in impacts)
-    assert decide_bump(impacts) == "major"
+    decision = decide_bump(impacts)
+    assert decision.level == "major"
+    assert decision.confidence == 1.0
+    assert decision.reasons == ["Removed public symbol"]
+
+
+def test_confidence_ratio():
+    old = {"m:f": _sig("m:f", [_p("x")], None)}
+    new = {"m:f": _sig("m:f", [_p("x"), _p("y")], None)}
+    impacts = diff_public_api(old, new)
+    impacts.append(Impact("minor", "m:g", "Added public symbol"))
+    decision = decide_bump(impacts)
+    assert decision.level == "major"
+    assert decision.confidence == 0.5
+    assert decision.reasons == ["Added required param 'y'"]

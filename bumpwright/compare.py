@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 
 from .public_api import FuncSig, Param, PublicAPI
@@ -20,6 +21,23 @@ class Impact:
     severity: str  # "major" | "minor" | "patch"
     symbol: str
     reason: str
+
+
+@dataclass(frozen=True)
+class Decision:
+    """Describe the outcome of a bump decision.
+
+    Attributes:
+        level: Suggested semantic version bump (``"major"``, ``"minor"``,
+            ``"patch"``) or ``None`` when no change is required.
+        confidence: Proportion of impacts that triggered ``level``.
+        reasons: Explanations from :class:`Impact` entries supporting the
+            decision.
+    """
+
+    level: str | None
+    confidence: float
+    reasons: list[str]
 
 
 def _index_params(sig: FuncSig) -> dict[str, Param]:
@@ -137,21 +155,28 @@ def diff_public_api(
     return impacts
 
 
-def decide_bump(impacts: list[Impact]) -> str | None:
+def decide_bump(impacts: list[Impact]) -> Decision:
     """Determine the bump level from a list of impacts.
 
     Args:
         impacts: Detected impacts from API comparison.
 
     Returns:
-        Suggested semantic version bump (``"major"``, ``"minor"``, or ``"patch"``) or
-        ``None`` if ``impacts`` is empty.
+        Decision detailing the suggested bump level, confidence and reasons.
     """
 
     if not impacts:
-        return None
-    if any(i.severity == "major" for i in impacts):
-        return "major"
-    if any(i.severity == "minor" for i in impacts):
-        return "minor"
-    return "patch"
+        return Decision(None, 0.0, [])
+
+    counts = Counter(i.severity for i in impacts)
+    total = sum(counts.values())
+    if counts.get("major"):
+        level = "major"
+    elif counts.get("minor"):
+        level = "minor"
+    else:
+        level = "patch"
+    level_count = counts.get(level, 0)
+    reasons = [i.reason for i in impacts if i.severity == level]
+    confidence = level_count / total if total else 0.0
+    return Decision(level, confidence, reasons)

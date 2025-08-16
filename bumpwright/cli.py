@@ -16,7 +16,7 @@ from datetime import date
 from pathlib import Path
 
 from .analyzers import available, get_analyzer_info
-from .compare import Impact, decide_bump, diff_public_api
+from .compare import Decision, Impact, decide_bump, diff_public_api
 from .config import Config, load_config
 from .gitutils import (
     changed_paths,
@@ -268,19 +268,24 @@ def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
     impacts.extend(
         _run_analyzers(base, head, cfg, args.enable_analyzer, args.disable_analyzer)
     )
-    level = decide_bump(impacts)
+    decision = decide_bump(impacts)
     if args.format == "json":
         print(
             json.dumps(
-                {"level": level, "impacts": [i.__dict__ for i in impacts]},
+                {
+                    "level": decision.level,
+                    "confidence": decision.confidence,
+                    "reasons": decision.reasons,
+                    "impacts": [i.__dict__ for i in impacts],
+                },
                 indent=2,
             )
         )
     elif args.format == "md":
-        print(f"**bumpwright** suggests: `{level}`\n")
+        print(f"**bumpwright** suggests: `{decision.level}`\n")
         print(_format_impacts_text(impacts))
     else:
-        print(f"Suggested bump: {level}")
+        print(f"Suggested bump: {decision.level}")
         print(_format_impacts_text(impacts))
     return 0
 
@@ -327,7 +332,7 @@ def _infer_level(
     head: str,
     cfg: Config,
     args: argparse.Namespace,
-) -> str | None:
+) -> Decision:
     """Compute bump level from repository differences.
 
     Args:
@@ -337,7 +342,7 @@ def _infer_level(
         args: Parsed command-line arguments containing analyzer overrides.
 
     Returns:
-        Suggested bump level or ``None`` if no change is required.
+        Decision describing the suggested bump level and supporting data.
     """
 
     old_api = _build_api_at_ref(base, cfg.project.public_roots, cfg.ignore.paths)
@@ -394,6 +399,7 @@ def bump_command(args: argparse.Namespace) -> int:
         return _decide_only(args, cfg)
 
     level = args.level
+    decision: Decision | None = None
     base, head = _resolve_refs(args, level)
 
     try:
@@ -416,10 +422,13 @@ def bump_command(args: argparse.Namespace) -> int:
             return 0
 
     if not level:
-        level = _infer_level(base, head, cfg, args)
-        if level is None:
+        decision = _infer_level(base, head, cfg, args)
+        if decision.level is None:
             print("No version bump needed")
             return 0
+        level = decision.level
+    else:
+        decision = Decision(level, 1.0, [])
 
     ignore = list(cfg.version.ignore)
     if args.version_ignore:
@@ -439,6 +448,8 @@ def bump_command(args: argparse.Namespace) -> int:
                     "old_version": vc.old,
                     "new_version": vc.new,
                     "level": vc.level,
+                    "confidence": decision.confidence,
+                    "reasons": decision.reasons,
                     "files": [str(p) for p in vc.files],
                 },
                 indent=2,

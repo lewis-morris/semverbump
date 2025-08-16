@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 import sys
@@ -29,6 +30,27 @@ def test_decide_flag_detects_no_api_changes(tmp_path: Path) -> None:
         env=env,
     )
     assert "Suggested bump: None" in res_decide.stdout
+
+    res_decide_json = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "bumpwright.cli",
+            "bump",
+            "--decide",
+            "--format",
+            "json",
+        ],
+        cwd=repo,
+        check=True,
+        stdout=subprocess.PIPE,
+        text=True,
+        env=env,
+    )
+    data = json.loads(res_decide_json.stdout)
+    assert data["level"] is None
+    assert data["confidence"] == 0.0
+    assert data["reasons"] == []
 
     res_bump = subprocess.run(
         [sys.executable, "-m", "bumpwright.cli", "bump"],
