@@ -33,3 +33,5 @@ def test_decide_flag_defaults_to_previous_commit(tmp_path: Path) -> None:
 
     data = json.loads(res.stdout)
     assert data["level"] == "minor"
+    assert data["confidence"] == 1.0
+    assert data["reasons"] == ["Added public symbol"]

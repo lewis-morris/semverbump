@@ -69,10 +69,15 @@ require.
 
    {
      "level": "minor",
+     "confidence": 1.0,
+     "reasons": ["added CLI entry 'greet'"],
      "impacts": [
        {"severity": "minor", "symbol": "cli.new_command", "reason": "added CLI entry 'greet'"}
      ]
    }
+
+The ``confidence`` value reflects the proportion of impacts that led to the
+suggested level, while ``reasons`` summarise those impacts.
 
 Running ``bumpwright bump --decide`` without ``--base`` compares the current
 commit against the last release commit or, if none exists, its parent (``HEAD^``).

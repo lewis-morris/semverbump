@@ -70,6 +70,8 @@ def test_enable_analyzer_flag(tmp_path: Path) -> None:
     )
     data = json.loads(res.stdout)
     assert data["level"] == "major"
+    assert data["confidence"] == 1.0
+    assert data["reasons"] == ["Removed command"]
 
 
 def test_disable_analyzer_flag(tmp_path: Path) -> None:
@@ -100,3 +102,5 @@ def test_disable_analyzer_flag(tmp_path: Path) -> None:
     )
     data = json.loads(res.stdout)
     assert data["level"] is None
+    assert data["confidence"] == 0.0
+    assert data["reasons"] == []
