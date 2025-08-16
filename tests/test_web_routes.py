@@ -1,5 +1,4 @@
-from bumpwright.analysers.web_routes import (diff_routes,
-                                             extract_routes_from_source)
+from bumpwright.analysers.web_routes import diff_routes, extract_routes_from_source
 
 
 def _build(src: str):
@@ -70,3 +69,17 @@ def a(limit: int | None = None):
     )
     impacts = diff_routes(old, new)
     assert any(i.severity == "minor" for i in impacts)
+
+
+def test_async_route_detected():
+    routes = _build(
+        """
+from fastapi import FastAPI
+app = FastAPI()
+
+@app.get('/a')
+async def a():
+    return 1
+"""
+    )
+    assert ("/a", "GET") in routes

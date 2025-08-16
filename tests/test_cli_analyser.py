@@ -4,8 +4,7 @@ import subprocess
 from pathlib import Path
 
 from bumpwright.analysers import load_enabled
-from bumpwright.analysers.cli import (CLIAnalyser, diff_cli,
-                                      extract_cli_from_source)
+from bumpwright.analysers.cli import CLIAnalyser, diff_cli, extract_cli_from_source
 from bumpwright.cli.decide import _run_analysers
 from bumpwright.config import Config, Ignore, Project
 
@@ -81,6 +80,19 @@ def cli(name):
     )
     impacts = diff_cli(old, new)
     assert any(i.severity == "major" for i in impacts)
+
+
+def test_async_click_command_detected():
+    cmds = _build(
+        """
+import click
+
+@click.command()
+async def cli():
+    pass
+"""
+    )
+    assert "cli" in cmds
 
 
 def test_argparse_nargs_plus_major():

@@ -43,6 +43,8 @@ def _extract_params(args: ast.arguments) -> dict[str, bool]:
 def extract_routes_from_source(code: str) -> dict[tuple[str, str], Route]:
     """Extract routes from source code.
 
+    Supports synchronous and asynchronous route handlers.
+
     Args:
         code: Module source code.
 
@@ -54,7 +56,7 @@ def extract_routes_from_source(code: str) -> dict[tuple[str, str], Route]:
     routes: dict[tuple[str, str], Route] = {}
 
     for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
         path = None
         methods: Iterable[str] | None = None
@@ -65,8 +67,14 @@ def extract_routes_from_source(code: str) -> dict[tuple[str, str], Route]:
                     if deco.args and _is_const_str(deco.args[0]):
                         path = deco.args[0].value  # type: ignore[assignment]
                     for kw in deco.keywords:
-                        if kw.arg == "methods" and isinstance(kw.value, (ast.List, ast.Tuple)):
-                            methods = [elt.value.upper() for elt in kw.value.elts if _is_const_str(elt)]
+                        if kw.arg == "methods" and isinstance(
+                            kw.value, (ast.List, ast.Tuple)
+                        ):
+                            methods = [
+                                elt.value.upper()
+                                for elt in kw.value.elts
+                                if _is_const_str(elt)
+                            ]
                     if methods is None:
                         methods = ["GET"]
                 elif name.upper() in HTTP_METHODS:  # FastAPI style
@@ -80,7 +88,9 @@ def extract_routes_from_source(code: str) -> dict[tuple[str, str], Route]:
     return routes
 
 
-def _build_routes_at_ref(ref: str, roots: Iterable[str], ignores: Iterable[str]) -> dict[tuple[str, str], Route]:
+def _build_routes_at_ref(
+    ref: str, roots: Iterable[str], ignores: Iterable[str]
+) -> dict[tuple[str, str], Route]:
     """Collect routes for all modules under given roots at a git ref.
 
     Args:
@@ -98,7 +108,9 @@ def _build_routes_at_ref(ref: str, roots: Iterable[str], ignores: Iterable[str])
     return out
 
 
-def diff_routes(old: dict[tuple[str, str], Route], new: dict[tuple[str, str], Route]) -> list[Impact]:
+def diff_routes(
+    old: dict[tuple[str, str], Route], new: dict[tuple[str, str], Route]
+) -> list[Impact]:
     """Compute impacts between two route mappings.
 
     Args:
@@ -160,9 +172,13 @@ class WebRoutesAnalyser:
             Mapping of ``(path, method)`` to :class:`Route` objects.
         """
 
-        return _build_routes_at_ref(ref, self.cfg.project.public_roots, self.cfg.ignore.paths)
+        return _build_routes_at_ref(
+            ref, self.cfg.project.public_roots, self.cfg.ignore.paths
+        )
 
-    def compare(self, old: dict[tuple[str, str], Route], new: dict[tuple[str, str], Route]) -> list[Impact]:
+    def compare(
+        self, old: dict[tuple[str, str], Route], new: dict[tuple[str, str], Route]
+    ) -> list[Impact]:
         """Compare two route mappings and return impacts.
 
         Args:
