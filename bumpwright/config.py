@@ -16,6 +16,7 @@ _DEFAULTS = {
     "rules": {"return_type_change": "minor"},  # or "major"
     "analyzers": {"cli": False},
     "migrations": {"paths": ["migrations"]},
+    "changelog": {"path": ""},
     "version": {
         "paths": [
             "pyproject.toml",
@@ -74,6 +75,17 @@ class Migrations:
 
 
 @dataclass
+class Changelog:
+    """Changelog file configuration.
+
+    Attributes:
+        path: Default changelog file path. Empty string disables changelog generation.
+    """
+
+    path: str = ""
+
+
+@dataclass
 class VersionFiles:
     """Locations containing project version strings.
 
@@ -104,6 +116,7 @@ class Config:
         rules: Rules controlling version bumps.
         ignore: Paths to exclude when scanning.
         analyzers: Optional analyzer plugin settings.
+        changelog: Default changelog file location.
         version: Locations containing version strings.
     """
 
@@ -112,6 +125,7 @@ class Config:
     ignore: Ignore = field(default_factory=Ignore)
     analyzers: Analyzers = field(default_factory=Analyzers)
     migrations: Migrations = field(default_factory=Migrations)
+    changelog: Changelog = field(default_factory=Changelog)
     version: VersionFiles = field(default_factory=VersionFiles)
 
 
@@ -151,6 +165,7 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
     enabled = {name for name, enabled in d["analyzers"].items() if enabled}
     analyzers = Analyzers(enabled=enabled)
     migrations = Migrations(**d.get("migrations", {}))
+    changelog = Changelog(**d.get("changelog", {}))
     version = VersionFiles(**d.get("version", {}))
     return Config(
         project=proj,
@@ -158,5 +173,6 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
         ignore=ign,
         analyzers=analyzers,
         migrations=migrations,
+        changelog=changelog,
         version=version,
     )

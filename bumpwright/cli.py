@@ -351,6 +351,8 @@ def bump_command(args: argparse.Namespace) -> int:
     """
 
     cfg = load_config(args.config)
+    if args.changelog is None and cfg.changelog.path:
+        args.changelog = cfg.changelog.path
     if args.decide:
         return _decide_only(args, cfg)
 
