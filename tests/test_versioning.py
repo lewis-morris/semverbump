@@ -27,7 +27,7 @@ def test_bump_string():
 def test_bump_string_uses_cached_config(monkeypatch: pytest.MonkeyPatch) -> None:
     """Repeated calls reuse cached configuration."""
 
-    versioning._DEFAULT_CFG = None
+    versioning._get_default_config.cache_clear()
     calls = {"count": 0}
 
     def fake_load_config(path: str = "bumpwright.toml"):
@@ -38,7 +38,7 @@ def test_bump_string_uses_cached_config(monkeypatch: pytest.MonkeyPatch) -> None
     assert versioning.bump_string("1.0.0", "patch") == "1.0.1"
     assert versioning.bump_string("1.0.1", "patch") == "1.0.2"
     assert calls["count"] == 1
-    versioning._DEFAULT_CFG = None
+    versioning._get_default_config.cache_clear()
 
 
 def test_bump_string_semver_prerelease_and_build() -> None:
