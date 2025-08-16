@@ -10,4 +10,4 @@ from .cli import main
 
 __all__ = ["__version__", "main"]
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
