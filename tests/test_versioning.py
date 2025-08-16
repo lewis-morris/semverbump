@@ -197,10 +197,12 @@ def test_resolve_files_uses_cache(
     assert calls["count"] == 1
 
 
-def test_apply_bump_reuses_resolve_cache(
+
+def test_apply_bump_clears_resolve_cache(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Ensure repeated bumps avoid redundant globbing."""
+    """Verify custom patterns trigger cache invalidation."""
+
 
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))

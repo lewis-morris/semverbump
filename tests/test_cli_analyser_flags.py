@@ -14,7 +14,7 @@ def _setup_cli_repo(
     repo, pkg, _ = setup_repo(tmp_path)
     if enable_in_config:
         (repo / "bumpwright.toml").write_text(
-            """[project]\npublic_roots=['pkg']\n[analyzers]\ncli = true\n""",
+            """[project]\npublic_roots=['pkg']\n[analysers]\ncli = true\n""",
             encoding="utf-8",
         )
         run(["git", "add", "bumpwright.toml"], repo)
@@ -42,8 +42,8 @@ sub = parser.add_subparsers()
     return repo, base, head
 
 
-def test_enable_analyzer_flag(tmp_path: Path) -> None:
-    """CLI flag enables an analyzer not set in configuration."""
+def test_enable_analyser_flag(tmp_path: Path) -> None:
+    """CLI flag enables an analyser not set in configuration."""
     repo, base, head = _setup_cli_repo(tmp_path)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
     res = subprocess.run(
@@ -59,7 +59,7 @@ def test_enable_analyzer_flag(tmp_path: Path) -> None:
             head,
             "--format",
             "json",
-            "--enable-analyzer",
+            "--enable-analyser",
             "cli",
         ],
         cwd=repo,
@@ -74,8 +74,8 @@ def test_enable_analyzer_flag(tmp_path: Path) -> None:
     assert data["reasons"] == ["Removed command"]
 
 
-def test_disable_analyzer_flag(tmp_path: Path) -> None:
-    """CLI flag disables an analyzer configured in the project."""
+def test_disable_analyser_flag(tmp_path: Path) -> None:
+    """CLI flag disables an analyser configured in the project."""
     repo, base, head = _setup_cli_repo(tmp_path, enable_in_config=True)
     env = {**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])}
     res = subprocess.run(
@@ -91,7 +91,7 @@ def test_disable_analyzer_flag(tmp_path: Path) -> None:
             head,
             "--format",
             "json",
-            "--disable-analyzer",
+            "--disable-analyser",
             "cli",
         ],
         cwd=repo,

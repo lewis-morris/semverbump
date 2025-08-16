@@ -5,11 +5,11 @@ Custom severity mapping and plugin analysers
 
 .. code-block:: python
 
-   from bumpwright.analyzers import Analyzer, register
+   from bumpwright.analysers import Analyser, register
    from bumpwright.compare import Impact
 
    @register("no_prints", "Report usage of print statements")
-   class NoPrints(Analyzer):
+   class NoPrints(Analyser):
        def __init__(self, cfg):
            self.severity = getattr(cfg.rules, "print_call", "patch")
 
@@ -22,13 +22,13 @@ Custom severity mapping and plugin analysers
            return []
 
 The optional description makes the plugin discoverable via
-``get_analyzer_info("no_prints")`` and the :func:`available` helper.
+``get_analyser_info("no_prints")`` and the :func:`available` helper.
 
 2. Enable the plugin and map its finding to a version bump:
 
 .. code-block:: toml
 
-   [analyzers]
+   [analysers]
    no_prints = true
 
    [rules]

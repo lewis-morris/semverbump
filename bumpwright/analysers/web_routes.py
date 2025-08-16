@@ -166,11 +166,11 @@ def diff_routes(
 
 
 @register("web_routes", "Track changes in web application routes.")
-class WebRoutesAnalyzer:
-    """Analyzer plugin for web application routes."""
+class WebRoutesAnalyser:
+    """Analyser plugin for web application routes."""
 
     def __init__(self, cfg: Config) -> None:
-        """Initialize the analyzer with configuration."""
+        """Initialize the analyser with configuration."""
         self.cfg = cfg
 
     def collect(self, ref: str) -> dict[tuple[str, str], Route]:

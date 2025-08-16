@@ -3,8 +3,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-from bumpwright.versioning import read_project_version
 from cli_helpers import run, setup_repo
+
+from bumpwright.versioning import read_project_version
 
 
 def test_bump_command_searches_pyproject(tmp_path: Path) -> None:

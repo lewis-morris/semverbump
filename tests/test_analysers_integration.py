@@ -1,4 +1,4 @@
-"""Integration tests for combining analyzer plugins."""
+"""Integration tests for combining analyser plugins."""
 
 import os
 import subprocess
@@ -9,7 +9,7 @@ try:  # pragma: no cover - handled when pytest not installed
 except ModuleNotFoundError:  # pragma: no cover
     pytest = None  # type: ignore
 
-from bumpwright.analyzers import load_enabled
+from bumpwright.analysers import load_enabled
 from bumpwright.compare import Impact
 from bumpwright.config import Config, Project
 
@@ -87,24 +87,24 @@ app = Flask(__name__)
         ),
     ],
 )
-def test_combined_analyzers(
+def test_combined_analysers(
     tmp_path: Path, enabled: set[str], expected: list[Impact]
 ) -> None:
-    """Ensure multiple analyzers produce combined impacts."""
+    """Ensure multiple analysers produce combined impacts."""
     repo, base, head = _setup_repo(tmp_path)
 
     cfg = Config(project=Project(public_roots=["pkg"]))
-    cfg.analyzers.enabled.update(enabled)
-    analyzers = load_enabled(cfg)
+    cfg.analysers.enabled.update(enabled)
+    analysers = load_enabled(cfg)
 
     impacts: list[Impact] = []
     old_cwd = os.getcwd()
     os.chdir(repo)
     try:
-        for analyzer in analyzers:
-            old_state = analyzer.collect(base)
-            new_state = analyzer.collect(head)
-            impacts.extend(analyzer.compare(old_state, new_state))
+        for analyser in analysers:
+            old_state = analyser.collect(base)
+            new_state = analyser.collect(head)
+            impacts.extend(analyser.compare(old_state, new_state))
     finally:
         os.chdir(old_cwd)
 

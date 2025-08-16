@@ -64,14 +64,14 @@ def init(args: argparse.Namespace) -> int:
     help="Only determine the bump level without modifying any files.",
 )
 @click.option(
-    "--enable-analyzer",
+    "--enable-analyser",
     multiple=True,
-    help="Enable analyzer NAME (repeatable) in addition to configuration.",
+    help="Enable analyser NAME (repeatable) in addition to configuration.",
 )
 @click.option(
-    "--disable-analyzer",
+    "--disable-analyser",
     multiple=True,
-    help="Disable analyzer NAME (repeatable) even if configured.",
+    help="Disable analyser NAME (repeatable) even if configured.",
 )
 @click.option(
     "--pyproject",
@@ -109,8 +109,8 @@ def bump(args: argparse.Namespace, **kwargs: object) -> int:
 
     params = vars(args).copy()
     params.update(kwargs)
-    params["enable_analyzer"] = list(params.get("enable_analyzer", []))
-    params["disable_analyzer"] = list(params.get("disable_analyzer", []))
+    params["enable_analyser"] = list(params.get("enable_analyser", []))
+    params["disable_analyser"] = list(params.get("disable_analyser", []))
     params["version_path"] = list(params.get("version_path", []))
     params["version_ignore"] = list(params.get("version_ignore", []))
     params["format"] = params.pop("format_")

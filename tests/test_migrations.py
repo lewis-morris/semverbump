@@ -1,4 +1,4 @@
-"""Tests for the migrations analyzer plugin."""
+"""Tests for the migrations analyser plugin."""
 
 import os
 import subprocess
@@ -9,7 +9,7 @@ try:  # pragma: no cover - handled when pytest not installed
 except ModuleNotFoundError:  # pragma: no cover
     pytest = None  # type: ignore
 
-from bumpwright.analyzers import load_enabled
+from bumpwright.analysers import load_enabled
 from bumpwright.compare import Impact
 from bumpwright.config import Config, Migrations
 
@@ -46,7 +46,7 @@ def _baseline(repo: Path) -> str:
 
 
 def _analyze(repo: Path, base: str, head: str) -> list[Impact]:
-    """Run the migrations analyzer and return impacts.
+    """Run the migrations analyser and return impacts.
 
     Args:
         repo: Repository root path.
@@ -58,12 +58,12 @@ def _analyze(repo: Path, base: str, head: str) -> list[Impact]:
     """
 
     cfg = Config(migrations=Migrations(paths=["migrations"]))
-    cfg.analyzers.enabled.add("migrations")
-    analyzer = load_enabled(cfg)[0]
+    cfg.analysers.enabled.add("migrations")
+    analyser = load_enabled(cfg)[0]
     old_cwd = os.getcwd()
     os.chdir(repo)
     try:
-        return analyzer.compare(analyzer.collect(base), analyzer.collect(head))
+        return analyser.compare(analyser.collect(base), analyser.collect(head))
     finally:
         os.chdir(old_cwd)
 

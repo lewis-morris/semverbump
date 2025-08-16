@@ -17,13 +17,19 @@ Static public-API diff and heuristics to suggest semantic version bumps.
    :caption: Configuration
 
    configuration
-   analyzers/index
+   analysers/index
 
 .. toctree::
    :maxdepth: 2
    :caption: Guides
 
    guides/index
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Support
+
+   troubleshooting
 
 .. toctree::
    :maxdepth: 1
