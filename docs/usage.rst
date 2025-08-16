@@ -128,11 +128,14 @@ patterns.
 ``--changelog [FILE]``
     Append release notes for the new version to ``FILE``.
     When ``FILE`` is omitted or set to ``-``, the changelog entry is printed to
-    standard output. If the option is omitted, no changelog entry is produced.
+    standard output. If the option is omitted entirely, the
+    ``[changelog].path`` setting provides a default location. See
+    :doc:`configuration` for more detail.
 
 ``--changelog-template PATH``
     Jinja2 template file used when rendering changelog entries. Defaults to the
-    built-in template.
+    built-in template or ``[changelog].template`` when configured. See
+    :doc:`configuration` for more detail.
 
 ``--pyproject PATH``
     Path to the project's ``pyproject.toml`` file. Defaults to
