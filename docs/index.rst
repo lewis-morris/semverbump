@@ -21,9 +21,7 @@ Static public-API diff and heuristics to suggest semantic version bumps.
    :maxdepth: 2
    :caption: Guides
 
-   advanced
-   workflows
-   troubleshooting
+   guides/index
 
 .. toctree::
    :maxdepth: 1
