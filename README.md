@@ -92,14 +92,14 @@ aborts if uncommitted changes are detected.
 
    ```console
    $ bumpwright bump --decide --base origin/main --head HEAD --format text
-   bumpwright suggests: minor
+   Suggested bump: minor
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
    ```
 
    ```console
    $ bumpwright bump --decide --base origin/main --head HEAD --format md
-   **bumpwright** suggests: `minor`
+   **Suggested bump:** `minor`
 
 
    - [MINOR] cli.new_command: added CLI entry 'greet'
