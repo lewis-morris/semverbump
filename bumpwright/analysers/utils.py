@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 from collections.abc import Iterable, Iterator
 
-from ..gitutils import list_py_files_at_ref, read_file_at_ref
+from ..gitutils import list_py_files_at_ref, read_files_at_ref
 
 
 def _is_const_str(node: ast.AST) -> bool:
@@ -39,7 +39,9 @@ def iter_py_files_at_ref(
         Tuples of ``(path, source)`` for each discovered Python file.
     """
 
-    for path in list_py_files_at_ref(ref, roots, ignore_globs=ignore_globs, cwd=cwd):
-        code = read_file_at_ref(ref, path, cwd=cwd)
+    paths = list(list_py_files_at_ref(ref, roots, ignore_globs=ignore_globs, cwd=cwd))
+    contents = read_files_at_ref(ref, paths, cwd=cwd)
+    for path in paths:
+        code = contents.get(path)
         if code is not None:
             yield path, code
