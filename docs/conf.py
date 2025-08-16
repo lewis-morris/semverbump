@@ -5,8 +5,9 @@ import os
 import sys
 from datetime import datetime
 
-# Ensure project root on path so bumpwright can be imported when building docs
+# Ensure project root and docs path on sys.path for imports
 sys.path.insert(0, os.path.abspath(".."))
+sys.path.insert(0, os.path.abspath("."))
 
 import bumpwright
 
@@ -27,7 +28,6 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_wagtail_theme",
     "sphinx.ext.autosummary",
-    "sphinxcontrib.autoprogram",
     "sphinx.ext.linkcode",
     "sphinx_click",
 ]
