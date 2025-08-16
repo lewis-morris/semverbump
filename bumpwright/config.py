@@ -10,12 +10,29 @@ import copy
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
+from .types import BumpLevel
+
 
 @dataclass
 class Rules:
-    """Rules controlling version bump decisions."""
+    """Rules controlling version bump decisions.
 
-    return_type_change: str = "minor"  # "minor" | "major"
+    Attributes:
+        return_type_change: Version bump level triggered when a public API
+            return type changes.
+    """
+
+    return_type_change: BumpLevel = "minor"
+
+    def __post_init__(self) -> None:
+        """Validate rule configuration.
+
+        Raises:
+            ValueError: If ``return_type_change`` is not ``"major"`` or ``"minor"``.
+        """
+
+        if self.return_type_change not in {"major", "minor"}:
+            raise ValueError("return_type_change must be 'major' or 'minor'")
 
 
 @dataclass
