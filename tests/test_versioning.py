@@ -123,6 +123,56 @@ def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
     assert init not in out.files
 
 
+def test_resolve_files_nested_dirs_sorted(tmp_path: Path) -> None:
+    """Resolve nested patterns and ensure results are deterministically ordered."""
+
+    pkg = tmp_path / "pkg"
+    sub = pkg / "sub"
+    sub.mkdir(parents=True)
+
+    # Create files in non-sorted order to verify output sorting.
+    paths = [
+        pkg / "b.txt",
+        pkg / "a.txt",
+        sub / "d.txt",
+        sub / "c.txt",
+    ]
+    for path in paths:
+        path.write_text("", encoding="utf-8")
+
+    out = _resolve_files(["pkg/**/*.txt"], [], tmp_path)
+    expected = [
+        pkg / "a.txt",
+        pkg / "b.txt",
+        sub / "c.txt",
+        sub / "d.txt",
+    ]
+    assert out == expected
+
+
+def test_resolve_files_absolute_paths_and_ignore_patterns(tmp_path: Path) -> None:
+    """Handle absolute patterns and exclusion rules in file resolution."""
+
+    base = tmp_path
+    abs_file = base / "abs.py"
+    abs_file.write_text("", encoding="utf-8")
+
+    ignore_abs = base / "ignore_abs.py"
+    ignore_abs.write_text("", encoding="utf-8")
+
+    pkg = base / "pkg"
+    pkg.mkdir()
+    keep_rel = pkg / "keep.py"
+    keep_rel.write_text("", encoding="utf-8")
+    ignore_rel = pkg / "ignore_rel.py"
+    ignore_rel.write_text("", encoding="utf-8")
+
+    patterns = [str(abs_file), str(ignore_abs), "pkg/*.py"]
+    ignore = [str(ignore_abs), "pkg/ignore_rel.py"]
+    out = _resolve_files(patterns, ignore, base)
+    expected = [abs_file, keep_rel]
+    assert out == expected
+
 def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Ensure repeated resolution reuses cached results."""
 
