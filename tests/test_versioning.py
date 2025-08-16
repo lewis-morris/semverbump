@@ -1,6 +1,8 @@
 from pathlib import Path
 
+import pytest
 from tomlkit import dumps as toml_dumps
+from tomlkit.exceptions import ParseError
 
 from bumpwright.versioning import apply_bump, bump_string, read_project_version
 
@@ -9,6 +11,57 @@ def test_bump_string():
     assert bump_string("1.2.3", "patch") == "1.2.4"
     assert bump_string("1.2.3", "minor") == "1.3.0"
     assert bump_string("1.2.3", "major") == "2.0.0"
+
+
+@pytest.mark.parametrize("level", ["", "foo", "majority"])
+def test_bump_string_invalid_level(level: str) -> None:
+    """Ensure ``bump_string`` rejects unsupported bump levels."""
+
+    with pytest.raises(ValueError):
+        bump_string("1.2.3", level)  # type: ignore[arg-type]
+
+
+@pytest.fixture
+def missing_file(tmp_path: Path) -> Path:
+    """Return a path to a non-existent ``pyproject.toml`` file."""
+
+    return tmp_path / "pyproject.toml"
+
+
+@pytest.fixture
+def pyproject_missing_version(tmp_path: Path) -> Path:
+    """Create a ``pyproject.toml`` lacking the version field."""
+
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {}}))
+    return py
+
+
+@pytest.fixture
+def pyproject_malformed(tmp_path: Path) -> Path:
+    """Create a malformed ``pyproject.toml`` to trigger parse errors."""
+
+    py = tmp_path / "pyproject.toml"
+    py.write_text("::invalid::", encoding="utf-8")
+    return py
+
+
+@pytest.mark.parametrize(
+    ("path_fixture", "exc"),
+    [
+        ("missing_file", FileNotFoundError),
+        ("pyproject_missing_version", KeyError),
+        ("pyproject_malformed", ParseError),
+    ],
+)
+def test_read_project_version_errors(
+    path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest
+) -> None:
+    """Validate ``read_project_version`` error handling for bad inputs."""
+
+    path = request.getfixturevalue(path_fixture)
+    with pytest.raises(exc):
+        read_project_version(path)
 
 
 def test_apply_bump(tmp_path: Path):
