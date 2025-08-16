@@ -287,14 +287,20 @@ Ensure project dependencies for analysers are installed:
 
 ## Development
 
-This project uses [Ruff](https://docs.astral.sh/ruff/) for linting. Run
+This project uses [pre-commit](https://pre-commit.com/) to maintain code
+style and quality with tools like Ruff, Black, and isort.
+
+Install the pre-commit hooks:
 
 ```bash
-ruff check .
+pre-commit install
 ```
 
-before opening a pull request to ensure code style and static analysis
-requirements are met.
+Run all checks locally before opening a pull request:
+
+```bash
+pre-commit run --all-files
+```
 
 ## Roadmap
 
