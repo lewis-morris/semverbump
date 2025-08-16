@@ -48,7 +48,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Match the build path above
-          path: docs/build/html
+          path: docs/_build/html
 
   deploy:
     name: Deploy to GitHub Pages
