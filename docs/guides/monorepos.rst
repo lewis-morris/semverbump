@@ -1,7 +1,13 @@
 Handling multi-package repositories
 ===================================
 
-1. Configure version file paths for each package in ``bumpwright.toml``:
+Bumpwright works in monorepos with several packages by targeting each package
+independently.
+
+Configure version file paths
+----------------------------
+
+Define where versions are stored for each package in ``bumpwright.toml``:
 
 .. code-block:: toml
 
@@ -12,7 +18,10 @@ Handling multi-package repositories
    ]
    scheme = "semver"
 
-2. Run ``bumpwright`` for the package that changed:
+Run Bumpwright for the changed package
+--------------------------------------
+
+Invoke Bumpwright against the package that changed:
 
 .. code-block:: console
 

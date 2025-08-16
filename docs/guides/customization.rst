@@ -1,23 +1,26 @@
-Advanced Usage
-==============
+Configuration examples
+======================
 
-Customise bumpwright beyond the basics.
+Adjust Bumpwright for complex projects using the examples below.
 
-Customise rules for version decisions:
+Custom version rules
+--------------------
 
 .. code-block:: toml
 
    [rules]
    return_type_change = "major"
 
-Exclude paths from API scanning:
+Ignore paths
+------------
 
 .. code-block:: toml
 
    [ignore]
    paths = ["tests/**", "examples/**"]
 
-Specify additional version file locations:
+Version file locations
+----------------------
 
 .. code-block:: toml
 
@@ -26,13 +29,11 @@ Specify additional version file locations:
    ignore = ["examples/**"]
    scheme = "semver"
 
-Apply a bump and commit/tag automatically:
+Automatic bump with commit and tag
+----------------------------------
 
 .. code-block:: console
 
    bumpwright bump --base v1.0.0 --head HEAD --commit --tag
 
-.. toctree::
-   :maxdepth: 1
-
-   monorepos
+Need to support multiple packages? See :doc:`monorepos`.

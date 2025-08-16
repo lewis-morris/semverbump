@@ -1,10 +1,14 @@
 GitHub Actions workflows
 ========================
 
-Bumpwright integrates easily with GitHub Actions. The workflows below show
-how to automatically apply a version bump on pushes to your main branch,
-suggest the next semantic version, and run a manual release. Place these files
-in the ``.github/workflows`` directory of your project to use them.
+Bumpwright integrates easily with GitHub Actions. This guide covers three
+workflows:
+
+* Automatically apply a version bump on pushes to your main branch.
+* Suggest the next semantic version in pull requests.
+* Run a manual release with tagging.
+
+Place the selected file in ``.github/workflows`` to use it.
 
 Workflows that create commits or tags require ``permissions: contents: write``
 and authenticate using the default ``GITHUB_TOKEN``. When referencing the
