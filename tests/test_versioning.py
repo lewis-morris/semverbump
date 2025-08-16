@@ -300,6 +300,21 @@ def test_resolve_files_absolute_paths_and_ignore_patterns(tmp_path: Path) -> Non
     assert out == expected
 
 
+def test_resolve_files_overlapping_patterns_deduped(tmp_path: Path) -> None:
+    """Overlapping glob patterns yield unique, sorted results."""
+
+    a = tmp_path / "a.txt"
+    b = tmp_path / "b.txt"
+    a.write_text("", encoding="utf-8")
+    b.write_text("", encoding="utf-8")
+
+    patterns = ["*.txt", "a.*", "b.*"]
+    out = _resolve_files(patterns, [], tmp_path)
+
+    assert out == [a, b]
+
+
+
 def test_resolve_files_uses_cache(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

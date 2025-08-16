@@ -103,7 +103,9 @@ def read_project_version(pyproject_path: str | Path = "pyproject.toml") -> str:
         raise KeyError("project.version not found in pyproject.toml") from e
 
 
-def write_project_version(new_version: str, pyproject_path: str | Path = "pyproject.toml") -> None:
+def write_project_version(
+    new_version: str, pyproject_path: str | Path = "pyproject.toml"
+) -> None:
     """Write ``new_version`` to the ``pyproject.toml`` file.
 
     Args:
@@ -218,7 +220,9 @@ def _update_additional_files(
     return changed, skipped
 
 
-def _resolve_files(patterns: Iterable[str], ignore: Iterable[str], base_dir: Path) -> list[Path]:
+def _resolve_files(
+    patterns: Iterable[str], ignore: Iterable[str], base_dir: Path
+) -> list[Path]:
     """Expand glob patterns while applying ignore rules relative to ``base_dir``.
 
     Args:
@@ -239,7 +243,9 @@ def _resolve_files(patterns: Iterable[str], ignore: Iterable[str], base_dir: Pat
 
 
 @lru_cache(maxsize=None)
-def _resolve_files_cached(patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str) -> tuple[Path, ...]:
+def _resolve_files_cached(
+    patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str
+) -> tuple[Path, ...]:
     """Resolve files for caching.
 
     This function performs the actual glob resolution and is wrapped with
@@ -251,10 +257,10 @@ def _resolve_files_cached(patterns: tuple[str, ...], ignore: tuple[str, ...], ba
         base_dir: Directory relative to which patterns are evaluated.
 
     Returns:
-        Tuple of discovered file paths matching ``patterns`` minus ``ignore``.
+        Tuple of unique file paths matching ``patterns`` minus ``ignore``.
     """
 
-    out: list[Path] = []
+    out: set[Path] = set()
     ignore_list = list(ignore)
     base = Path(base_dir)
     for pat in patterns:
@@ -271,10 +277,9 @@ def _resolve_files_cached(patterns: tuple[str, ...], ignore: tuple[str, ...], ba
                 rel_str = path_str
             if any(fnmatch(path_str, ig) or fnmatch(rel_str, ig) for ig in ignore_list):
                 continue
-            out.append(p)
+            out.add(p)
     # Ensure deterministic ordering for predictable downstream operations.
-    out.sort()
-    return tuple(out)
+    return tuple(sorted(out))
 
 
 def _replace_version(path: Path, old: str, new: str) -> bool:
