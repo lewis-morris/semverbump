@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import subprocess
 import sys
 from collections.abc import Iterable
@@ -26,6 +27,8 @@ from .gitutils import (
 )
 from .public_api import PublicAPI, extract_public_api_from_source, module_name_from_path
 from .versioning import apply_bump, find_pyproject
+
+logger = logging.getLogger(__name__)
 
 
 def _build_api_at_ref(ref: str, roots: list[str], ignores: Iterable[str]) -> PublicAPI:
@@ -90,7 +93,8 @@ def _run_analyzers(
 
     Command-line flags may enable or disable analyzers beyond those declared in
     configuration. Any names in ``enable`` are added to the configured set,
-    while names in ``disable`` are removed.
+    while names in ``disable`` are removed. Unknown analyzer names are skipped
+    and logged as warnings.
 
     Args:
         base: Base git reference.
@@ -117,8 +121,9 @@ def _run_analyzers(
     impacts: list[Impact] = []
     for name in names:
         info = get_analyzer_info(name)
-        if info is None:  # defensive: ignore unknown names
-            raise ValueError(f"Analyzer '{name}' is not registered")
+        if info is None:  # unknown analyzers are ignored with a warning
+            logger.warning("Analyzer '%s' is not registered", name)
+            continue
         analyzer = info.cls(cfg)
         old = analyzer.collect(base)
         new = analyzer.collect(head)

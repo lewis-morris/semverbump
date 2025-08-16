@@ -1,9 +1,11 @@
+import logging
 import os
 import subprocess
 from pathlib import Path
 
 from bumpwright.analyzers import load_enabled
 from bumpwright.analyzers.cli import CLIAnalyzer, diff_cli, extract_cli_from_source
+from bumpwright.cli import _run_analyzers
 from bumpwright.config import Config, Ignore, Project
 
 
@@ -159,3 +161,11 @@ def test_load_enabled_instantiates_plugins() -> None:
     cfg.analyzers.enabled.add("cli")
     analyzers = load_enabled(cfg)
     assert any(isinstance(a, CLIAnalyzer) for a in analyzers)
+
+
+def test_run_analyzers_warns_for_unknown(caplog) -> None:
+    cfg = Config()
+    with caplog.at_level(logging.WARNING):
+        impacts = _run_analyzers("base", "head", cfg, enable=["unknown"])  # no analyzer
+    assert impacts == []
+    assert "Analyzer 'unknown' is not registered" in caplog.text
