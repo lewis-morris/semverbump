@@ -6,6 +6,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from fnmatch import fnmatch
+from functools import lru_cache
 from glob import glob
 from pathlib import Path
 from typing import Literal
@@ -109,9 +110,7 @@ def read_project_version(pyproject_path: str | Path = "pyproject.toml") -> str:
         raise KeyError("project.version not found in pyproject.toml") from e
 
 
-def write_project_version(
-    new_version: str, pyproject_path: str | Path = "pyproject.toml"
-) -> None:
+def write_project_version(new_version: str, pyproject_path: str | Path = "pyproject.toml") -> None:
     """Write ``new_version`` to the ``pyproject.toml`` file.
 
     Args:
@@ -164,6 +163,8 @@ def apply_bump(
         cfg = load_config()
     if paths is None:
         paths = cfg.version.paths
+    else:
+        _resolve_files_cached.cache_clear()
     if ignore is None:
         ignore = cfg.version.ignore
 
@@ -214,9 +215,7 @@ def _update_additional_files(
     return changed
 
 
-def _resolve_files(
-    patterns: Iterable[str], ignore: Iterable[str], base_dir: Path
-) -> list[Path]:
+def _resolve_files(patterns: Iterable[str], ignore: Iterable[str], base_dir: Path) -> list[Path]:
     """Expand glob patterns while applying ignore rules relative to ``base_dir``.
 
     Args:
@@ -226,11 +225,35 @@ def _resolve_files(
 
     Returns:
         List of discovered file paths matching ``patterns`` minus ``ignore``.
+
+    Notes:
+        Results are cached based on ``patterns``, ``ignore``, and ``base_dir`` for
+        performance.
+    """
+
+    base = Path(base_dir).resolve()
+    return list(_resolve_files_cached(tuple(patterns), tuple(ignore), str(base)))
+
+
+@lru_cache(maxsize=None)
+def _resolve_files_cached(patterns: tuple[str, ...], ignore: tuple[str, ...], base_dir: str) -> tuple[Path, ...]:
+    """Resolve files for caching.
+
+    This function performs the actual glob resolution and is wrapped with
+    ``functools.lru_cache`` via :func:`_resolve_files`.
+
+    Args:
+        patterns: Glob patterns to search for version files.
+        ignore: Glob patterns to exclude from results.
+        base_dir: Directory relative to which patterns are evaluated.
+
+    Returns:
+        Tuple of discovered file paths matching ``patterns`` minus ``ignore``.
     """
 
     out: list[Path] = []
     ignore_list = list(ignore)
-    base = Path(base_dir).resolve()
+    base = Path(base_dir)
     for pat in patterns:
         pat_path = Path(pat)
         search = pat if pat_path.is_absolute() else str(base / pat)
@@ -248,7 +271,7 @@ def _resolve_files(
             out.append(p)
     # Ensure deterministic ordering for predictable downstream operations.
     out.sort()
-    return out
+    return tuple(out)
 
 
 def _replace_version(path: Path, old: str, new: str) -> None:

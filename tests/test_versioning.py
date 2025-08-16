@@ -4,7 +4,13 @@ import pytest
 from tomlkit import dumps as toml_dumps
 from tomlkit.exceptions import ParseError
 
-from bumpwright.versioning import apply_bump, bump_string, read_project_version
+from bumpwright.versioning import (
+    _resolve_files,
+    _resolve_files_cached,
+    apply_bump,
+    bump_string,
+    read_project_version,
+)
 
 
 def test_bump_string():
@@ -54,9 +60,7 @@ def pyproject_malformed(tmp_path: Path) -> Path:
         ("pyproject_malformed", ParseError),
     ],
 )
-def test_read_project_version_errors(
-    path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest
-) -> None:
+def test_read_project_version_errors(path_fixture: str, exc: type[Exception], request: pytest.FixtureRequest) -> None:
     """Validate ``read_project_version`` error handling for bad inputs."""
 
     path = request.getfixturevalue(path_fixture)
@@ -117,3 +121,37 @@ def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
     out = apply_bump("minor", py, ignore=[str(init)])
     assert "__version__ = '1.0.0'" in init.read_text(encoding="utf-8")
     assert init not in out.files
+
+
+def test_resolve_files_uses_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Ensure repeated resolution reuses cached results."""
+
+    (tmp_path / "a.txt").write_text("1", encoding="utf-8")
+    (tmp_path / "b.txt").write_text("2", encoding="utf-8")
+    _resolve_files_cached.cache_clear()
+    calls = {"count": 0}
+    from bumpwright.versioning import glob as glob_orig
+
+    def fake_glob(pattern: str, recursive: bool = True) -> list[str]:
+        calls["count"] += 1
+        return glob_orig(pattern, recursive=recursive)
+
+    monkeypatch.setattr("bumpwright.versioning.glob", fake_glob)
+    _resolve_files(["*.txt"], [], tmp_path)
+    _resolve_files(["*.txt"], [], tmp_path)
+    assert calls["count"] == 1
+
+
+def test_apply_bump_clears_resolve_cache(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Verify custom patterns trigger cache invalidation."""
+
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
+    cleared = {"flag": False}
+
+    def fake_clear() -> None:
+        cleared["flag"] = True
+
+    monkeypatch.setattr(_resolve_files_cached, "cache_clear", fake_clear)
+    apply_bump("patch", py, paths=["*.cfg"])
+    assert cleared["flag"]
