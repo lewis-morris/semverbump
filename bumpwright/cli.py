@@ -456,14 +456,11 @@ def bump_command(args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Entry point for the ``bumpwright`` CLI.
-
-    Args:
-        argv: Optional argument vector.
+def get_parser() -> argparse.ArgumentParser:
+    """Build the argument parser for the command-line interface.
 
     Returns:
-        Process exit code.
+        Configured :class:`argparse.ArgumentParser` instance.
     """
 
     avail = ", ".join(available()) or "none"
@@ -558,9 +555,7 @@ def main(argv: list[str] | None = None) -> int:
         "--version-ignore",
         action="append",
         dest="version_ignore",
-        help=(
-            "Glob pattern for paths to exclude from version updates " "(repeatable)."
-        ),
+        help=("Glob pattern for paths to exclude from version updates (repeatable)."),
     )
     p_bump.add_argument(
         "--commit",
@@ -582,7 +577,20 @@ def main(argv: list[str] | None = None) -> int:
         help="Append release notes to FILE or stdout when no path is given.",
     )
     p_bump.set_defaults(func=bump_command)
+    return parser
 
+
+def main(argv: list[str] | None = None) -> int:
+    """Entry point for the ``bumpwright`` CLI.
+
+    Args:
+        argv: Optional argument vector.
+
+    Returns:
+        Process exit code.
+    """
+
+    parser = get_parser()
     args = parser.parse_args(argv)
     if not hasattr(args, "func"):
         parser.print_help()
