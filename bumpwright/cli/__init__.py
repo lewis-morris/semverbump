@@ -60,9 +60,7 @@ def get_parser() -> argparse.ArgumentParser:
     avail = ", ".join(available()) or "none"
     parser = argparse.ArgumentParser(
         prog="bumpwright",
-        description=(
-            f"Suggest and apply semantic version bumps. Available analysers: {avail}."
-        ),
+        description=(f"Suggest and apply semantic version bumps. Available analysers: {avail}."),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
@@ -77,8 +75,7 @@ def get_parser() -> argparse.ArgumentParser:
         "init",
         help="Create baseline release commit",
         description=(
-            "Create an empty 'chore(release): initialise baseline' commit to "
-            "establish a comparison point for future bumps."
+            "Create an empty 'chore(release): initialise baseline' commit to establish a comparison point for future bumps."
         ),
     )
     p_init.set_defaults(func=init_command)
@@ -136,9 +133,7 @@ def get_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Create a git commit for the version change.",
     )
-    p_bump.add_argument(
-        "--tag", action="store_true", help="Create a git tag for the new version."
-    )
+    p_bump.add_argument("--tag", action="store_true", help="Create a git tag for the new version.")
     p_bump.add_argument(
         "--dry-run",
         action="store_true",

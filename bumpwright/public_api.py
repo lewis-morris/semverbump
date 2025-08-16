@@ -134,9 +134,7 @@ def _vararg_param(args: ast.arguments) -> list[Param]:
     """Return variable positional parameter if present."""
 
     if args.vararg:
-        return [
-            Param(args.vararg.arg, "vararg", None, _render_type(args.vararg.annotation))
-        ]
+        return [Param(args.vararg.arg, "vararg", None, _render_type(args.vararg.annotation))]
     return []
 
 
@@ -160,9 +158,7 @@ def _varkw_param(args: ast.arguments) -> list[Param]:
     """Return variable keyword parameter if present."""
 
     if args.kwarg:
-        return [
-            Param(args.kwarg.arg, "varkw", None, _render_type(args.kwarg.annotation))
-        ]
+        return [Param(args.kwarg.arg, "varkw", None, _render_type(args.kwarg.annotation))]
     return []
 
 
@@ -256,9 +252,7 @@ class _APIVisitor(ast.NodeVisitor):
                     continue
                 params = tuple(_param_list(elt.args))
                 ret = _render_type(elt.returns)
-                self.sigs.append(
-                    FuncSig(f"{self.module_name}:{cname}.{mname}", params, ret)
-                )
+                self.sigs.append(FuncSig(f"{self.module_name}:{cname}.{mname}", params, ret))
 
 
 def module_name_from_path(root: str, path: str) -> str:

@@ -14,7 +14,7 @@ _DEFAULTS = {
     "project": {"package": "", "public_roots": ["."]},
     "ignore": {"paths": ["tests/**", "examples/**", "scripts/**"]},
     "rules": {"return_type_change": "minor"},  # or "major"
-    "analysers": {"cli": False},
+    "analysers": {"cli": False, "web_routes": False, "migrations": False},
     "migrations": {"paths": ["migrations"]},
     "changelog": {"path": "", "template": ""},
     "version": {
@@ -36,7 +36,6 @@ _DEFAULTS = {
             ".env/**",
             "**/__pycache__/**",
         ],
-
         "scheme": "semver",
     },
 }
@@ -67,9 +66,7 @@ class Project:
 class Ignore:
     """Paths to ignore during scanning."""
 
-    paths: list[str] = field(
-        default_factory=lambda: ["tests/**", "examples/**", "scripts/**"]
-    )
+    paths: list[str] = field(default_factory=lambda: ["tests/**", "examples/**", "scripts/**"])
 
 
 @dataclass

@@ -4,7 +4,8 @@ import subprocess
 from pathlib import Path
 
 from bumpwright.analysers import load_enabled
-from bumpwright.analysers.cli import CLIAnalyser, diff_cli, extract_cli_from_source
+from bumpwright.analysers.cli import (CLIAnalyser, diff_cli,
+                                      extract_cli_from_source)
 from bumpwright.cli.decide import _run_analysers
 from bumpwright.config import Config, Ignore, Project
 

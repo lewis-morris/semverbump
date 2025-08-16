@@ -12,27 +12,27 @@ Example configuration showing all available sections and their default values:
     package = ""
     public_roots = ["."]
 
-   [ignore]
-   paths = ["tests/**", "examples/**", "scripts/**"]
+    [ignore]
+    paths = ["tests/**", "examples/**", "scripts/**"]
 
-   [rules]
-   return_type_change = "minor"  # or "major"
+    [rules]
+    return_type_change = "minor"  # or "major"
 
-   [analysers]
-   cli = false
-   web_routes = false
+    [analysers]
+    cli = false
+    web_routes = false
 
-   [migrations]
-   paths = ["migrations"]
+    [migrations]
+    paths = ["migrations"]
 
-   [changelog]
-   path = ""
-   template = ""
+    [changelog]
+    path = ""
+    template = ""
 
-   [version]
-   paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]
-   ignore = []
-   scheme = "semver"
+    [version]
+    paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]
+    ignore = ["build/**", "dist/**", "*.egg-info/**", ".eggs/**", ".venv/**", "venv/**", ".env/**", "**/__pycache__/**"]
+    scheme = "semver"
 
 Set an analyser value to ``true`` to enable it.
 
@@ -73,6 +73,9 @@ Ignore
      - list[str]
      - ``["tests/**", "examples/**", "scripts/**"]``
      - Glob patterns excluded from analysis.
+
+By default, ``bumpwright`` skips ``tests/**``, ``examples/**``, and ``scripts/**``
+when scanning for public API changes.
 
 Rules
 ~~~~~
@@ -152,6 +155,10 @@ scheme is applied.
      - ``"semver"``
      - Versioning scheme used when bumping. Supported values include
        ``"semver"`` and ``"pep440"``.
+
+Version replacement ignores build and environment artefacts by default:
+``build/**``, ``dist/**``, ``*.egg-info/**``, ``.eggs/**``, ``.venv/**``,
+``venv/**``, ``.env/**``, and ``**/__pycache__/**``.
 
 Command-line options ``--version-path`` and ``--version-ignore`` extend these
 defaults for one-off runs.

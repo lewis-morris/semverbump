@@ -18,6 +18,7 @@ from bumpwright.cli.bump import (  # isort:skip
 )
 
 
+
 def test_prepare_version_files_no_relevant_changes(tmp_path):
     repo, _, base = setup_repo(tmp_path)
     pyproj = repo / "pyproject.toml"

@@ -18,9 +18,7 @@ from ..gitutils import changed_paths, collect_commits, last_release_commit
 from ..versioning import VersionChange, apply_bump, find_pyproject
 from .decide import _decide_only, _infer_level
 
-_DEFAULT_TEMPLATE = (
-    Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
-).read_text(encoding="utf-8")
+_DEFAULT_TEMPLATE = (Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2").read_text(encoding="utf-8")
 
 
 def _commit_tag(
@@ -50,10 +48,7 @@ def _commit_tag(
             stderr=subprocess.DEVNULL,
         )
         if result.returncode == 0:
-            msg = (
-                f"Tag v{version} already exists. "
-                "Delete the tag manually or use a different version."
-            )
+            msg = f"Tag v{version} already exists. Delete the tag manually or use a different version."
             raise RuntimeError(msg)
 
     if commit:
@@ -62,6 +57,7 @@ def _commit_tag(
         subprocess.run(
             ["git", "commit", "-m", f"chore(release): {version}"], check=True
         )
+
     if tag:
         subprocess.run(["git", "tag", f"v{version}"], check=True)
 
@@ -128,11 +124,7 @@ def _build_changelog(args: argparse.Namespace, new_version: str) -> str | None:
             link = f"{base_url}/commit/{sha}"
         entries.append({"sha": sha, "subject": subject, "link": link})
     template_path = getattr(args, "changelog_template", None)
-    template_txt = (
-        Path(template_path).read_text(encoding="utf-8")
-        if template_path
-        else _DEFAULT_TEMPLATE
-    )
+    template_txt = Path(template_path).read_text(encoding="utf-8") if template_path else _DEFAULT_TEMPLATE
     tmpl = Template(template_txt)
     rendered = tmpl.render(
         version=new_version,
@@ -169,17 +161,13 @@ def _prepare_version_files(
     version_files = {p for p in paths if not any(ch in p for ch in "*?[")}
     changed = _safe_changed_paths(base, head)
     if changed is not None:
-        filtered = {
-            p for p in changed if p != pyproject.name and p not in version_files
-        }
+        filtered = {p for p in changed if p != pyproject.name and p not in version_files}
         if not filtered:
             return None
     return paths
 
 
-def _display_result(
-    args: argparse.Namespace, vc: VersionChange, decision: Decision
-) -> None:
+def _display_result(args: argparse.Namespace, vc: VersionChange, decision: Decision) -> None:
     """Show bump outcome using the selected format."""
 
     if args.format == "json":

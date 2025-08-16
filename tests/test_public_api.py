@@ -1,6 +1,7 @@
 import pytest
 
-from bumpwright.public_api import extract_public_api_from_source, module_name_from_path
+from bumpwright.public_api import (extract_public_api_from_source,
+                                   module_name_from_path)
 
 
 def test_extracts_functions_and_methods():
@@ -20,9 +21,7 @@ class Bar:
     assert "pkg.mod:Bar._private" not in keys
 
     foo = api["pkg.mod:foo"]
-    assert foo.returns == "-> int" or foo.returns.endswith(
-        "int"
-    )  # libcst emits "-> int" style string
+    assert foo.returns == "-> int" or foo.returns.endswith("int")  # libcst emits "-> int" style string
     assert any(p.name == "y" and p.default is not None for p in foo.params)
 
 

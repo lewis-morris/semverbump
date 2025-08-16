@@ -87,9 +87,7 @@ app = Flask(__name__)
         ),
     ],
 )
-def test_combined_analysers(
-    tmp_path: Path, enabled: set[str], expected: list[Impact]
-) -> None:
+def test_combined_analysers(tmp_path: Path, enabled: set[str], expected: list[Impact]) -> None:
     """Ensure multiple analysers produce combined impacts."""
     repo, base, head = _setup_repo(tmp_path)
 
