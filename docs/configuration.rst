@@ -19,7 +19,7 @@ Example configuration showing all available sections and their default values:
    [rules]
    return_type_change = "minor"  # or "major"
 
-   [analyzers]
+   [analysers]
    cli = false
    web_routes = false
 
@@ -95,8 +95,8 @@ Rules
 Analysers
 ~~~~~~~~~
 
-Each key under ``[analyzers]`` toggles a plugin. Unknown names raise an error
-at run time. Command-line flags ``--enable-analyzer`` and ``--disable-analyzer``
+Each key under ``[analysers]`` toggles a plugin. Unknown names raise an error
+at run time. Command-line flags ``--enable-analyser`` and ``--disable-analyser``
 temporarily override these settings. Built-in analysers include:
 
 .. list-table:: Available analysers

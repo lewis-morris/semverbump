@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from bumpwright import gitutils
-from bumpwright.analyzers.utils import iter_py_files_at_ref
+from bumpwright.analysers.utils import iter_py_files_at_ref
 
 
 def test_iter_py_files_at_ref(tmp_path):

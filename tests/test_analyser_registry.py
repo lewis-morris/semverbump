@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import pytest
 
-from bumpwright.analyzers import (
-    Analyzer,
+from bumpwright.analysers import (
+    Analyser,
     available,
-    get_analyzer_info,
+    get_analyser_info,
     load_enabled,
     register,
 )
@@ -13,12 +15,12 @@ from bumpwright.config import Config
 
 def test_register_records_metadata(monkeypatch) -> None:
     """Ensure register stores class and description."""
-    from bumpwright import analyzers
+    from bumpwright import analysers
 
-    monkeypatch.setattr(analyzers, "REGISTRY", {})
+    monkeypatch.setattr(analysers, "REGISTRY", {})
 
-    @register("dummy", "Example analyzer")
-    class DummyAnalyzer(Analyzer):
+    @register("dummy", "Example analyser")
+    class DummyAnalyser(Analyser):
         def __init__(self, cfg: Config) -> None:  # pragma: no cover - simple init
             self.cfg = cfg
 
@@ -31,16 +33,16 @@ def test_register_records_metadata(monkeypatch) -> None:
             return []
 
     assert "dummy" in available()
-    info = get_analyzer_info("dummy")
-    assert info and info.description == "Example analyzer"
+    info = get_analyser_info("dummy")
+    assert info and info.description == "Example analyser"
 
 
 def test_load_enabled_errors_for_unknown(monkeypatch) -> None:
-    """Unknown analyzers should raise a clear error."""
-    from bumpwright import analyzers
+    """Unknown analysers should raise a clear error."""
+    from bumpwright import analysers
 
-    monkeypatch.setattr(analyzers, "REGISTRY", {})
+    monkeypatch.setattr(analysers, "REGISTRY", {})
     cfg = Config()
-    cfg.analyzers.enabled.add("missing")
+    cfg.analysers.enabled.add("missing")
     with pytest.raises(ValueError):
         load_enabled(cfg)

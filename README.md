@@ -51,7 +51,7 @@ See [docs/quickstart.rst](docs/quickstart.rst) for a step-by-step example.
 - `--base`: base git reference
 - `--head`: head git reference
 - `--format`: output format
-- `--enable-analyzer` or `--disable-analyzer`: toggle analyzers
+- `--enable-analyser` or `--disable-analyser`: toggle analysers
 - See [CLI reference](docs/cli_reference.rst) for details.
 
 ### `bump` options
@@ -61,18 +61,18 @@ See [docs/quickstart.rst](docs/quickstart.rst) for a step-by-step example.
 - `--format`: output format
 - `--commit`: commit the version bump
 - `--tag`: create a git tag
-- `--enable-analyzer` or `--disable-analyzer`: toggle analyzers
+- `--enable-analyser` or `--disable-analyser`: toggle analysers
 - See [CLI reference](docs/cli_reference.rst) for details.
 
 1. **Create a configuration file** (``bumpwright.toml``) to customise behaviour:
 
    ```toml
-   [analyzers]
+   [analysers]
    cli = true      # enable CLI analysis
    web_routes = false  # disable route analysis
    ```
 
-   Command-line flags ``--enable-analyzer`` and ``--disable-analyzer`` can
+   Command-line flags ``--enable-analyser`` and ``--disable-analyser`` can
    temporarily override these settings for a single invocation.
 
 2. **Suggest the next version** between two git references:
@@ -156,7 +156,7 @@ paths = ["tests/**", "examples/**", "scripts/**"]
 [rules]
 return_type_change = "minor"  # or "major"
 
-[analyzers]
+[analysers]
 cli = false
 web_routes = false
 
@@ -177,7 +177,7 @@ aspect of bumpwright:
 - **project** – identifies the package, public API roots, and metadata file.
 - **ignore** – glob patterns excluded from analysis.
 - **rules** – maps findings to semantic version levels.
-- **[analyzers]** – toggles built-in or plugin analysers.
+- **[analysers]** – toggles built-in or plugin analysers.
 - **migrations** – directories containing Alembic migration scripts.
 - **changelog** – default changelog file used with ``--changelog``.
 - **version** – files where version strings are read and updated.
@@ -186,7 +186,7 @@ See ``docs/configuration.rst`` for in-depth descriptions and additional
 examples. The default file name is ``bumpwright.toml`` but you may specify an
 alternative with ``--config``.
 
-### Analyzer reference
+### Analyser reference
 
 #### Python API
 
@@ -221,7 +221,7 @@ Severity rules:
 Configuration:
 
 ```toml
-[analyzers]
+[analysers]
 cli = true  # enable
 # cli = false  # disable
 ```
@@ -246,7 +246,7 @@ Severity rules:
 Configuration:
 
 ```toml
-[analyzers]
+[analysers]
 web_routes = true  # enable
 # web_routes = false  # disable
 ```

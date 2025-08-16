@@ -17,7 +17,7 @@ Static public-API diff and heuristics to suggest semantic version bumps.
    :caption: Configuration
 
    configuration
-   analyzers/index
+   analysers/index
 
 .. toctree::
    :maxdepth: 2

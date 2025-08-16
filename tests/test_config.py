@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import builtins
 import importlib
 from pathlib import Path
@@ -7,16 +9,16 @@ import tomli
 from bumpwright.config import load_config
 
 
-def test_load_config_parses_analyzers(tmp_path: Path) -> None:
+def test_load_config_parses_analysers(tmp_path: Path) -> None:
     cfg_file = tmp_path / "bumpwright.toml"
-    cfg_file.write_text("[analyzers]\nflask_routes = true\nsqlalchemy = false\n")
+    cfg_file.write_text("[analysers]\nflask_routes = true\nsqlalchemy = false\n")
     cfg = load_config(cfg_file)
-    assert cfg.analyzers.enabled == {"flask_routes"}
+    assert cfg.analysers.enabled == {"flask_routes"}
 
 
-def test_load_config_defaults_analyzers(tmp_path: Path) -> None:
+def test_load_config_defaults_analysers(tmp_path: Path) -> None:
     cfg = load_config(tmp_path / "missing.toml")
-    assert cfg.analyzers.enabled == set()
+    assert cfg.analysers.enabled == set()
 
 
 def test_load_config_changelog(tmp_path: Path) -> None:

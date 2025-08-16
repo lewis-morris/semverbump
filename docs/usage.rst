@@ -52,11 +52,11 @@ require.
 ``--repo-url URL``
     Base repository URL for linking commit hashes in Markdown output.
 
-``--enable-analyzer NAME``
-    Enable analyzer ``NAME`` in addition to configuration. Repeatable.
+``--enable-analyser NAME``
+    Enable analyser ``NAME`` in addition to configuration. Repeatable.
 
-``--disable-analyzer NAME``
-    Disable analyzer ``NAME`` even if enabled in configuration. Repeatable.
+``--disable-analyser NAME``
+    Disable analyser ``NAME`` even if enabled in configuration. Repeatable.
 
 **Examples**
 
@@ -115,11 +115,11 @@ assignment. These locations can be customised via the ``[version]`` section in
 ``--repo-url URL``
     Base repository URL for linking commit hashes in Markdown output.
 
-``--enable-analyzer NAME``
-    Enable analyzer ``NAME`` in addition to configuration. Repeatable.
+``--enable-analyser NAME``
+    Enable analyser ``NAME`` in addition to configuration. Repeatable.
 
-``--disable-analyzer NAME``
-    Disable analyzer ``NAME`` even if enabled in configuration. Repeatable.
+``--disable-analyser NAME``
+    Disable analyser ``NAME`` even if enabled in configuration. Repeatable.
 
 ``--changelog [FILE]``
     Append release notes for the new version to ``FILE``.

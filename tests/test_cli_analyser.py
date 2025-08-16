@@ -3,10 +3,9 @@ import os
 import subprocess
 from pathlib import Path
 
-from bumpwright.analyzers import load_enabled
-from bumpwright.analyzers.cli import (CLIAnalyzer, diff_cli,
-                                      extract_cli_from_source)
-from bumpwright.cli.decide import _run_analyzers
+from bumpwright.analysers import load_enabled
+from bumpwright.analysers.cli import CLIAnalyser, diff_cli, extract_cli_from_source
+from bumpwright.cli.decide import _run_analysers
 from bumpwright.config import Config, Ignore, Project
 
 
@@ -111,7 +110,7 @@ def _run(cmd: list[str], cwd: Path) -> str:
     return res.stdout.strip()
 
 
-def test_cli_analyzer_respects_ignore(tmp_path: Path) -> None:
+def test_cli_analyser_respects_ignore(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()
     _run(["git", "init"], repo)
@@ -145,28 +144,28 @@ def b():
     head = _run(["git", "rev-parse", "HEAD"], repo)
 
     cfg = Config(project=Project(public_roots=["."]), ignore=Ignore(paths=["tests/**"]))
-    analyzer = CLIAnalyzer(cfg)
+    analyser = CLIAnalyser(cfg)
     old_cwd = os.getcwd()
     os.chdir(repo)
     try:
-        old = analyzer.collect(base)
-        new = analyzer.collect(head)
+        old = analyser.collect(base)
+        new = analyser.collect(head)
     finally:
         os.chdir(old_cwd)
-    impacts = analyzer.compare(old, new)
+    impacts = analyser.compare(old, new)
     assert impacts == []
 
 
 def test_load_enabled_instantiates_plugins() -> None:
     cfg = Config()
-    cfg.analyzers.enabled.add("cli")
-    analyzers = load_enabled(cfg)
-    assert any(isinstance(a, CLIAnalyzer) for a in analyzers)
+    cfg.analysers.enabled.add("cli")
+    analysers = load_enabled(cfg)
+    assert any(isinstance(a, CLIAnalyser) for a in analysers)
 
 
-def test_run_analyzers_warns_for_unknown(caplog) -> None:
+def test_run_analysers_warns_for_unknown(caplog) -> None:
     cfg = Config()
     with caplog.at_level(logging.WARNING):
-        impacts = _run_analyzers("base", "head", cfg, enable=["unknown"])  # no analyzer
+        impacts = _run_analysers("base", "head", cfg, enable=["unknown"])  # no analyser
     assert impacts == []
-    assert "Analyzer 'unknown' is not registered" in caplog.text
+    assert "Analyser 'unknown' is not registered" in caplog.text

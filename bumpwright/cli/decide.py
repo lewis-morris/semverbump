@@ -8,8 +8,8 @@ import logging
 import subprocess
 from collections.abc import Iterable
 
-from ..analyzers import get_analyzer_info
-from ..analyzers.utils import iter_py_files_at_ref
+from ..analysers import get_analyser_info
+from ..analysers.utils import iter_py_files_at_ref
 from ..compare import Decision, Impact, decide_bump, diff_public_api
 from ..config import Config
 from ..gitutils import last_release_commit
@@ -18,7 +18,7 @@ from ..public_api import (
     extract_public_api_from_source,
     module_name_from_path,
 )
-from . import add_analyzer_toggles, add_ref_options
+from . import add_analyser_toggles, add_ref_options
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ def add_decide_arguments(parser: argparse.ArgumentParser) -> None:
     """Add shared decision-related CLI options to ``parser``.
 
     Args:
-        parser: The parser to extend with ref and analyzer options.
+        parser: The parser to extend with ref and analyser options.
     """
 
     add_ref_options(parser)
@@ -59,19 +59,19 @@ def add_decide_arguments(parser: argparse.ArgumentParser) -> None:
         default="text",
         help="Output style: plain text, Markdown, or machine-readable JSON.",
     )
-    add_analyzer_toggles(parser)
+    add_analyser_toggles(parser)
 
 
-def _run_analyzers(
+def _run_analysers(
     base: str,
     head: str,
     cfg: Config,
     enable: Iterable[str] | None = None,
     disable: Iterable[str] | None = None,
 ) -> list[Impact]:
-    """Run analyzer plugins and collect impacts."""
+    """Run analyser plugins and collect impacts."""
 
-    names = set(cfg.analyzers.enabled)
+    names = set(cfg.analysers.enabled)
     if enable:
         names.update(enable)
     if disable:
@@ -79,14 +79,14 @@ def _run_analyzers(
 
     impacts: list[Impact] = []
     for name in names:
-        info = get_analyzer_info(name)
+        info = get_analyser_info(name)
         if info is None:
-            logger.warning("Analyzer '%s' is not registered", name)
+            logger.warning("Analyser '%s' is not registered", name)
             continue
-        analyzer = info.cls(cfg)
-        old = analyzer.collect(base)
-        new = analyzer.collect(head)
-        impacts.extend(analyzer.compare(old, new))
+        analyser = info.cls(cfg)
+        old = analyser.collect(base)
+        new = analyser.collect(head)
+        impacts.extend(analyser.compare(old, new))
     return impacts
 
 
@@ -116,7 +116,7 @@ def _decide_only(args: argparse.Namespace, cfg: Config) -> int:
         old_api, new_api, return_type_change=cfg.rules.return_type_change
     )
     impacts.extend(
-        _run_analyzers(base, head, cfg, args.enable_analyzer, args.disable_analyzer)
+        _run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser)
     )
     decision = decide_bump(impacts)
     if args.format == "json":
@@ -154,6 +154,6 @@ def _infer_level(
         old_api, new_api, return_type_change=cfg.rules.return_type_change
     )
     impacts.extend(
-        _run_analyzers(base, head, cfg, args.enable_analyzer, args.disable_analyzer)
+        _run_analysers(base, head, cfg, args.enable_analyser, args.disable_analyser)
     )
     return decide_bump(impacts)

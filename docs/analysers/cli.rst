@@ -11,11 +11,11 @@ Dependencies
 Enable or disable
 ~~~~~~~~~~~~~~~~~
 
-Set ``cli`` under ``[analyzers]`` to ``true`` or ``false``.
+Set ``cli`` under ``[analysers]`` to ``true`` or ``false``.
 
 .. code-block:: toml
 
-   [analyzers]
+   [analysers]
    cli = true  # set to false to disable
 
 Severity rules

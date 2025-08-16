@@ -11,11 +11,11 @@ Dependencies
 Enable or disable
 ~~~~~~~~~~~~~~~~~
 
-Set ``web_routes`` under ``[analyzers]``.
+Set ``web_routes`` under ``[analysers]``.
 
 .. code-block:: toml
 
-   [analyzers]
+   [analysers]
    web_routes = true  # set to false to disable
 
 Severity rules

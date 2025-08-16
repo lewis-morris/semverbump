@@ -14,7 +14,7 @@ _DEFAULTS = {
     "project": {"package": "", "public_roots": ["."], "index_file": "pyproject.toml"},
     "ignore": {"paths": ["tests/**", "examples/**", "scripts/**"]},
     "rules": {"return_type_change": "minor"},  # or "major"
-    "analyzers": {"cli": False},
+    "analysers": {"cli": False},
     "migrations": {"paths": ["migrations"]},
     "changelog": {"path": ""},
     "version": {
@@ -57,11 +57,11 @@ class Ignore:
 
 
 @dataclass
-class Analyzers:
-    """Analyzer plugin configuration.
+class Analysers:
+    """Analyser plugin configuration.
 
     Attributes:
-        enabled: Names of enabled analyzer plugins.
+        enabled: Names of enabled analyser plugins.
     """
 
     enabled: set[str] = field(default_factory=set)
@@ -69,7 +69,7 @@ class Analyzers:
 
 @dataclass
 class Migrations:
-    """Settings for the migrations analyzer."""
+    """Settings for the migrations analyser."""
 
     paths: list[str] = field(default_factory=lambda: ["migrations"])
 
@@ -115,7 +115,7 @@ class Config:
         project: Project settings.
         rules: Rules controlling version bumps.
         ignore: Paths to exclude when scanning.
-        analyzers: Optional analyzer plugin settings.
+        analysers: Optional analyser plugin settings.
         changelog: Default changelog file location.
         version: Locations containing version strings.
     """
@@ -123,7 +123,7 @@ class Config:
     project: Project = field(default_factory=Project)
     rules: Rules = field(default_factory=Rules)
     ignore: Ignore = field(default_factory=Ignore)
-    analyzers: Analyzers = field(default_factory=Analyzers)
+    analysers: Analysers = field(default_factory=Analysers)
     migrations: Migrations = field(default_factory=Migrations)
     changelog: Changelog = field(default_factory=Changelog)
     version: VersionFiles = field(default_factory=VersionFiles)
@@ -162,8 +162,8 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
     proj = Project(**d["project"])
     rules = Rules(**d["rules"])
     ign = Ignore(**d["ignore"])
-    enabled = {name for name, enabled in d["analyzers"].items() if enabled}
-    analyzers = Analyzers(enabled=enabled)
+    enabled = {name for name, enabled in d["analysers"].items() if enabled}
+    analysers = Analysers(enabled=enabled)
     migrations = Migrations(**d.get("migrations", {}))
     changelog = Changelog(**d.get("changelog", {}))
     version = VersionFiles(**d.get("version", {}))
@@ -171,7 +171,7 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
         project=proj,
         rules=rules,
         ignore=ign,
-        analyzers=analyzers,
+        analysers=analysers,
         migrations=migrations,
         changelog=changelog,
         version=version,

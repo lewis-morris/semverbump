@@ -15,7 +15,7 @@ Configure ``[migrations]`` paths and enable the analyser:
 
 .. code-block:: toml
 
-   [analyzers]
+   [analysers]
    migrations = true  # set to false to disable
 
    [migrations]

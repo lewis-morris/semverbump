@@ -233,11 +233,11 @@ def _build_cli_at_ref(
 
 
 @register("cli", "Analyze command-line interfaces for changes.")
-class CLIAnalyzer:
-    """Analyzer plugin for command-line interfaces."""
+class CLIAnalyser:
+    """Analyser plugin for command-line interfaces."""
 
     def __init__(self, cfg: Config) -> None:
-        """Initialize the analyzer with configuration."""
+        """Initialize the analyser with configuration."""
         self.cfg = cfg
 
     def collect(self, ref: str) -> dict[str, Command]:
