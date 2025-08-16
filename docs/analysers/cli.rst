@@ -1,12 +1,13 @@
 CLI Analyser
 ============
 
-Tracks ``argparse`` or ``click`` command-line interfaces.
+Tracks ``argparse`` or ``click`` command-line interfaces through static analysis.
 
 Dependencies
 ~~~~~~~~~~~~
 
-* ``click`` (optional for Click-based CLIs)
+* None. The analyser inspects source code statically and only requires ``click``
+  if your project depends on it.
 
 Enable or disable
 ~~~~~~~~~~~~~~~~~
