@@ -65,7 +65,25 @@ Start with a tiny example project to see **bumpwright** in action.
 
    ``bumpwright`` inspects commits since the baseline and suggests the next
    semantic version. The lines following the suggestion list the impacts that
-   informed it.
+   informed it. Note that ``bumpwright bump --decide`` compares ``HEAD`` to the
+   last release or ``HEAD^``.
+
+   .. code-block:: bash
+
+      bumpwright bump --decide --format md
+
+   .. code-block:: text
+
+      ## Suggested bump: minor
+      - [MINOR] demo:greet: Added public symbol
+
+   .. code-block:: bash
+
+      bumpwright bump --decide --format json
+
+   .. code-block:: json
+
+      {"suggested_bump": "minor", "impacts": [{"scope": "demo:greet", "level": "MINOR", "description": "Added public symbol"}]}
 
 #. Apply the bump and tag the release.
 
@@ -74,8 +92,9 @@ Start with a tiny example project to see **bumpwright** in action.
       bumpwright bump --commit --tag
 
    This updates version files, creates a ``chore(release): <version>`` commit,
-   and tags the release. Omit ``--commit`` and ``--tag`` to preview the bump
-   without modifying the repository.
+   and tags the release. When ``--commit`` is used, this is the default commit
+   message. Omit ``--commit`` and ``--tag`` to preview the bump without
+   modifying the repository.
 
 Flow
 ----
