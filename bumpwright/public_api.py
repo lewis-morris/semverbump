@@ -302,18 +302,18 @@ def module_name_from_path(root: str, path: str) -> str:
     return ".".join(rel.parts)
 
 
-def extract_public_api_from_source(module_name: str, code: str) -> PublicAPI:
+def extract_public_api_from_source(module_name: str, code: str | ast.AST) -> PublicAPI:
     """Extract the public API from Python source code.
 
     Args:
         module_name: Name of the module represented by ``code``.
-        code: Source code to analyze.
+        code: Source text or a pre-parsed module AST.
 
     Returns:
         Mapping of symbol names to :class:`FuncSig` objects.
     """
 
-    mod = ast.parse(code)
+    mod = ast.parse(code) if isinstance(code, str) else code
     exports = _parse_exports(mod)
     visitor = _APIVisitor(module_name, exports)
     visitor.visit(mod)
