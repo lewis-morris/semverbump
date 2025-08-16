@@ -1,4 +1,4 @@
-GitHub Actions workflows
+CI/CD (GitHub Actions)
 ========================
 
 Bumpwright integrates easily with GitHub Actions. This guide covers three

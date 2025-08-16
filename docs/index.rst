@@ -52,15 +52,6 @@ Quickstart Guide
    installation
    quickstart
 
-Core Concepts
--------------
-
-.. toctree::
-   :maxdepth: 2
-
-   versioning
-   configuration
-
 Basic Usage
 -----------
 
@@ -68,6 +59,15 @@ Basic Usage
    :maxdepth: 2
 
    usage/index
+
+Concepts
+========
+
+.. toctree::
+   :maxdepth: 2
+
+   ../versioning
+   ../configuration
 
 Advanced Usage
 --------------
@@ -96,13 +96,6 @@ Examples & Recipes
 
    recipes/index
 
-CI integration
---------------
-
-.. toctree::
-   :maxdepth: 2
-
-   ci/github-actions
 
 Troubleshooting & FAQ
 ---------------------
