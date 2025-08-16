@@ -7,6 +7,7 @@ import subprocess
 from collections.abc import Iterable
 from fnmatch import fnmatch
 from functools import lru_cache
+from io import BytesIO
 from pathlib import Path
 
 
@@ -161,6 +162,84 @@ def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> str | None:
 
 
 read_file_at_ref.cache_clear = _read_file_at_ref_cached.cache_clear  # type: ignore[attr-defined]
+
+
+@lru_cache(maxsize=None)
+def _read_files_at_ref_cached(
+    ref: str, paths: tuple[str, ...], cwd: str | None
+) -> dict[str, str | None]:
+    """Return cached contents for multiple paths at a git reference.
+
+    Args:
+        ref: Git reference at which to read files.
+        paths: Iterable of file paths relative to the repository root.
+        cwd: Repository path.
+
+    Returns:
+        Mapping of file paths to their contents or ``None`` if a file does not
+        exist at ``ref``.
+    """
+
+    if not paths:
+        return {}
+    spec = "\n".join(f"{ref}:{p}" for p in paths) + "\n"
+    res = subprocess.run(
+        ["git", "cat-file", "--batch"],
+        cwd=cwd,
+        input=spec.encode(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if res.returncode != 0:
+        raise subprocess.CalledProcessError(
+            res.returncode,
+            "git cat-file --batch",
+            output=res.stdout.decode(),
+            stderr=res.stderr.decode(),
+        )
+
+    out = BytesIO(res.stdout)
+    results: dict[str, str | None] = {}
+    for path in paths:
+        header = out.readline().decode().strip()
+        if not header:
+            results[path] = None
+            continue
+        if header.endswith(" missing"):
+            results[path] = None
+            continue
+        _sha, _typ, size_str = header.split()
+        size = int(size_str)
+        content = out.read(size).decode()
+        out.read(1)
+        results[path] = content
+    return results
+
+
+def read_files_at_ref(
+    ref: str, paths: Iterable[str], cwd: str | None = None
+) -> dict[str, str | None]:
+    """Read multiple file contents at ``ref`` in a single subprocess call.
+
+    Results are cached per ``(ref, tuple(paths), cwd)`` for improved
+    performance. Use ``read_files_at_ref.cache_clear()`` to invalidate.
+
+    Args:
+        ref: Git reference at which to read files.
+        paths: Iterable of file paths relative to the repository root.
+        cwd: Repository path.
+
+    Returns:
+        Mapping of file paths to their contents or ``None`` if a file does not
+        exist at ``ref``.
+    """
+
+    paths_tuple = tuple(paths)
+    return dict(_read_files_at_ref_cached(ref, paths_tuple, cwd))
+
+
+read_files_at_ref.cache_clear = _read_files_at_ref_cached.cache_clear  # type: ignore[attr-defined]
 
 
 def last_release_commit(cwd: str | None = None) -> str | None:
