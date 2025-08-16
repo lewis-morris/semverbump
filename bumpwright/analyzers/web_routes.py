@@ -1,4 +1,10 @@
-"""Analyze HTTP route decorators to compare endpoints across git references."""
+"""Detect HTTP route changes across git references.
+
+This module parses Flask and FastAPI route decorators to track endpoint
+modifications. Each detected route is returned as a :class:`Route` dataclass
+containing the URL ``path``, HTTP ``method``, and a ``params`` mapping of
+parameter names to a boolean flag indicating whether the parameter is required.
+"""
 
 from __future__ import annotations
 
