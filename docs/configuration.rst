@@ -98,9 +98,10 @@ Rules
 Analysers
 ~~~~~~~~~
 
-Each key under ``[analysers]`` toggles a plugin. Unknown names raise an error
-at run time. Command-line flags ``--enable-analyser`` and ``--disable-analyser``
-temporarily override these settings. Built-in analysers include:
+Each key under ``[analysers]`` toggles a plugin. Only registered analyser
+names are respected; unknown keys are silently ignored. Command-line flags
+``--enable-analyser`` and ``--disable-analyser`` temporarily override these
+settings. Built-in analysers include:
 
 .. list-table:: Available analysers
    :header-rows: 1
@@ -155,7 +156,7 @@ scheme is applied.
    * - ``ignore``
      - list[str]
      - ``["build/**", "dist/**", "*.egg-info/**", ".eggs/**", ".venv/**", "venv/**", ".env/**", "**/__pycache__/**"]``
-     - Glob patterns excluded from version replacement.
+     - Glob patterns appended to the default exclusion list for version replacement.
    * - ``scheme``
      - str
      - ``"semver"``
@@ -164,10 +165,17 @@ scheme is applied.
 
 Version replacement ignores build and environment artefacts by default:
 ``build/**``, ``dist/**``, ``*.egg-info/**``, ``.eggs/**``, ``.venv/**``,
-``venv/**``, ``.env/**``, and ``**/__pycache__/**``.
+``venv/**``, ``.env/**``, and ``**/__pycache__/**``. Entries listed in
+``[version].ignore`` are appended to this list. Command-line options
+``--version-path`` and ``--version-ignore`` extend these defaults for
+one-off runs.
 
-Command-line options ``--version-path`` and ``--version-ignore`` extend these
-defaults for one-off runs.
+To use PEP 440 version numbers instead of semantic versioning:
+
+.. code-block:: toml
+
+    [version]
+    scheme = "pep440"
 
 Changelog
 ~~~~~~~~~

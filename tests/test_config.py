@@ -4,6 +4,7 @@ import builtins
 import importlib
 from pathlib import Path
 
+import pytest
 import tomli
 
 from bumpwright.config import Config, load_config
@@ -93,3 +94,24 @@ def test_version_ignore_defaults_extend(tmp_path: Path) -> None:
         "**/__pycache__/**",
     }
     assert defaults.issubset(set(cfg.version.ignore))
+
+
+def test_unknown_top_level_section(tmp_path: Path) -> None:
+    """Raise an error for unrecognised top-level sections."""
+
+    cfg_file = tmp_path / "bumpwright.toml"
+    cfg_file.write_text("[nonsense]\nfoo=1\n")
+    with pytest.raises(ValueError) as exc:
+        load_config(cfg_file)
+    assert "nonsense" in str(exc.value)
+
+
+def test_unknown_key_in_section(tmp_path: Path) -> None:
+    """Raise an error for unrecognised keys within a known section."""
+
+    cfg_file = tmp_path / "bumpwright.toml"
+    cfg_file.write_text("[project]\nunknown='x'\n")
+    with pytest.raises(ValueError) as exc:
+        load_config(cfg_file)
+    message = str(exc.value)
+    assert "project" in message and "unknown" in message

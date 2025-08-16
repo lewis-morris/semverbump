@@ -57,7 +57,117 @@ def _index_params(sig: FuncSig) -> dict[str, Param]:
     return {p.name: p for p in sig.params}
 
 
-def compare_funcs(old: FuncSig, new: FuncSig, return_type_change: Severity = "minor") -> list[Impact]:
+def _removed_params(
+    oldp: dict[str, Param], newp: dict[str, Param], fullname: str
+) -> list[Impact]:
+    """Detect removed parameters between two parameter mappings.
+
+    Args:
+        oldp: Parameters from the original function signature indexed by name.
+        newp: Parameters from the updated function signature indexed by name.
+        fullname: Fully qualified name of the function for reporting.
+
+    Returns:
+        List of :class:`Impact` instances describing removed parameters.
+    """
+
+    impacts: list[Impact] = []
+    for name, op in oldp.items():
+        if name not in newp:
+            if op.kind in ("posonly", "pos", "kwonly") and op.default is None:
+                impacts.append(
+                    Impact("major", fullname, f"Removed required param '{name}'")
+                )
+            elif op.default is not None or op.kind in ("kwonly", "vararg", "varkw"):
+                impacts.append(
+                    Impact("minor", fullname, f"Removed optional param '{name}'")
+                )
+    return impacts
+
+
+def _added_params(
+    oldp: dict[str, Param], newp: dict[str, Param], fullname: str
+) -> list[Impact]:
+    """Detect added parameters between two parameter mappings.
+
+    Args:
+        oldp: Parameters from the original function signature indexed by name.
+        newp: Parameters from the updated function signature indexed by name.
+        fullname: Fully qualified name of the function for reporting.
+
+    Returns:
+        List of :class:`Impact` instances describing added parameters.
+    """
+
+    impacts: list[Impact] = []
+    for name, np in newp.items():
+        if name not in oldp:
+            if np.default is None and np.kind in ("posonly", "pos", "kwonly"):
+                impacts.append(
+                    Impact("major", fullname, f"Added required param '{name}'")
+                )
+            else:
+                impacts.append(
+                    Impact("minor", fullname, f"Added optional param '{name}'")
+                )
+    return impacts
+
+
+def _param_kind_changes(
+    oldp: dict[str, Param], newp: dict[str, Param], fullname: str
+) -> list[Impact]:
+    """Detect changes in parameter kind between two parameter mappings.
+
+    Args:
+        oldp: Parameters from the original function signature indexed by name.
+        newp: Parameters from the updated function signature indexed by name.
+        fullname: Fully qualified name of the function for reporting.
+
+    Returns:
+        List of :class:`Impact` instances describing kind changes.
+    """
+
+    impacts: list[Impact] = []
+    for name, np in newp.items():
+        if name in oldp:
+            op = oldp[name]
+            if op.kind != np.kind and (
+                op.kind in ("posonly", "pos", "kwonly")
+                or np.kind in ("posonly", "pos", "kwonly")
+            ):
+                impacts.append(
+                    Impact(
+                        "major",
+                        fullname,
+                        f"Param '{name}' kind changed {op.kind}→{np.kind}",
+                    )
+                )
+    return impacts
+
+
+def _return_annotation_change(
+    old: FuncSig, new: FuncSig, severity: Severity
+) -> list[Impact]:
+    """Detect return annotation change between two signatures.
+
+    Args:
+        old: Original function signature.
+        new: Updated function signature.
+        severity: Impact level to report when the return annotation changes.
+
+    Returns:
+        A list containing a single :class:`Impact` if the return annotation
+        changed, otherwise an empty list.
+    """
+
+    if old.returns != new.returns:
+        return [Impact(severity, old.fullname, "Return annotation changed")]
+    return []
+
+
+def compare_funcs(
+    old: FuncSig, new: FuncSig, return_type_change: Severity = "minor"
+) -> list[Impact]:
     """Compare two function signatures and record API impacts.
 
     Args:
@@ -69,48 +179,22 @@ def compare_funcs(old: FuncSig, new: FuncSig, return_type_change: Severity = "mi
         List of :class:`Impact` instances describing detected changes.
     """
 
-    impacts: list[Impact] = []
-
     oldp = _index_params(old)
     newp = _index_params(new)
 
-    # Removed parameters
-    for name, op in oldp.items():
-        if name not in newp:
-            if op.kind in ("posonly", "pos", "kwonly") and op.default is None:
-                impacts.append(Impact("major", old.fullname, f"Removed required param '{name}'"))
-            elif op.default is not None or op.kind in (
-                "kwonly",
-                "vararg",
-                "varkw",
-            ):
-                impacts.append(Impact("minor", old.fullname, f"Removed optional param '{name}'"))
-
-    # Param kind changes are major; added params are major if required otherwise minor
-    for name, np in newp.items():
-        if name in oldp:
-            op = oldp[name]
-            if op.kind != np.kind and (op.kind in ("posonly", "pos", "kwonly") or np.kind in ("posonly", "pos", "kwonly")):
-                impacts.append(
-                    Impact(
-                        "major",
-                        old.fullname,
-                        f"Param '{name}' kind changed {op.kind}→{np.kind}",
-                    )
-                )
-        elif np.default is None and np.kind in ("posonly", "pos", "kwonly"):
-            impacts.append(Impact("major", old.fullname, f"Added required param '{name}'"))
-        else:
-            impacts.append(Impact("minor", old.fullname, f"Added optional param '{name}'"))
-
-    # Return annotation change -> configurable severity
-    if old.returns != new.returns:
-        impacts.append(Impact(return_type_change, old.fullname, "Return annotation changed"))
+    impacts = (
+        _removed_params(oldp, newp, old.fullname)
+        + _param_kind_changes(oldp, newp, old.fullname)
+        + _added_params(oldp, newp, old.fullname)
+        + _return_annotation_change(old, new, return_type_change)
+    )
 
     return impacts
 
 
-def diff_public_api(old: PublicAPI, new: PublicAPI, return_type_change: Severity = "minor") -> list[Impact]:
+def diff_public_api(
+    old: PublicAPI, new: PublicAPI, return_type_change: Severity = "minor"
+) -> list[Impact]:
     """Compute impacts between two public API mappings.
 
     Args:
@@ -130,7 +214,9 @@ def diff_public_api(old: PublicAPI, new: PublicAPI, return_type_change: Severity
 
     # Surviving symbols
     for k in old.keys() & new.keys():
-        impacts.extend(compare_funcs(old[k], new[k], return_type_change=return_type_change))
+        impacts.extend(
+            compare_funcs(old[k], new[k], return_type_change=return_type_change)
+        )
 
     # Added symbols
     for k in new.keys() - old.keys():

@@ -1,7 +1,15 @@
 """Tests for public API comparison helpers."""
 
-from bumpwright.compare import (Impact, compare_funcs, decide_bump,
-                                diff_public_api)
+from bumpwright.compare import (
+    Impact,
+    _added_params,
+    _param_kind_changes,
+    _removed_params,
+    _return_annotation_change,
+    compare_funcs,
+    decide_bump,
+    diff_public_api,
+)
 from bumpwright.public_api import FuncSig, Param
 from bumpwright.types import BumpLevel
 
@@ -18,36 +26,54 @@ def _p(name, kind="pos", default=None, ann=None):
     return Param(name, kind, default, ann)
 
 
-def test_added_optional_param_is_minor():
-    old = _sig("m:f", [_p("x")], "-> int")
-    new = _sig("m:f", [_p("x"), _p("timeout", kind="kwonly", default="None")], "-> int")
-    impacts = compare_funcs(old, new)
-    assert any(i.severity == MINOR for i in impacts)
-
-
-def test_added_required_param_is_major():
-    old = _sig("m:f", [_p("x")], "-> int")
-    new = _sig("m:f", [_p("x"), _p("y")], "-> int")
-    impacts = compare_funcs(old, new)
-    assert any(i.severity == MAJOR for i in impacts)
-
-
-def test_removed_required_param_is_major():
-    old = _sig("m:f", [_p("x"), _p("y")], None)
-    new = _sig("m:f", [_p("x")], None)
-    impacts = compare_funcs(old, new)
-    assert any(i.severity == MAJOR for i in impacts)
-
-
-def test_removed_optional_param_is_minor():
+def test_removed_params_classify_optional_and_required():
     old = _sig(
         "m:f",
         [_p("x"), _p("timeout", kind="kwonly", default="None")],
         "-> int",
     )
-    new = _sig("m:f", [_p("x")], "-> int")
-    impacts = compare_funcs(old, new)
-    assert any(i.severity == MINOR for i in impacts)
+    new = _sig("m:f", [], "-> int")
+    impacts = _removed_params(
+        {p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f"
+    )
+    assert Impact(MAJOR, "m:f", "Removed required param 'x'") in impacts
+    assert Impact(MINOR, "m:f", "Removed optional param 'timeout'") in impacts
+
+
+def test_added_params_classify_optional_and_required():
+    old = _sig("m:f", [_p("x")], "-> int")
+    new = _sig(
+        "m:f",
+        [_p("x"), _p("y"), _p("timeout", kind="kwonly", default="None")],
+        "-> int",
+    )
+    impacts = _added_params(
+        {p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f"
+    )
+    assert Impact(MAJOR, "m:f", "Added required param 'y'") in impacts
+    assert Impact(MINOR, "m:f", "Added optional param 'timeout'") in impacts
+
+
+def test_param_kind_changes_detected():
+    old = _sig("m:f", [_p("x"), _p("y")], "-> int")
+    new = _sig("m:f", [_p("x", kind="kwonly"), _p("y", kind="posonly")], "-> int")
+    impacts = _param_kind_changes(
+        {p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f"
+    )
+    assert Impact(MAJOR, "m:f", "Param 'x' kind changed pos→kwonly") in impacts
+    assert Impact(MAJOR, "m:f", "Param 'y' kind changed pos→posonly") in impacts
+
+
+def test_return_annotation_change_helper():
+    old = _sig("m:f", [_p("x")], "int")
+    new = _sig("m:f", [_p("x")], "str")
+    impacts = _return_annotation_change(old, new, MAJOR)
+    assert impacts == [Impact(MAJOR, "m:f", "Return annotation changed")]
+
+
+def test_return_annotation_change_helper_no_change():
+    sig = _sig("m:f", [_p("x")], "int")
+    assert _return_annotation_change(sig, sig, MAJOR) == []
 
 
 def test_removed_symbol_is_major():

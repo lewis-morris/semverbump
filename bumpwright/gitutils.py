@@ -116,29 +116,11 @@ def list_py_files_at_ref(
 list_py_files_at_ref.cache_clear = _list_py_files_at_ref_cached.cache_clear  # type: ignore[attr-defined]
 
 
-@lru_cache(maxsize=None)
-def _read_file_at_ref_cached(ref: str, path: str, cwd: str | None) -> str | None:
-    """Return cached file contents for a ref and path.
-
-    Args:
-        ref: Git reference at which to read the file.
-        path: File path relative to the repository root.
-        cwd: Repository path.
-
-    Returns:
-        File contents, or ``None`` if the file does not exist at ``ref``.
-    """
-
-    try:
-        return _run(["git", "show", f"{ref}:{path}"], cwd)
-    except subprocess.CalledProcessError:
-        return None
-
-
 def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> str | None:
     """Read the contents of ``path`` at ``ref`` if it exists.
 
-    Results are cached per ``(ref, path, cwd)`` for improved performance. Use
+    This is a thin wrapper around :func:`read_files_at_ref` that retrieves a
+    single file. Results are cached via ``read_files_at_ref``; call
     ``read_file_at_ref.cache_clear()`` to invalidate.
 
     Args:
@@ -150,10 +132,7 @@ def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> str | None:
         File contents, or ``None`` if the file does not exist at ``ref``.
     """
 
-    return _read_file_at_ref_cached(ref, path, cwd)
-
-
-read_file_at_ref.cache_clear = _read_file_at_ref_cached.cache_clear  # type: ignore[attr-defined]
+    return read_files_at_ref(ref, [path], cwd).get(path)
 
 
 @lru_cache(maxsize=None)
@@ -232,6 +211,9 @@ def read_files_at_ref(
 
 
 read_files_at_ref.cache_clear = _read_files_at_ref_cached.cache_clear  # type: ignore[attr-defined]
+
+
+read_file_at_ref.cache_clear = read_files_at_ref.cache_clear  # type: ignore[attr-defined]
 
 
 def last_release_commit(cwd: str | None = None) -> str | None:
