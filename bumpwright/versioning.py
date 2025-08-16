@@ -9,7 +9,8 @@ from fnmatch import fnmatch
 from functools import lru_cache
 from glob import glob
 from pathlib import Path
-from typing import Literal
+
+from .types import BumpLevel
 
 try:  # pragma: no cover - needed for linting when dependency missing
     from packaging.version import Version
@@ -34,11 +35,11 @@ class VersionChange:
 
     old: str
     new: str
-    level: Literal["major", "minor", "patch"]
+    level: BumpLevel
     files: list[Path] = field(default_factory=list)
 
 
-def bump_string(v: str, level: Literal["major", "minor", "patch"]) -> str:
+def bump_string(v: str, level: BumpLevel) -> str:
     """Increment a semantic version string by ``level``.
 
     Args:
@@ -136,7 +137,7 @@ def write_project_version(
 
 
 def apply_bump(
-    level: Literal["major", "minor", "patch"],
+    level: BumpLevel,
     pyproject_path: str | Path = "pyproject.toml",
     dry_run: bool = False,
     paths: Iterable[str] | None = None,

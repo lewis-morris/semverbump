@@ -6,8 +6,9 @@ import ast
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from ..compare import Impact, Severity
+from ..compare import Impact
 from ..config import Config
+from ..types import BumpLevel
 from . import register
 from .utils import iter_py_files_at_ref
 
@@ -197,11 +198,11 @@ def diff_cli(old: dict[str, Command], new: dict[str, Command]) -> list[Impact]:
         op = old[name].options
         np = new[name].options
         for opt in op.keys() - np.keys():
-            severity: Severity = "major" if op[opt] else "minor"
+            severity: BumpLevel = "major" if op[opt] else "minor"
             reason = "Removed required option" if op[opt] else "Removed optional option"
             impacts.append(Impact(severity, name, f"{reason} '{opt}'"))
         for opt in np.keys() - op.keys():
-            severity: Severity = "major" if np[opt] else "minor"
+            severity: BumpLevel = "major" if np[opt] else "minor"
             reason = "Added required option" if np[opt] else "Added optional option"
             impacts.append(Impact(severity, name, f"{reason} '{opt}'"))
         for opt in op.keys() & np.keys():
