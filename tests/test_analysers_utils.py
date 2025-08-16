@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 
 from bumpwright import gitutils
+from bumpwright.analysers import utils
 from bumpwright.analysers.utils import _is_const_str, iter_py_files_at_ref
 
 
@@ -32,3 +33,27 @@ def test_is_const_str() -> None:
     other_node = ast.parse("1").body[0].value  # type: ignore[assignment]
     assert _is_const_str(const_node)
     assert not _is_const_str(other_node)
+
+
+def test_iter_py_files_at_ref_single_git_call(monkeypatch):
+    calls: list[tuple[str, tuple[str, ...]]] = []
+
+    def fake_read_files_at_ref(ref: str, paths: list[str], cwd: str | None = None):
+        calls.append((ref, tuple(paths)))
+        return {p: f"{p}-contents" for p in paths}
+
+    def fake_list_py_files_at_ref(
+        ref: str,
+        roots: list[str],
+        ignore_globs: list[str] | None = None,
+        cwd: str | None = None,
+    ) -> set[str]:
+        return {"a.py", "b.py"}
+
+    monkeypatch.setattr(utils, "read_files_at_ref", fake_read_files_at_ref)
+    monkeypatch.setattr(utils, "list_py_files_at_ref", fake_list_py_files_at_ref)
+
+    files = dict(iter_py_files_at_ref("HEAD", ["."], []))
+
+    assert files == {"a.py": "a.py-contents", "b.py": "b.py-contents"}
+    assert len(calls) == 1
