@@ -96,7 +96,8 @@ Analysers
 ~~~~~~~~~
 
 Each key under ``[analyzers]`` toggles a plugin. Unknown names raise an error
-at run time. Built-in analysers include:
+at run time. Command-line flags ``--enable-analyzer`` and ``--disable-analyzer``
+temporarily override these settings. Built-in analysers include:
 
 .. list-table:: Available analysers
    :header-rows: 1

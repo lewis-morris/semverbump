@@ -52,6 +52,12 @@ require.
 ``--repo-url URL``
     Base repository URL for linking commit hashes in Markdown output.
 
+``--enable-analyzer NAME``
+    Enable analyzer ``NAME`` in addition to configuration. Repeatable.
+
+``--disable-analyzer NAME``
+    Disable analyzer ``NAME`` even if enabled in configuration. Repeatable.
+
 **Examples**
 
 .. code-block:: console
@@ -120,6 +126,12 @@ assignment. These locations can be customised via the ``[version]`` section in
 
 ``--repo-url URL``
     Base repository URL for linking commit hashes in Markdown output.
+
+``--enable-analyzer NAME``
+    Enable analyzer ``NAME`` in addition to configuration. Repeatable.
+
+``--disable-analyzer NAME``
+    Disable analyzer ``NAME`` even if enabled in configuration. Repeatable.
 
 ``--pyproject PATH``
     Path to the project's ``pyproject.toml`` file. Defaults to
