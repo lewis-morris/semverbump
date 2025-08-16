@@ -38,14 +38,10 @@ jobs:
         run: |
           python .github/scripts/generate_badges.py docs/_static/badges
 
-      - name: Build Sphinx
+      - name: Build Sphinx (docs -> _build/html)
         working-directory: docs
         run: |
-          # Support both layouts: docs/source -> build/html OR docs/ -> build
-          if [ -d "source" ]; then
-            sphinx-build -b html source _build/html
-          else
-          fi
+          sphinx-build -b html . _build/html
 
       - name: Upload artifact (for Pages)
         uses: actions/upload-pages-artifact@v3
