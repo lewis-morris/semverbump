@@ -6,8 +6,52 @@ import argparse
 import sys
 
 from ..analyzers import available
-from .bump import bump_command
-from .init import init_command
+
+
+def add_ref_options(parser: argparse.ArgumentParser) -> None:
+    """Attach git reference options to ``parser``.
+
+    Args:
+        parser: Subparser to which the ``--base`` and ``--head`` options are added.
+    """
+
+    parser.add_argument(
+        "--base",
+        help=(
+            "Base git reference when auto-deciding the level. Defaults to the last release "
+            "commit or the previous commit (HEAD^)."
+        ),
+    )
+    parser.add_argument(
+        "--head",
+        default="HEAD",
+        help="Head git reference; defaults to the current HEAD.",
+    )
+
+
+def add_analyzer_toggles(parser: argparse.ArgumentParser) -> None:
+    """Attach analyzer enable/disable flags to ``parser``.
+
+    Args:
+        parser: Subparser receiving analyzer toggling options.
+    """
+
+    parser.add_argument(
+        "--enable-analyzer",
+        action="append",
+        dest="enable_analyzer",
+        help="Enable analyzer NAME (repeatable) in addition to configuration.",
+    )
+    parser.add_argument(
+        "--disable-analyzer",
+        action="append",
+        dest="disable_analyzer",
+        help="Disable analyzer NAME (repeatable) even if configured.",
+    )
+
+
+from .bump import bump_command  # noqa: E402
+from .init import init_command  # noqa: E402
 
 
 def get_parser() -> argparse.ArgumentParser:
@@ -49,18 +93,7 @@ def get_parser() -> argparse.ArgumentParser:
         choices=["major", "minor", "patch"],
         help="Desired bump level; if omitted, it is inferred from --base and --head.",
     )
-    p_bump.add_argument(
-        "--base",
-        help=(
-            "Base git reference when auto-deciding the level. Defaults to the last release "
-            "commit or the previous commit (HEAD^)."
-        ),
-    )
-    p_bump.add_argument(
-        "--head",
-        default="HEAD",
-        help="Head git reference; defaults to the current HEAD.",
-    )
+    add_ref_options(p_bump)
     p_bump.add_argument(
         "--format",
         choices=["text", "md", "json"],
@@ -76,18 +109,7 @@ def get_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Only determine the bump level without modifying any files.",
     )
-    p_bump.add_argument(
-        "--enable-analyzer",
-        action="append",
-        dest="enable_analyzer",
-        help="Enable analyzer NAME (repeatable) in addition to configuration.",
-    )
-    p_bump.add_argument(
-        "--disable-analyzer",
-        action="append",
-        dest="disable_analyzer",
-        help="Disable analyzer NAME (repeatable) even if configured.",
-    )
+    add_analyzer_toggles(p_bump)
     p_bump.add_argument(
         "--pyproject",
         default="pyproject.toml",

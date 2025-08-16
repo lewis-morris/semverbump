@@ -18,6 +18,7 @@ from ..public_api import (
     extract_public_api_from_source,
     module_name_from_path,
 )
+from . import add_analyzer_toggles, add_ref_options
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,23 @@ def _format_impacts_text(impacts: list[Impact]) -> str:
     for i in impacts:
         lines.append(f"- [{i.severity.upper()}] {i.symbol}: {i.reason}")
     return "\n".join(lines) if lines else "(no API-impacting changes detected)"
+
+
+def add_decide_arguments(parser: argparse.ArgumentParser) -> None:
+    """Add shared decision-related CLI options to ``parser``.
+
+    Args:
+        parser: The parser to extend with ref and analyzer options.
+    """
+
+    add_ref_options(parser)
+    parser.add_argument(
+        "--format",
+        choices=["text", "md", "json"],
+        default="text",
+        help="Output style: plain text, Markdown, or machine-readable JSON.",
+    )
+    add_analyzer_toggles(parser)
 
 
 def _run_analyzers(
