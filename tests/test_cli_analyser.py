@@ -6,6 +6,7 @@ from pathlib import Path
 from bumpwright.analysers import load_enabled
 from bumpwright.analysers.cli import CLIAnalyser, diff_cli, extract_cli_from_source
 from bumpwright.cli.decide import _run_analysers
+from bumpwright.compare import Impact
 from bumpwright.config import Config, Ignore, Project
 
 
@@ -32,7 +33,7 @@ p_build = sub.add_parser('build')
 """
     )
     impacts = diff_cli(old, new)
-    assert any(i.severity == "major" for i in impacts)
+    assert impacts == [Impact("major", "run", "Removed command")]
 
 
 def test_added_optional_flag_minor():
@@ -54,7 +55,7 @@ p_run.add_argument('--force')
 """
     )
     impacts = diff_cli(old, new)
-    assert any(i.severity == "minor" for i in impacts)
+    assert impacts == [Impact("minor", "run", "Added optional option '--force'")]
 
 
 def test_click_required_change_major():
@@ -79,7 +80,7 @@ def cli(name):
 """
     )
     impacts = diff_cli(old, new)
-    assert any(i.severity == "major" for i in impacts)
+    assert impacts == [Impact("major", "cli", "Option '--name' became required")]
 
 
 def test_async_click_command_detected():
@@ -115,7 +116,7 @@ p_run.add_argument('--files', nargs='+')
 """
     )
     impacts = diff_cli(old, new)
-    assert any(i.severity == "major" for i in impacts)
+    assert impacts == [Impact("major", "run", "Option '--files' became required")]
 
 
 def _run(cmd: list[str], cwd: Path) -> str:
@@ -173,7 +174,7 @@ def test_load_enabled_instantiates_plugins() -> None:
     cfg = Config()
     cfg.analysers.enabled.add("cli")
     analysers = load_enabled(cfg)
-    assert any(isinstance(a, CLIAnalyser) for a in analysers)
+    assert [type(a) for a in analysers] == [CLIAnalyser]
 
 
 def test_run_analysers_warns_for_unknown(caplog) -> None:
