@@ -6,12 +6,20 @@ Versioning
 Use the dedicated ``pre`` and ``build`` levels to update those segments
 independently.
 
+.. note::
+
+   The :func:`bumpwright.versioning.bump_string` utility supports
+   additional ``pre`` and ``build`` increments. The CLI exposes only the
+   ``major``, ``minor``, and ``patch`` levels.
+
 SemVer
 ------
 
 The :class:`~bumpwright.version_schemes.SemverScheme` tracks prerelease and
-build identifiers. Use ``pre`` and ``build`` to manage these segments while
-release bumps clear them:
+
+build identifiers. Both parts can be incremented independently. Numeric
+components are validated against the SemVer spec, so leading zeros such as
+``01.0.0`` raise :class:`ValueError`:
 
 .. code-block:: python
 

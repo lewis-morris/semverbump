@@ -60,12 +60,12 @@ Start with a tiny example project to see **bumpwright** in action.
 
    .. code-block:: text
 
-      level  confidence
-      -----  -----------
-      minor  1.00
+      Suggested bump: minor
+      - [MINOR] demo:greet: Added public symbol
 
    ``bumpwright`` inspects commits since the baseline and suggests the next
-   semantic version.
+   semantic version. The lines following the suggestion list the impacts that
+   informed it.
 
 Flow
 ----
