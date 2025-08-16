@@ -1,10 +1,22 @@
 GitHub Actions workflows
 ========================
 
-Bumpwright integrates easily with GitHub Actions. The example workflows below
-show how to suggest the next semantic version and how to apply a release.
-Place these files in the ``.github/workflows`` directory of your project to
-use them.
+Bumpwright integrates easily with GitHub Actions. The workflows below show
+how to automatically apply a version bump on pushes to your main branch,
+suggest the next semantic version, and run a manual release. Place these files
+in the ``.github/workflows`` directory of your project to use them.
+
+Automatic version bump on push
+------------------------------
+
+The ``bumpwright-auto-bump.yml`` workflow updates your project version and
+changelog whenever new commits land on ``main`` or ``master``.
+
+.. literalinclude:: ../_static/workflows/bumpwright-auto-bump.yml
+   :language: yaml
+   :caption: bumpwright-auto-bump.yml
+
+Download the file: :download:`bumpwright-auto-bump.yml <../_static/workflows/bumpwright-auto-bump.yml>`.
 
 Pull request check
 ------------------
@@ -19,8 +31,8 @@ event, or adapt it to run on pull requests.
 
 Download the file: :download:`bumpwright-check.yml <../_static/workflows/bumpwright-check.yml>`.
 
-Release automation
-------------------
+Manual release automation
+-------------------------
 
 The ``bumpwright-release.yml`` workflow applies a version bump, commits the
 updated files, and pushes a tag. Provide the desired bump level when triggering

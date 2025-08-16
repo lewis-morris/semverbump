@@ -1,0 +1,25 @@
+name: bumpwright auto bump
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - name: Install bumpwright
+        run: pip install bumpwright
+      - name: Bump version and update changelog
+        run: |
+          bumpwright bump --decide --pyproject pyproject.toml --changelog CHANGELOG.md --commit --tag
+      - name: Push changes
+        run: git push origin HEAD --follow-tags
