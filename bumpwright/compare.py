@@ -145,6 +145,44 @@ def _param_kind_changes(
     return impacts
 
 
+def _param_default_changes(
+    oldp: dict[str, Param], newp: dict[str, Param], fullname: str
+) -> list[Impact]:
+    """Detect parameter default value changes between two mappings.
+
+    Args:
+        oldp: Parameters from the original function signature indexed by name.
+        newp: Parameters from the updated function signature indexed by name.
+        fullname: Fully qualified name of the function for reporting.
+
+    Returns:
+        List of :class:`Impact` instances describing default value changes.
+    """
+
+    impacts: list[Impact] = []
+    for name, np in newp.items():
+        if name in oldp:
+            op = oldp[name]
+            if op.default != np.default:
+                if op.default is None and np.default is not None:
+                    impacts.append(
+                        Impact("minor", fullname, f"Param '{name}' default added")
+                    )
+                elif op.default is not None and np.default is None:
+                    impacts.append(
+                        Impact("major", fullname, f"Param '{name}' default removed")
+                    )
+                else:
+                    impacts.append(
+                        Impact(
+                            "minor",
+                            fullname,
+                            f"Param '{name}' default changed {op.default}→{np.default}",
+                        )
+                    )
+    return impacts
+
+
 def _return_annotation_change(
     old: FuncSig, new: FuncSig, severity: Severity
 ) -> list[Impact]:
@@ -185,6 +223,7 @@ def compare_funcs(
     impacts = (
         _removed_params(oldp, newp, old.fullname)
         + _param_kind_changes(oldp, newp, old.fullname)
+        + _param_default_changes(oldp, newp, old.fullname)
         + _added_params(oldp, newp, old.fullname)
         + _return_annotation_change(old, new, return_type_change)
     )

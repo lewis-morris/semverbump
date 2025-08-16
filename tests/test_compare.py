@@ -3,6 +3,7 @@
 from bumpwright.compare import (
     Impact,
     _added_params,
+    _param_default_changes,
     _param_kind_changes,
     _removed_params,
     _return_annotation_change,
@@ -64,6 +65,25 @@ def test_param_kind_changes_detected():
     assert Impact(MAJOR, "m:f", "Param 'y' kind changed pos→posonly") in impacts
 
 
+def test_param_default_changes_detected():
+    old = _sig(
+        "m:f",
+        [_p("x", default="1"), _p("y"), _p("z", default="1")],
+        "-> int",
+    )
+    new = _sig(
+        "m:f",
+        [_p("x"), _p("y", default="2"), _p("z", default="2")],
+        "-> int",
+    )
+    impacts = _param_default_changes(
+        {p.name: p for p in old.params}, {p.name: p for p in new.params}, "m:f"
+    )
+    assert Impact(MAJOR, "m:f", "Param 'x' default removed") in impacts
+    assert Impact(MINOR, "m:f", "Param 'y' default added") in impacts
+    assert Impact(MINOR, "m:f", "Param 'z' default changed 1→2") in impacts
+
+
 def test_return_annotation_change_helper():
     old = _sig("m:f", [_p("x")], "int")
     new = _sig("m:f", [_p("x")], "str")
@@ -108,6 +128,23 @@ def test_compare_funcs_return_type_change_major():
     new = _sig("m:f", [_p("x")], "str")
     impacts = compare_funcs(old, new, return_type_change=MAJOR)
     assert impacts == [Impact(MAJOR, "m:f", "Return annotation changed")]
+
+
+def test_compare_funcs_default_changes():
+    old = _sig(
+        "m:f",
+        [_p("x", default="1"), _p("y"), _p("z", default="1")],
+        None,
+    )
+    new = _sig(
+        "m:f",
+        [_p("x"), _p("y", default="2"), _p("z", default="2")],
+        None,
+    )
+    impacts = compare_funcs(old, new)
+    assert Impact(MAJOR, "m:f", "Param 'x' default removed") in impacts
+    assert Impact(MINOR, "m:f", "Param 'y' default added") in impacts
+    assert Impact(MINOR, "m:f", "Param 'z' default changed 1→2") in impacts
 
 
 def test_diff_public_api_added_symbol():
