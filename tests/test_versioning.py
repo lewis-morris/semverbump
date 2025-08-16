@@ -13,6 +13,7 @@ from bumpwright.versioning import (
     _resolve_files_cached,
     apply_bump,
     bump_string,
+    clear_version_file_cache,
     find_pyproject,
     read_project_version,
     write_project_version,
@@ -429,15 +430,36 @@ def test_resolve_files_uses_cache(
     assert calls["count"] == 1
 
 
-def test_apply_bump_clears_resolve_cache(
+def test_clear_version_file_cache(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    """Verify custom patterns trigger cache invalidation."""
+    """Manual cache clearing forces subsequent filesystem scans."""
+
+    (tmp_path / "a.txt").write_text("1", encoding="utf-8")
+    _resolve_files_cached.cache_clear()
+    calls = {"count": 0}
+    from bumpwright.versioning import glob as glob_orig  # noqa: PLC0415
+
+    def fake_glob(pattern: str, recursive: bool = True) -> list[str]:
+        calls["count"] += 1
+        return glob_orig(pattern, recursive=recursive)
+
+    monkeypatch.setattr("bumpwright.versioning.glob", fake_glob)
+    _resolve_files(["*.txt"], [], tmp_path)
+    clear_version_file_cache()
+    _resolve_files(["*.txt"], [], tmp_path)
+    assert calls["count"] == 2  # noqa: PLR2004
+
+
+def test_apply_bump_reuses_resolve_cache(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Repeated bumps with identical patterns reuse cached file resolution."""
 
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
-    cfg = tmp_path / "extra.cfg"
-    cfg.write_text("version = '0.1.0'", encoding="utf-8")
+    cfg_file = tmp_path / "extra.cfg"
+    cfg_file.write_text("version = '0.1.0'", encoding="utf-8")
 
     calls = {"count": 0}
     from bumpwright.versioning import glob as glob_orig  # noqa: PLC0415
@@ -447,19 +469,44 @@ def test_apply_bump_clears_resolve_cache(
         return glob_orig(pattern, recursive=recursive)
 
     monkeypatch.setattr("bumpwright.versioning.glob", fake_glob)
-    apply_bump(
-        "patch",
-        py,
-        paths=["*.cfg"],
-        config_path=tmp_path / "bumpwright.toml",
-    )
-    apply_bump(
-        "patch",
-        py,
-        paths=["*.cfg"],
-        config_path=tmp_path / "bumpwright.toml",
-    )
+    apply_bump("patch", py, paths=["*.cfg"], config_path=tmp_path / "bumpwright.toml")
+    apply_bump("patch", py, paths=["*.cfg"], config_path=tmp_path / "bumpwright.toml")
     assert calls["count"] == 1
+
+
+@pytest.mark.parametrize("arg", ["paths", "ignore"])
+def test_apply_bump_clears_cache_on_arg_change(
+    arg: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Changing ``paths`` or ``ignore`` clears the resolved file cache."""
+
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
+    a_cfg = tmp_path / "a.cfg"
+    a_cfg.write_text("version = '0.1.0'", encoding="utf-8")
+    b_cfg = tmp_path / "b.cfg"
+    b_cfg.write_text("version = '0.1.0'", encoding="utf-8")
+
+    cfg = load_config(tmp_path / "bumpwright.toml")
+    calls = {"count": 0}
+    from bumpwright.versioning import glob as glob_orig  # noqa: PLC0415
+
+    def fake_glob(pattern: str, recursive: bool = True) -> list[str]:
+        calls["count"] += 1
+        return glob_orig(pattern, recursive=recursive)
+
+    monkeypatch.setattr("bumpwright.versioning.glob", fake_glob)
+
+    if arg == "paths":
+        apply_bump("patch", py, paths=["a.cfg"], cfg=cfg)
+        apply_bump("patch", py, paths=["b.cfg"], cfg=cfg)
+        apply_bump("patch", py, paths=["a.cfg"], cfg=cfg)
+    else:
+        apply_bump("patch", py, paths=["*.cfg"], ignore=["b.cfg"], cfg=cfg)
+        apply_bump("patch", py, paths=["*.cfg"], ignore=["a.cfg"], cfg=cfg)
+        apply_bump("patch", py, paths=["*.cfg"], ignore=["b.cfg"], cfg=cfg)
+
+    assert calls["count"] == 3  # noqa: PLR2004
 
 
 def test_find_pyproject(tmp_path: Path) -> None:
