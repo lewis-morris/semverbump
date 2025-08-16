@@ -38,16 +38,20 @@ def test_load_config_private_prefixes_default(tmp_path: Path) -> None:
 
 def test_load_config_changelog(tmp_path: Path) -> None:
     cfg_file = tmp_path / "bumpwright.toml"
-    cfg_file.write_text("[changelog]\npath='NEWS.md'\ntemplate='tmpl.j2'\n")
+    cfg_file.write_text(
+        "[changelog]\npath='NEWS.md'\ntemplate='tmpl.j2'\nexclude=['^chore']\n"
+    )
     cfg = load_config(cfg_file)
     assert cfg.changelog.path == "NEWS.md"
     assert cfg.changelog.template == "tmpl.j2"
+    assert cfg.changelog.exclude == ["^chore"]
 
 
 def test_load_config_changelog_default(tmp_path: Path) -> None:
     cfg = load_config(tmp_path / "missing.toml")
     assert cfg.changelog.path == ""
     assert cfg.changelog.template == ""
+    assert cfg.changelog.exclude == []
 
 
 def test_load_config_default_scheme(tmp_path: Path) -> None:

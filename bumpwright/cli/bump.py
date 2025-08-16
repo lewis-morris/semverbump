@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import re
 import subprocess
 from datetime import date
 from glob import has_magic
@@ -133,7 +134,9 @@ def _build_changelog(args: argparse.Namespace, new_version: str) -> str | None:
 
     Changelog entries are rendered using a Jinja2 template. Users may supply a
     custom template via ``--changelog-template`` or configuration; otherwise the
-    built-in template is used. Available template variables include:
+    built-in template is used. Commits whose subjects match any pattern from
+    ``--changelog-exclude`` or configuration are omitted. Available template
+    variables include:
 
     ``version``
         New project version string.
@@ -148,8 +151,11 @@ def _build_changelog(args: argparse.Namespace, new_version: str) -> str | None:
         return None
     base = last_release_commit() or f"{args.head}^"
     commits = collect_commits(base, args.head)
+    patterns = [re.compile(p) for p in getattr(args, "changelog_exclude", [])]
     entries: list[dict[str, Any]] = []
     for sha, subject in commits:
+        if any(p.search(subject) for p in patterns):
+            continue
         link = None
         if args.repo_url:
             base_url = args.repo_url.rstrip("/")
@@ -307,6 +313,9 @@ def bump_command(args: argparse.Namespace) -> int:
             changelog_template (str | None): Path to a Jinja2 template used to
                 render changelog entries. Defaults to the built-in template.
 
+            changelog_exclude (list[str]): Regex patterns of commit subjects to
+                exclude from changelog entries.
+
     Returns:
         Exit status code. ``0`` indicates success; ``1`` indicates an error.
     """
@@ -316,6 +325,10 @@ def bump_command(args: argparse.Namespace) -> int:
         args.changelog = cfg.changelog.path
     if getattr(args, "changelog_template", None) is None and cfg.changelog.template:
         args.changelog_template = cfg.changelog.template
+    excludes = list(cfg.changelog.exclude)
+    cli_excludes = getattr(args, "changelog_exclude", []) or []
+    excludes.extend(cli_excludes)
+    args.changelog_exclude = excludes
     if args.decide:
         return _decide_only(args, cfg)
 

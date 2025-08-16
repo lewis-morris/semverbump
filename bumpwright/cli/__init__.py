@@ -154,6 +154,14 @@ def get_parser() -> argparse.ArgumentParser:
         "--changelog-template",
         help="Jinja2 template file for changelog entries; defaults to built-in template.",
     )
+    p_bump.add_argument(
+        "--changelog-exclude",
+        action="append",
+        help=(
+            "Regex pattern for commit subjects to exclude from changelog "
+            "(repeatable)."
+        ),
+    )
     p_bump.set_defaults(func=bump_command)
     return parser
 
