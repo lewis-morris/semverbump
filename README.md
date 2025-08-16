@@ -148,7 +148,6 @@ all sections and their default values looks like:
 [project]
 package = ""
 public_roots = ["."]
-index_file = "pyproject.toml"
 
 [ignore]
 paths = ["tests/**", "examples/**", "scripts/**"]

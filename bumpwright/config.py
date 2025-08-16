@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 _DEFAULTS = {
-    "project": {"package": "", "public_roots": ["."], "index_file": "pyproject.toml"},
+    "project": {"package": "", "public_roots": ["."]},
     "ignore": {"paths": ["tests/**", "examples/**", "scripts/**"]},
     "rules": {"return_type_change": "minor"},  # or "major"
     "analysers": {"cli": False},
@@ -40,11 +40,16 @@ class Rules:
 
 @dataclass
 class Project:
-    """Project metadata and locations."""
+    """Project metadata and public API configuration.
+
+    Attributes:
+        package: Importable package containing the project's code. When empty the
+            repository layout is used.
+        public_roots: Paths whose contents constitute the public API.
+    """
 
     package: str = ""
     public_roots: list[str] = field(default_factory=lambda: ["."])
-    index_file: str = "pyproject.toml"
 
 
 @dataclass
