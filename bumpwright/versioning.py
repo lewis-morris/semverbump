@@ -6,7 +6,7 @@ import re
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from fnmatch import fnmatch
-from functools import lru_cache
+from functools import cache, lru_cache
 from glob import glob
 from pathlib import Path
 
@@ -17,9 +17,8 @@ from .config import Config, load_config
 from .types import BumpLevel
 from .version_schemes import get_version_scheme
 
-_DEFAULT_CFG: Config | None = None
 
-
+@cache
 def _get_default_config() -> Config:
     """Return cached configuration loading from disk on first use.
 
@@ -27,10 +26,7 @@ def _get_default_config() -> Config:
         Loaded :class:`~bumpwright.config.Config` instance.
     """
 
-    global _DEFAULT_CFG  # noqa: PLW0603
-    if _DEFAULT_CFG is None:
-        _DEFAULT_CFG = load_config()
-    return _DEFAULT_CFG
+    return load_config()
 
 
 @dataclass
