@@ -91,7 +91,7 @@ Because this mode only inspects commits, there is no effect on the filesystem.
 Update version information in ``pyproject.toml`` and other files.
 By default, ``bumpwright`` also searches ``setup.py``, ``setup.cfg`` and any
 ``__init__.py``, ``version.py`` or ``_version.py`` files for a version
-assignment. Files inside common build artifacts and virtual environments are
+assignment. Files inside common build artefacts and virtual environments are
 ignored by default (``build/**``, ``dist/**``, ``*.egg-info/**``, ``.eggs/**``,
 ``.venv/**``, ``venv/**``, ``.env/**`` and ``**/__pycache__/**``). These
 locations can be customised via the ``[version]`` section in ``bumpwright.toml``
