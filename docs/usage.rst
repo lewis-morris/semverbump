@@ -92,8 +92,9 @@ Update version information in ``pyproject.toml`` and other files.
 By default, ``bumpwright`` also searches ``setup.py``, ``setup.cfg`` and any
 ``__init__.py``, ``version.py`` or ``_version.py`` files for a version
 assignment. These locations can be customised via the ``[version]`` section in
-``bumpwright.toml`` or augmented with ``--version-path`` and
-``--version-ignore`` to add or exclude patterns.
+``bumpwright.toml``. The section also allows selecting a versioning scheme with
+``scheme = "semver"`` or ``"pep440"``. Command-line options ``--version-path``
+and ``--version-ignore`` extend these patterns for one-off runs.
 
 **Arguments**
 

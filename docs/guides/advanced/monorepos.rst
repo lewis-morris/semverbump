@@ -10,6 +10,7 @@ Handling multi-package repositories
      "packages/pkg_a/pyproject.toml",
      "packages/pkg_b/pyproject.toml",
    ]
+   scheme = "semver"
 
 2. Run ``bumpwright`` for the package that changed:
 

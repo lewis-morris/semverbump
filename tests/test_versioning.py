@@ -127,6 +127,32 @@ def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
     assert init not in out.files
 
 
+def test_apply_bump_respects_scheme(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Use configured version scheme when bumping."""
+
+    (tmp_path / "bumpwright.toml").write_text("[version]\nscheme='pep440'\n")
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "1!1.0.0"}}))
+    monkeypatch.chdir(tmp_path)
+    out = apply_bump("patch", py)
+    assert out.new == "1!1.0.1"
+
+
+def test_apply_bump_invalid_scheme(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Invalid version schemes raise clear errors."""
+
+    (tmp_path / "bumpwright.toml").write_text("[version]\nscheme='unknown'\n")
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(ValueError, match="Unknown version scheme"):
+        apply_bump("patch", py)
+
+
 def test_resolve_files_nested_dirs_sorted(tmp_path: Path) -> None:
     """Resolve nested patterns and ensure results are deterministically ordered."""
 
