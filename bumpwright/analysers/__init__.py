@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol
@@ -100,13 +101,27 @@ def get_analyser_info(name: str) -> AnalyserInfo | None:
     return REGISTRY.get(name)
 
 
-# Import built-in analysers for registration side-effects
-# isort: off
-# fmt: off
-from . import cli, migrations, grpc, openapi, graphql, web_routes  # noqa: F401,E402  # pylint: disable=wrong-import-position
+def _import_optional(module: str) -> None:
+    """Import analyser ``module`` if available.
 
-# fmt: on
-# isort: on
+    Args:
+        module: Name of the analyser submodule to import.
+
+    Missing optional dependencies are silently ignored so that importing
+    :mod:`bumpwright.analysers` does not fail when an analyser's requirements
+    are absent.
+    """
+
+    try:
+        importlib.import_module(f"{__name__}.{module}")
+    except ModuleNotFoundError:
+        # Optional dependency not installed; analyser will simply be skipped.
+        return
+
+
+# Import built-in analysers for registration side-effects
+for _mod in ("cli", "migrations", "grpc", "openapi", "graphql", "web_routes"):
+    _import_optional(_mod)
 
 __all__ = [
     "Analyser",
