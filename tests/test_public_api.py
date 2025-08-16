@@ -129,6 +129,36 @@ def bar():
     assert {"pkg.mod:foo", "pkg.mod:bar"} == keys
 
 
+@pytest.mark.parametrize(
+    "prefix, expected",
+    [
+        ("__all__ = ['foo']\n__all__ += ['bar']", {"pkg.mod:foo", "pkg.mod:bar"}),
+        ("__all__ = []\n__all__.append('foo')", {"pkg.mod:foo"}),
+        (
+            "__all__ = []\n__all__.extend(['foo', 'bar'])",
+            {"pkg.mod:foo", "pkg.mod:bar"},
+        ),
+        (
+            "names = []\nnames.append('foo')\nnames.extend(['bar'])\n__all__ = names",
+            {"pkg.mod:foo", "pkg.mod:bar"},
+        ),
+    ],
+)
+def test_extracts_all_from_mutations(prefix: str, expected: set[str]) -> None:
+    """Detect ``__all__`` constructed via in-place mutations."""
+
+    code = f"""
+{prefix}
+def foo():
+    pass
+def bar():
+    pass
+"""
+    api = extract_public_api_from_source("pkg.mod", code)
+    keys = set(api.keys())
+    assert expected == keys
+
+
 def test_custom_private_prefix() -> None:
     code = """
 def internal_func():
