@@ -103,7 +103,7 @@ def get_analyser_info(name: str) -> AnalyserInfo | None:
 # Import built-in analysers for registration side-effects
 # isort: off
 # fmt: off
-from . import cli, migrations, web_routes  # noqa: F401,E402  # pylint: disable=wrong-import-position
+from . import cli, graphql, migrations, web_routes  # noqa: F401,E402  # pylint: disable=wrong-import-position
 # fmt: on
 # isort: on
 
