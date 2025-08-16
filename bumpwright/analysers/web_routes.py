@@ -50,6 +50,8 @@ def _extract_params(args: ast.arguments) -> dict[str, bool]:
 def extract_routes_from_source(code: str) -> dict[tuple[str, str], Route]:
     """Extract routes from source code.
 
+    Supports synchronous and asynchronous route handlers.
+
     Args:
         code: Module source code.
 
@@ -61,7 +63,7 @@ def extract_routes_from_source(code: str) -> dict[tuple[str, str], Route]:
     routes: dict[tuple[str, str], Route] = {}
 
     for node in ast.walk(tree):
-        if not isinstance(node, ast.FunctionDef):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
         path = None
         methods: Iterable[str] | None = None
