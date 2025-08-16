@@ -119,6 +119,11 @@ def init(args: argparse.Namespace) -> int:
 @click.option(
     "--changelog",
     type=str,
+    flag_value="-",
+    default=None,
+    nargs=1,
+    is_flag=False,
+    metavar="[FILE]",
     help="Append release notes to FILE or stdout when no path is given.",
 )
 @click.option(
