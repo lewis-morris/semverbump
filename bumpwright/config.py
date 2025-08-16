@@ -148,6 +148,30 @@ def _merge_defaults(data: dict | None, defaults: dict) -> dict:
     return out
 
 
+def _validate_keys(data: dict, defaults: dict) -> None:
+    """Ensure configuration keys are recognised.
+
+    Args:
+        data: Configuration mapping merged with defaults.
+        defaults: Default configuration mapping generated from dataclasses.
+
+    Raises:
+        ValueError: If unknown sections or keys are present.
+    """
+    unexpected_sections = set(data) - set(defaults)
+    if unexpected_sections:
+        unknown = ", ".join(sorted(unexpected_sections))
+        raise ValueError(f"Unknown configuration sections: {unknown}")
+
+    for section, default_content in defaults.items():
+        if section == "analysers" or not isinstance(default_content, dict):
+            continue
+        unexpected = set(data.get(section, {})) - set(default_content)
+        if unexpected:
+            unknown = ", ".join(sorted(unexpected))
+            raise ValueError(f"Unknown keys in '{section}' section: {unknown}")
+
+
 def load_config(path: str | Path = "bumpwright.toml") -> Config:
     """Load configuration from a TOML file.
 
@@ -171,6 +195,7 @@ def load_config(path: str | Path = "bumpwright.toml") -> Config:
             *user_ignore,
         ]
     d = _merge_defaults(raw, defaults)
+    _validate_keys(d, defaults)
     proj = Project(**d["project"])
     rules = Rules(**d["rules"])
     ign = Ignore(**d["ignore"])
