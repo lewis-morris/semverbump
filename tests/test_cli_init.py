@@ -22,6 +22,6 @@ def test_init_creates_baseline_commit(tmp_path: Path) -> None:
         env={**os.environ, "PYTHONPATH": str(Path(__file__).resolve().parents[1])},
     )
     msg = run(["git", "log", "-1", "--format=%s"], repo)
-    assert msg == "chore(release): initialize baseline"
+    assert msg == "chore(release): initialise baseline"
     head = run(["git", "rev-parse", "HEAD"], repo)
     assert last_release_commit(str(repo)) == head
