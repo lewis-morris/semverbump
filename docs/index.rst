@@ -28,8 +28,8 @@ Key Features
 ------------
 
 - Static diff of functions, classes, and other exported symbols.
-- Pluggable analysers for command-line interfaces, web routes, and database
-  migrations.
+- Pluggable analysers for command-line interfaces, gRPC services, web routes,
+  and database migrations.
 - Dry-run mode to preview changes without touching files.
 - Output in plain text, Markdown, or JSON for easy integration.
 

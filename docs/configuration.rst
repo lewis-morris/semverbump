@@ -21,6 +21,7 @@ Example configuration showing all available sections and their default values:
 
     [analysers]
     cli = false
+    grpc = false
     web_routes = false
     migrations = false
 
@@ -111,6 +112,9 @@ settings. Built-in analysers include:
    * - ``cli``
      - Detects changes to command-line interfaces implemented with
        ``argparse`` or ``click``.
+     - ``false``
+   * - ``grpc``
+     - Detects gRPC service and method changes in ``.proto`` files.
      - ``false``
    * - ``web_routes``
      - Tracks additions or removals of web routes in frameworks such as
