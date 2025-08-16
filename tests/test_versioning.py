@@ -34,6 +34,14 @@ def test_bump_string_semver_prerelease_and_build() -> None:
     assert bump_string("1.2.3+build.1", "build", scheme="semver") == "1.2.3+build.2"
 
 
+@pytest.mark.parametrize("version", ["01.2.3", "1.02.3", "1.2.03"])
+def test_bump_string_semver_rejects_leading_zeros(version: str) -> None:
+    """SemVer parsing rejects numeric components with leading zeros."""
+
+    with pytest.raises(ValueError):
+        bump_string(version, "patch", scheme="semver")
+
+
 def test_bump_string_pep440_pre_and_local() -> None:
     """PEP 440 bumps handle prerelease and local segments."""
 
@@ -304,6 +312,7 @@ def test_resolve_files_overlapping_patterns_deduped(tmp_path: Path) -> None:
     out = _resolve_files(patterns, [], tmp_path)
 
     assert out == [a, b]
+
 
 
 def test_resolve_files_uses_cache(

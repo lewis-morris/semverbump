@@ -14,7 +14,9 @@ SemVer
 ------
 
 The :class:`~bumpwright.version_schemes.SemverScheme` tracks prerelease and
-build identifiers. Both parts can be incremented independently:
+build identifiers. Both parts can be incremented independently. Numeric
+components are validated against the SemVer spec, so leading zeros such as
+``01.0.0`` raise :class:`ValueError`:
 
 .. code-block:: python
 
