@@ -245,6 +245,8 @@ def _resolve_files(
             if any(fnmatch(path_str, ig) or fnmatch(rel_str, ig) for ig in ignore_list):
                 continue
             out.append(p)
+    # Ensure deterministic ordering for predictable downstream operations.
+    out.sort()
     return out
 
 

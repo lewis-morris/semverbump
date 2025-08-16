@@ -49,7 +49,8 @@ def test_apply_bump_updates_extra_files(tmp_path: Path) -> None:
     assert "__version__ = '0.1.1'" in init.read_text(encoding="utf-8")
     assert "VERSION = '0.1.1'" in ver.read_text(encoding="utf-8")
     assert "version = '0.1.1'" in _ver.read_text(encoding="utf-8")
-    assert {py, setup, init, ver, _ver} <= set(out.files)
+    # Out files are sorted for deterministic order.
+    assert out.files == [py, init, _ver, ver, setup]
 
 
 def test_apply_bump_ignore_patterns(tmp_path: Path) -> None:
