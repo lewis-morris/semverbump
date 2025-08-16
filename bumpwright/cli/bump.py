@@ -8,12 +8,19 @@ import subprocess
 import sys
 from datetime import date
 from pathlib import Path
+from typing import Any
+
+from jinja2 import Template
 
 from ..compare import Decision
 from ..config import Config, load_config
 from ..gitutils import changed_paths, collect_commits, last_release_commit
 from ..versioning import VersionChange, apply_bump, find_pyproject
 from .decide import _decide_only, _infer_level
+
+_DEFAULT_TEMPLATE = (
+    Path(__file__).resolve().parents[1] / "templates" / "changelog.md.j2"
+).read_text(encoding="utf-8")
 
 
 def _commit_tag(pyproject: str, version: str, commit: bool, tag: bool) -> None:
@@ -65,21 +72,46 @@ def _safe_changed_paths(base: str, head: str) -> set[str] | None:
 
 
 def _build_changelog(args: argparse.Namespace, new_version: str) -> str | None:
-    """Generate changelog text if requested."""
+    """Generate changelog text if requested.
+
+    Changelog entries are rendered using a Jinja2 template. Users may supply a
+    custom template via ``--changelog-template`` or configuration; otherwise the
+    built-in template is used. Available template variables include:
+
+    ``version``
+        New project version string.
+    ``date``
+        Current date in ISO format.
+    ``commits``
+        Sequence of mappings with ``sha``, ``subject``, and optional ``link``
+        keys representing commits since the previous release.
+    """
 
     if args.changelog is None:
         return None
     base = last_release_commit() or f"{args.head}^"
     commits = collect_commits(base, args.head)
-    lines = [f"## [v{new_version}] - {date.today().isoformat()}"]
+    entries: list[dict[str, Any]] = []
     for sha, subject in commits:
-        if args.repo_url and args.format == "md":
+        link = None
+        if args.repo_url:
             base_url = args.repo_url.rstrip("/")
             link = f"{base_url}/commit/{sha}"
-            lines.append(f"- [{sha}]({link}) {subject}")
-        else:
-            lines.append(f"- {sha} {subject}")
-    return "\n".join(lines) + "\n"
+        entries.append({"sha": sha, "subject": subject, "link": link})
+    template_path = getattr(args, "changelog_template", None)
+    template_txt = (
+        Path(template_path).read_text(encoding="utf-8")
+        if template_path
+        else _DEFAULT_TEMPLATE
+    )
+    tmpl = Template(template_txt)
+    rendered = tmpl.render(
+        version=new_version,
+        date=date.today().isoformat(),
+        commits=entries,
+        repo_url=args.repo_url,
+    )
+    return rendered.rstrip() + "\n"
 
 
 def _prepare_version_files(
@@ -161,6 +193,8 @@ def bump_command(args: argparse.Namespace) -> int:
     cfg: Config = load_config(args.config)
     if args.changelog is None and cfg.changelog.path:
         args.changelog = cfg.changelog.path
+    if getattr(args, "changelog_template", None) is None and cfg.changelog.template:
+        args.changelog_template = cfg.changelog.template
     if args.decide:
         return _decide_only(args, cfg)
 

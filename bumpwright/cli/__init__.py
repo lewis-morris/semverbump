@@ -150,6 +150,10 @@ def get_parser() -> argparse.ArgumentParser:
         const="-",
         help="Append release notes to FILE or stdout when no path is given.",
     )
+    p_bump.add_argument(
+        "--changelog-template",
+        help="Jinja2 template file for changelog entries; defaults to built-in template.",
+    )
     p_bump.set_defaults(func=bump_command)
     return parser
 

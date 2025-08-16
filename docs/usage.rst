@@ -126,6 +126,10 @@ assignment. These locations can be customised via the ``[version]`` section in
     When ``FILE`` is omitted or set to ``-``, the changelog entry is printed to
     standard output. If the option is omitted, no changelog entry is produced.
 
+``--changelog-template PATH``
+    Jinja2 template file used when rendering changelog entries. Defaults to the
+    built-in template.
+
 ``--pyproject PATH``
     Path to the project's ``pyproject.toml`` file. Defaults to
     ``pyproject.toml``.
@@ -187,6 +191,16 @@ Entries follow a simple Markdown structure:
 Each entry begins with a version heading and date, followed by a list of commit
 shas and subjects since the previous release.
 
+Templates receive the following variables:
+
+``version``
+    The new version string.
+``date``
+    Current date in ISO format.
+``commits``
+    List of mappings with ``sha``, ``subject``, and optional ``link`` keys for
+    commits since the previous release.
+
 Projects can set a default changelog path in ``bumpwright.toml`` so the
 ``bump`` command writes to that location when ``--changelog`` is omitted:
 
@@ -194,10 +208,12 @@ Projects can set a default changelog path in ``bumpwright.toml`` so the
 
    [changelog]
    path = "CHANGELOG.md"
+   template = "changelog.j2"
 
 With this configuration, running ``bumpwright bump`` automatically appends the
-release notes to ``CHANGELOG.md``. To print to stdout instead, invoke
-``bumpwright bump --changelog`` (or pass ``--changelog -`` for clarity).
+release notes to ``CHANGELOG.md`` using ``changelog.j2``. To print to stdout
+instead, invoke ``bumpwright bump --changelog`` (or pass ``--changelog -`` for
+clarity).
 
 To preview changes without touching the filesystem, combine ``--dry-run`` with
 JSON output:

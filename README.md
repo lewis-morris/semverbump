@@ -164,6 +164,7 @@ paths = ["migrations"]
 
 [changelog]
 path = ""
+template = ""
 
 [version]
 paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]
@@ -179,6 +180,8 @@ aspect of bumpwright:
 - **[analysers]** – toggles built-in or plugin analysers.
 - **migrations** – directories containing Alembic migration scripts.
 - **changelog** – default changelog file used with ``--changelog``.
+  ``template`` selects a custom Jinja2 template (leave empty for the built-in
+  version).
 - **version** – files where version strings are read and updated.
 
 See ``docs/configuration.rst`` for in-depth descriptions and additional

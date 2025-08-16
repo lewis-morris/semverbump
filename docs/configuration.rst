@@ -27,6 +27,7 @@ Example configuration showing all available sections and their default values:
 
    [changelog]
    path = ""
+   template = ""
 
    [version]
    paths = ["pyproject.toml", "setup.py", "setup.cfg", "**/__init__.py", "**/version.py", "**/_version.py"]
@@ -161,8 +162,13 @@ Changelog
    * - ``path``
      - str
      - ``""``
-     - Default file appended when running ``bumpwright bump`` with
-       ``--changelog`` omitted. Empty string means no default file.
+     - Default file appended when running ``bumpwright bump`` with ``--changelog``
+       omitted. Empty string means no default file.
+   * - ``template``
+     - str
+     - ``""``
+     - Jinja2 template file for changelog entries. Empty string selects the
+       built-in template.
 
 All sections and keys are optional; unspecified values fall back to the
 defaults shown above.
