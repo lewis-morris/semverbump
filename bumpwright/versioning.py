@@ -26,6 +26,9 @@ _VERSION_RE_PATTERNS: list[re.Pattern[str]] = [
 ]
 
 
+_last_resolve_args: tuple[tuple[str, ...], tuple[str, ...]] | None = None
+
+
 @cache
 def _get_default_config() -> Config:
     """Return cached configuration loading from disk on first use.
@@ -147,6 +150,16 @@ def write_project_version(
     p.write_text(toml_dumps(data), encoding="utf-8")
 
 
+def clear_version_file_cache() -> None:
+    """Clear cached version file resolutions.
+
+    Call this when versioned files are created or removed dynamically to force a
+    fresh filesystem scan on the next bump.
+    """
+
+    _resolve_files_cached.cache_clear()
+
+
 def apply_bump(  # noqa: PLR0913
     level: BumpLevel,
     pyproject_path: str | Path = "pyproject.toml",
@@ -182,8 +195,8 @@ def apply_bump(  # noqa: PLR0913
 
     Notes:
         Resolved file paths are cached across invocations for performance.
-        Call ``_resolve_files_cached.cache_clear()`` if the filesystem changes
-        and a fresh resolution is required.
+        Call :func:`clear_version_file_cache` if the filesystem changes and a
+        fresh resolution is required.
     """
 
     cfg = cfg or load_config(config_path or "bumpwright.toml")
@@ -194,13 +207,22 @@ def apply_bump(  # noqa: PLR0913
     if scheme is None:
         scheme = cfg.version.scheme
 
+    paths_t = tuple(paths)
+    ignore_t = tuple(ignore)
+    global _last_resolve_args  # noqa: PLW0603
+    if _last_resolve_args != (paths_t, ignore_t):
+        clear_version_file_cache()
+        _last_resolve_args = (paths_t, ignore_t)
+
     old = read_project_version(pyproject_path)
     new = bump_string(old, level, scheme)
     if dry_run:
         return VersionChange(old=old, new=new, level=level)
 
     write_project_version(new, pyproject_path)
-    updated, skipped = _update_additional_files(new, old, paths, ignore, pyproject_path)
+    updated, skipped = _update_additional_files(
+        new, old, paths_t, ignore_t, pyproject_path
+    )
     return VersionChange(
         old=old,
         new=new,
