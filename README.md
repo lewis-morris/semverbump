@@ -62,6 +62,35 @@ Suggested bump: minor
 See the [Quickstart guide](docs/quickstart.rst) for a full walk-through and the
 [documentation](docs/index.rst) for detailed guides.
 
+## Changelog generation
+
+Bumpwright can append release notes to a changelog using a Jinja2 template. The
+default context provides additional fields sourced from git:
+
+- ``release_datetime_iso`` – ISO-8601 timestamp of the tag's commit.
+- ``compare_url`` – GitHub compare link between the previous and new tags.
+- ``contributors`` – unique authors from ``git shortlog -sne`` linking to
+  profiles when ``users.noreply.github.com`` emails are detected.
+- ``breaking_changes`` – commits marked with a ``!`` type or a
+  ``BREAKING CHANGE:`` footer.
+
+Example output using the built-in template:
+
+```markdown
+## [v1.2.4] - 2024-04-01 (2024-04-01T12:00:00+00:00)
+[Diff since v1.2.3](https://github.com/me/project/compare/v1.2.3...v1.2.4)
+- [abc123](https://github.com/me/project/commit/abc123) feat!: drop old API
+
+### Breaking changes
+- feat!: drop old API
+
+### Contributors
+- [alice](https://github.com/alice)
+```
+
+Compare links let readers explore the full diff, while contributor names are
+auto-detected from the commit history.
+
 ## Badges
 
 The badges above are generated with

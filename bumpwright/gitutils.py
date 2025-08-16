@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import subprocess
 from collections.abc import Iterable
 from fnmatch import fnmatch
@@ -77,7 +78,9 @@ def _list_py_files_at_ref_cached(
         if not line.endswith(".py"):
             continue
         p = Path(line)
-        if any(str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm):
+        if any(
+            str(p).startswith(r.rstrip("/") + "/") or str(p) == r for r in roots_norm
+        ):
             s = str(p)
             if ignore_globs and any(fnmatch(s, pat) for pat in ignore_globs):
                 continue
@@ -134,7 +137,9 @@ def read_file_at_ref(ref: str, path: str, cwd: str | None = None) -> str | None:
 
 
 @lru_cache(maxsize=None)
-def _read_files_at_ref_cached(ref: str, paths: tuple[str, ...], cwd: str | None) -> dict[str, str | None]:
+def _read_files_at_ref_cached(
+    ref: str, paths: tuple[str, ...], cwd: str | None
+) -> dict[str, str | None]:
     """Return cached contents for multiple paths at a git reference.
 
     Args:
@@ -184,7 +189,9 @@ def _read_files_at_ref_cached(ref: str, paths: tuple[str, ...], cwd: str | None)
     return results
 
 
-def read_files_at_ref(ref: str, paths: Iterable[str], cwd: str | None = None) -> dict[str, str | None]:
+def read_files_at_ref(
+    ref: str, paths: Iterable[str], cwd: str | None = None
+) -> dict[str, str | None]:
     """Read multiple file contents at ``ref`` in a single subprocess call.
 
     Results are cached per ``(ref, tuple(paths), cwd)`` for improved
@@ -230,7 +237,9 @@ def last_release_commit(cwd: str | None = None) -> str | None:
     return out.strip() or None
 
 
-def collect_commits(base: str, head: str, cwd: str | None = None) -> list[tuple[str, str]]:
+def collect_commits(
+    base: str, head: str, cwd: str | None = None
+) -> list[tuple[str, str]]:
     """Collect commit metadata between two references.
 
     Args:
@@ -250,3 +259,62 @@ def collect_commits(base: str, head: str, cwd: str | None = None) -> list[tuple[
         sha, subject = line.split("\t", 1)
         commits.append((sha, subject))
     return commits
+
+
+def commit_message(ref: str, cwd: str | None = None) -> str:
+    """Return the full commit message for ``ref``.
+
+    Args:
+        ref: Git reference to inspect.
+        cwd: Repository path.
+
+    Returns:
+        Commit message including subject and body.
+    """
+
+    return _run(["git", "show", "-s", "--format=%B", ref], cwd)
+
+
+def commit_iso_datetime(ref: str, cwd: str | None = None) -> str:
+    """Return the ISO-8601 commit timestamp for ``ref``.
+
+    Args:
+        ref: Git reference to inspect.
+        cwd: Repository path.
+
+    Returns:
+        ISO-8601 formatted commit timestamp.
+    """
+
+    out = _run(["git", "show", "-s", "--format=%cI", ref], cwd)
+    return out.strip()
+
+
+def tag_for_commit(commit: str, cwd: str | None = None) -> str | None:
+    """Return the first tag pointing at ``commit`` if present."""
+
+    out = _run(["git", "tag", "--points-at", commit], cwd)
+    return out.splitlines()[0].strip() if out.strip() else None
+
+
+def collect_contributors(
+    base: str, head: str, cwd: str | None = None
+) -> list[tuple[str, str]]:
+    """Return contributors between two references.
+
+    Args:
+        base: Older git reference (exclusive).
+        head: Newer git reference (inclusive).
+        cwd: Optional repository path.
+
+    Returns:
+        List of ``(name, email)`` tuples.
+    """
+
+    out = _run(["git", "shortlog", "-sne", f"{base}..{head}"], cwd)
+    contributors: list[tuple[str, str]] = []
+    for line in out.splitlines():
+        match = re.match(r"\s*\d+\s+(.+)\s+<([^>]+)>", line)
+        if match:
+            contributors.append((match.group(1).strip(), match.group(2).strip()))
+    return contributors
