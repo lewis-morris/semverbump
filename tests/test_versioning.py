@@ -24,8 +24,11 @@ def test_bump_string():
 
 
 def test_bump_string_semver_prerelease_and_build() -> None:
-    """SemVer bumps preserve and increment prerelease and build metadata."""
+    """SemVer release bumps clear prerelease and build metadata."""
 
+    assert bump_string("1.2.3-alpha.1+build.1", "patch", scheme="semver") == "1.2.4"
+    assert bump_string("1.2.3-alpha.1+build.1", "minor", scheme="semver") == "1.3.0"
+    assert bump_string("1.2.3-alpha.1+build.1", "major", scheme="semver") == "2.0.0"
     assert (
         bump_string("1.2.3-alpha.1+build.1", "patch", scheme="semver")
         == "1.2.4-alpha.1+build.1"
@@ -43,8 +46,11 @@ def test_bump_string_semver_rejects_leading_zeros(version: str) -> None:
 
 
 def test_bump_string_pep440_pre_and_local() -> None:
-    """PEP 440 bumps handle prerelease and local segments."""
+    """PEP 440 release bumps remove prerelease and local identifiers."""
 
+    assert bump_string("1.2.3rc1+local.1", "patch", scheme="pep440") == "1.2.4"
+    assert bump_string("1.2.3rc1+local.1", "minor", scheme="pep440") == "1.3.0"
+    assert bump_string("1.2.3rc1+local.1", "major", scheme="pep440") == "2.0.0"
     assert (
         bump_string("1.2.3rc1+local.1", "patch", scheme="pep440") == "1.2.4rc1+local.1"
     )
