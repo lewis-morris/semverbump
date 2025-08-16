@@ -1,6 +1,7 @@
-Cache performance
-=================
+Performance & caching
+=====================
 
+Caching is on by default and speeds up repeated bumps in the same process.
 Resolving version file patterns is cached to avoid repeated filesystem
 globbing. A simple benchmark scanning 1,000 files shows the impact:
 

@@ -56,8 +56,8 @@ Suggested bump: minor
 - [MINOR] demo:greet: Added public symbol
 ```
 
-See the [documentation](docs/index.rst) for detailed guides and advanced
-scenarios.
+See the [Quickstart guide](docs/quickstart.rst) for a full walk-through and the
+[documentation](docs/index.rst) for detailed guides.
 
 ## Development
 
