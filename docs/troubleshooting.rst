@@ -46,10 +46,10 @@ before running Bumpwright.
 
 Template path not found
 ~~~~~~~~~~~~~~~~~~~~~~~
-*Cause*: The template file referenced by ``--template`` cannot be located.
+*Cause*: The Jinja2 template used for release notes, referenced by ``--changelog-template``, cannot be located.
 
-*Fix*: Provide the full path to an existing template or add it to the expected
-location so Bumpwright can render the changelog.
+*Fix*: Provide the full path to an existing Jinja2 template or add it to the expected
+location so Bumpwright can render the release notes.
 
 FAQ
 ---
