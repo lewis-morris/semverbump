@@ -12,9 +12,12 @@ html_title = project
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.viewcode",
     "sphinx_autodoc_typehints",
     "sphinx_copybutton",
-    "sphinx_wagtail_theme"
+    "sphinx_wagtail_theme",
 ]
 
 templates_path = ["_templates"]
@@ -32,6 +35,10 @@ napoleon_numpy_docstring = False
 napoleon_include_special_with_doc = True
 napoleon_use_param = True
 napoleon_use_rtype = True
+
+# Cross-referencing and external links
+autosectionlabel_prefix_document = True
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 # Autodoc / typehints behaviour
 autodoc_default_options = {
