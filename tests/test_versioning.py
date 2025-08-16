@@ -9,7 +9,9 @@ from bumpwright.versioning import (
     _resolve_files_cached,
     apply_bump,
     bump_string,
+    find_pyproject,
     read_project_version,
+    write_project_version,
 )
 
 
@@ -185,7 +187,7 @@ def test_resolve_files_uses_cache(
     (tmp_path / "b.txt").write_text("2", encoding="utf-8")
     _resolve_files_cached.cache_clear()
     calls = {"count": 0}
-    from bumpwright.versioning import glob as glob_orig
+    from bumpwright.versioning import glob as glob_orig  # noqa: PLC0415
 
     def fake_glob(pattern: str, recursive: bool = True) -> list[str]:
         calls["count"] += 1
@@ -195,7 +197,6 @@ def test_resolve_files_uses_cache(
     _resolve_files(["*.txt"], [], tmp_path)
     _resolve_files(["*.txt"], [], tmp_path)
     assert calls["count"] == 1
-
 
 
 def test_apply_bump_clears_resolve_cache(
@@ -203,14 +204,13 @@ def test_apply_bump_clears_resolve_cache(
 ) -> None:
     """Verify custom patterns trigger cache invalidation."""
 
-
     py = tmp_path / "pyproject.toml"
     py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
     cfg = tmp_path / "extra.cfg"
     cfg.write_text("version = '0.1.0'", encoding="utf-8")
 
     calls = {"count": 0}
-    from bumpwright.versioning import glob as glob_orig
+    from bumpwright.versioning import glob as glob_orig  # noqa: PLC0415
 
     def fake_glob(pattern: str, recursive: bool = True) -> list[str]:
         calls["count"] += 1
@@ -220,3 +220,39 @@ def test_apply_bump_clears_resolve_cache(
     apply_bump("patch", py, paths=["*.cfg"])
     apply_bump("patch", py, paths=["*.cfg"])
     assert calls["count"] == 1
+
+
+def test_find_pyproject(tmp_path: Path) -> None:
+    """Locate the nearest ``pyproject.toml`` when present."""
+
+    root = tmp_path / "proj"
+    root.mkdir()
+    py = root / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
+    sub = root / "pkg"
+    sub.mkdir()
+    assert find_pyproject(sub) == py
+
+
+def test_find_pyproject_missing(tmp_path: Path) -> None:
+    """Return ``None`` when no ``pyproject.toml`` is found."""
+
+    assert find_pyproject(tmp_path / "missing") is None
+
+
+def test_write_project_version(tmp_path: Path) -> None:
+    """Update the project version in ``pyproject.toml``."""
+
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({"project": {"version": "0.1.0"}}))
+    write_project_version("0.2.0", py)
+    assert read_project_version(py) == "0.2.0"
+
+
+def test_write_project_version_missing_project(tmp_path: Path) -> None:
+    """Raise ``KeyError`` when the ``[project]`` table is absent."""
+
+    py = tmp_path / "pyproject.toml"
+    py.write_text(toml_dumps({}))
+    with pytest.raises(KeyError):
+        write_project_version("0.1.0", py)

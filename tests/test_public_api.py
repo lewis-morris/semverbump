@@ -71,3 +71,24 @@ def sample(a, /, b, c=1, *d, e, f=2, **g):
         ("f", "kwonly", "2"),
         ("g", "varkw", None),
     ]
+
+
+def test_extract_without_exports_includes_public() -> None:
+    """Include public symbols when ``__all__`` is absent."""
+
+    code = """
+def foo():
+    pass
+def _bar():
+    pass
+"""
+    api = extract_public_api_from_source("pkg.mod", code)
+    assert "pkg.mod:foo" in api
+    assert "pkg.mod:_bar" not in api
+
+
+def test_extract_invalid_code_raises() -> None:
+    """Raise ``SyntaxError`` when source cannot be parsed."""
+
+    with pytest.raises(SyntaxError):
+        extract_public_api_from_source("pkg.mod", "def bad(:\n pass")
